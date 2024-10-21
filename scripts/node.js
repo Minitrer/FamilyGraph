@@ -6,9 +6,11 @@ export default class Node {
     #children = [];
     #div;
 
-    constructor(family, name="Name", spouse=undefined, parents=undefined, children=undefined) {
+    constructor(name="Name", family=undefined, spouse=undefined, parents=undefined, children=undefined) {
         this.#name = name;
-        this.#family = family;
+        if (family) {
+            this.#family = family;
+        }
         if (spouse) {
             this.#spouse = spouse;
         }
@@ -47,6 +49,9 @@ export default class Node {
         return this.#div;
     }
 
+    SetFamily(family) {
+        this.#family = family;
+    }
     // Each of these methods update the instance's property
     // They also update the target's corresponding property if the method wasn't called internally
     Adopt(child, internal=false) {
@@ -62,7 +67,7 @@ export default class Node {
             }
             this.#children.forEach(_child => {
                 _child.GetAdopted(this, true);
-            })
+            });
             return true;
         }
         this.#children.push(child);
@@ -86,7 +91,7 @@ export default class Node {
             }
             this.#parents.forEach(_parent => {
                 _parent.Adopt(this, true);
-            })
+            });
             return true;
         }
         this.#parents.push(parent);
@@ -113,14 +118,14 @@ export default class Node {
             return true;
         }
 
-        this.#children = [];
-
-        if (internal) {
-            return true;
+        
+        if (!internal) {
+            this.#children.forEach(_child => {
+                _child.OrphanSelf(this, true);
+            });
         }
-        this.#children.forEach(_child => {
-            _child.OrphanSelf(this, true);
-        });
+        
+        this.#children = [];
         return true;
     }
     OrphanSelf(parent=undefined, internal=false) {
@@ -143,7 +148,7 @@ export default class Node {
         if (!internal) {
             this.#parents.forEach(_parent => {
                 _parent.Orphan(this, true);
-            })
+            });
         }
         
         this.#parents = [];
@@ -163,7 +168,7 @@ export default class Node {
             }
             spouse.forEach(_spouse => {
                 _spouse.Marry(this, true);
-            })
+            });
             return true;
         }
 
@@ -195,7 +200,7 @@ export default class Node {
         if (!internal) {
             spouse.forEach(_spouse => {
                 _spouse.Divorce(this, true);
-            })
+            });
         }
 
         this.#spouse = [];
