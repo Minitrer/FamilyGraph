@@ -28,6 +28,11 @@ export default class Node {
         name_element.appendChild(document.createTextNode(this.#name));
         name_element.setAttribute("class", "name")
         this.#div.appendChild(name_element);
+
+        this.#div.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            return;
+        });
     }
     
     get name() {
