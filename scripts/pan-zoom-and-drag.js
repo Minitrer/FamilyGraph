@@ -1,10 +1,15 @@
+const scaleSensitivity = 0.1;
+const minScale = 0.1;
+
+let clickedPos = {
+    x: 0,
+    y: 0
+}
+let transformScale = 1;
+
 document.addEventListener("DOMContentLoaded", () => {
 
     const graph = document.getElementsByClassName("graph")[0];
-    let clickedPos = {
-        x: 0,
-        y: 0
-    }
     graph.transformPos = {
         x: 0,
         y: 0
@@ -12,20 +17,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let draggingElement = {};
     function drag(event) {
-        draggingElement.style.transform = `translate(${draggingElement.transformPos.x + event.pageX - clickedPos.x}px, ${draggingElement.transformPos.y + event.pageY - clickedPos.y}px)`;
-    }
-    // function pan(event) {
-    //     graph.style.transform = `translate(${transformPos.x + event.pageX - clickedPos.x}px, ${transformPos.y + event.pageY - clickedPos.y}px)`;
-    // }
-    // function makeDraggable(element) {
-    //     element.addEventListener("mousemove", drag);
+        const newPos = {
+            x: draggingElement.transformPos.x + (event.pageX - clickedPos.x) * (1 / transformScale),
+            y: draggingElement.transformPos.y + (event.pageY - clickedPos.y) * (1 / transformScale),
+        }
 
-    //     element.addEventListener("mouseup", (event) => {
-    //         element.transformPos.x += event.pageX - clickedPos.x;
-    //         element.transformPos.y += event.pageY - clickedPos.y; 
-    //         document.removeEventListener("mousemove", drag);
-    //         }, {once: true});
-    // }
+        draggingElement.style.setProperty("--pos-x", newPos.x);
+        draggingElement.style.setProperty("--pos-y", newPos.y);
+    }
 
     document.addEventListener("mousedown", (event) => {
         clickedPos.x = event.pageX;
@@ -44,9 +43,19 @@ document.addEventListener("DOMContentLoaded", () => {
         document.addEventListener("mousemove", drag);
         
         document.addEventListener("mouseup", (event) => {
-            draggingElement.transformPos.x += event.pageX - clickedPos.x;
-            draggingElement.transformPos.y += event.pageY - clickedPos.y; 
+            draggingElement.transformPos.x += (event.pageX - clickedPos.x) * (1 / transformScale);
+            draggingElement.transformPos.y += (event.pageY - clickedPos.y) * (1 / transformScale); 
             document.removeEventListener("mousemove", drag);
         }, {once: true});
+    });
+
+    document.addEventListener("wheel", (event) => {
+        const direction = Math.sign(event.deltaY);
+        if (transformScale + direction * scaleSensitivity < minScale) {
+            return;
+        }
+        transformScale += direction * scaleSensitivity;
+
+        graph.style.setProperty("--scale", transformScale);
     });
 });

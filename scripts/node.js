@@ -31,9 +31,14 @@ export default class Node {
             e.preventDefault();
             return;
         });
+
+        this.#div.style.setProperty("--pos-x", 0);
+        this.#div.style.setProperty("--pos-y", 0);
+
+        this.#div.style.transform = "translate(calc(var(--pos-x) * 1px), calc(var(--pos-y) * 1px))";
         this.#div.transformPos = {
             x: 0,
-            y: 0
+            y: 0,
         }
     }
     
