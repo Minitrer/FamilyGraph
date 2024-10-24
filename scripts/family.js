@@ -20,13 +20,13 @@ export default class Family {
 
             // Set family, add parents to parent div, marry parents together and adopt children
             for (let i = 0, length = this.#parents.length; i < length; i++) {
-                this.#parents[i].SetFamily(this);
+                this.#parents[i].setFamily(this);
                 this.#parents_div.appendChild(this.#parents[i].div);
-                this.#parents[i].Adopt(this.#children);
+                this.#parents[i].adopt(this.#children);
                 if (i === length - 1) {
                     break;
                 }
-                this.#parents[i].Marry(this.#parents.slice(i + 1));
+                this.#parents[i].marry(this.#parents.slice(i + 1));
             }
         }
         if (children) {
@@ -36,7 +36,7 @@ export default class Family {
             this.#children.forEach(child => {
                 this.#children_div.appendChild(child.div);
                 if (typeof child === "Node") {
-                    child.SetFamily(this);
+                    child.setFamily(this);
                 }
             });
         }

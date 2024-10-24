@@ -22,34 +22,4 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
     const family = new Family(parents, children);
     graph.appendChild(family.div);
-
-    
-    let clickedPos = {
-        x: 0,
-        y: 0
-    }
-    let transformPos = {
-        x: 0,
-        y: 0
-    }
-
-    function pan(event) {
-        graph.style.transform = `translate(${transformPos.x + event.pageX - clickedPos.x}px, ${transformPos.y + event.pageY - clickedPos.y}px)`;
-    }
-
-    document.addEventListener("mousedown", (event) => {
-        if (event.target.classList.contains("node") || event.target.parentElement.classList.contains("node")) {
-            return;
-        }
-        clickedPos.x = event.pageX;
-        clickedPos.y = event.pageY;
-
-        document.addEventListener("mousemove", pan);
-
-        document.addEventListener("mouseup", (event) => {
-            transformPos.x += event.pageX - clickedPos.x;
-            transformPos.y += event.pageY - clickedPos.y; 
-            document.removeEventListener("mousemove", pan);
-        }, {once: true});
-    });
 });

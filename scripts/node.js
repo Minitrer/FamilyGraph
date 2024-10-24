@@ -1,5 +1,4 @@
 export default class Node {
-    #name;
     #family;
     #spouse = [];
     #parents = [];
@@ -7,7 +6,6 @@ export default class Node {
     #div;
 
     constructor(name="Name", family=undefined, spouse=undefined, parents=undefined, children=undefined) {
-        this.#name = name;
         if (family) {
             this.#family = family;
         }
@@ -25,7 +23,7 @@ export default class Node {
         this.#div.setAttribute("class", "node");
 
         const name_element = document.createElement("h1");
-        name_element.appendChild(document.createTextNode(this.#name));
+        name_element.textContent = name;
         name_element.setAttribute("class", "name")
         this.#div.appendChild(name_element);
 
@@ -33,10 +31,14 @@ export default class Node {
             e.preventDefault();
             return;
         });
+        this.#div.transformPos = {
+            x: 0,
+            y: 0
+        }
     }
     
     get name() {
-        return this.#name;
+        return this.#div.firstElementChild.textContent;
     }
     get family() {
         return this.#family;
@@ -54,12 +56,12 @@ export default class Node {
         return this.#div;
     }
 
-    SetFamily(family) {
+    setFamily(family) {
         this.#family = family;
     }
     // Each of these methods update the instance's property
     // They also update the target's corresponding property if the method wasn't called internally
-    Adopt(child, internal=false) {
+    adopt(child, internal=false) {
         if (this.#children.includes(child)) {
             return false;
         }
@@ -83,7 +85,7 @@ export default class Node {
         child.GetAdopted(this, true);
         return true;
     }
-    GetAdopted(parent, internal=false) {
+    getAdopted(parent, internal=false) {
         if (this.#parents.includes(parent)) {
             return false;
         }
@@ -107,7 +109,7 @@ export default class Node {
         parent.Adopt(this, true);
         return true;
     }
-    Orphan(child=undefined, internal=false) {
+    orphan(child=undefined, internal=false) {
         if (child) {
             const index = this.#children.indexOf(child);
             if (index < 0) {
@@ -133,7 +135,7 @@ export default class Node {
         this.#children = [];
         return true;
     }
-    OrphanSelf(parent=undefined, internal=false) {
+    orphanSelf(parent=undefined, internal=false) {
         if (parent) {
             const index = this.#parents.indexOf(parent);
             if (index < 0) {
@@ -160,7 +162,7 @@ export default class Node {
         return true;
     }
 
-    Marry(spouse, internal=false) {
+    marry(spouse, internal=false) {
         if (this.#spouse.includes(spouse)) {
             return false;
         }
@@ -172,7 +174,7 @@ export default class Node {
                 return true;
             }
             spouse.forEach(_spouse => {
-                _spouse.Marry(this, true);
+                _spouse.marry(this, true);
             });
             return true;
         }
@@ -182,10 +184,10 @@ export default class Node {
         if (internal) {
             return true;
         }
-        spouse.Marry(this, true);
+        spouse.marry(this, true);
         return true;
     }
-    Divorce(spouse=undefined, internal=false) {
+    divorce(spouse=undefined, internal=false) {
         if (spouse) {
             const index = this.#spouse.indexOf(spouse);
             if (index < 0) {
