@@ -1,3 +1,5 @@
+import Vec2 from "./vec2.js";
+
 const pathWidth = 5;
 const arrowWidth = 5;
 const padding = pathWidth + arrowWidth;
@@ -14,10 +16,7 @@ export default function createConnection(from, to, direction) {
         return;
     }
 
-    const dirTo = {
-        x: to.x - from.x,
-        y: to.y - from.y,
-    }
+    const dirTo = to.subtract(from);
 
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
@@ -26,16 +25,14 @@ export default function createConnection(from, to, direction) {
     svg.setAttribute("viewBox", `0 0 ${Math.abs(dirTo.x) + padding * 2} ${Math.abs(dirTo.y) + padding * 2}`);
 
     svg.style.position = "absolute";
-    svg.style.top = `${Math.min(from.x, from.x) - padding}`;
-    svg.style.left = `${Math.min(from.y, from.y) - padding}`;
+    svg.style.top = `${Math.min(from.x, to.x) - padding}px`;
+    svg.style.left = `${Math.min(from.y, to.y) - padding}px`;
 
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    const origin = {
-        x: 0,
-        y: 0,
-    }
-    origin.x = dirTo.x > 0? padding : Math.abs(dirTo.x);
-    origin.y = dirTo.y > 0? padding : Math.abs(dirTo.y);
+    const origin = new Vec2(
+        dirTo.x > 0? padding : Math.abs(dirTo.x),
+        dirTo.y > 0? padding : Math.abs(dirTo.y)
+    );
     path.setAttribute("d",
        `M ${origin.x} ${origin.y}
         L ${origin.x} ${origin.y + dirTo.y}

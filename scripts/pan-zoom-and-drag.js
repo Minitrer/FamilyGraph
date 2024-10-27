@@ -1,26 +1,22 @@
+import Vec2 from "./vec2.js";
+
 const scaleSensitivity = 0.1;
 const minScale = 0.1;
 
-let clickedPos = {
-    x: 0,
-    y: 0
-}
+let clickedPos = new Vec2(0, 0);
 let transformScale = 1;
 
 document.addEventListener("DOMContentLoaded", () => {
 
     const workspace = document.getElementById("workspace");
-    workspace.transformPos = {
-        x: 0,
-        y: 0
-    }
+    workspace.transformPos = new Vec2(0, 0);
 
     let draggingElement = {};
     function drag(event) {
-        const newPos = {
-            x: draggingElement.transformPos.x + (event.pageX - clickedPos.x) * (1 / transformScale),
-            y: draggingElement.transformPos.y + (event.pageY - clickedPos.y) * (1 / transformScale),
-        }
+        const newPos = new Vec2(
+            draggingElement.transformPos.x + (event.pageX - clickedPos.x) * (1 / transformScale),
+            draggingElement.transformPos.y + (event.pageY - clickedPos.y) * (1 / transformScale)
+        );
 
         draggingElement.style.setProperty("--pos-x", newPos.x);
         draggingElement.style.setProperty("--pos-y", newPos.y);

@@ -1,3 +1,5 @@
+import Vec2 from "./vec2.js";
+
 export default class Node {
     #family;
     #spouse = [];
@@ -37,10 +39,7 @@ export default class Node {
         this.#div.style.setProperty("--pos-y", 0);
 
         this.#div.style.transform = "translate(calc(var(--pos-x) * 1px), calc(var(--pos-y) * 1px))";
-        this.#div.transformPos = {
-            x: 0,
-            y: 0,
-        }
+        this.#div.transformPos = new Vec2(0, 0);
     }
     
     get name() {
