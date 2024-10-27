@@ -1,4 +1,4 @@
-html, body {
+html, body, .workspace {
     width: 100%;
     height: 100%;
     padding: 0%;
@@ -6,7 +6,20 @@ html, body {
     background-color: black;
     overflow: hidden;
 }
+#workspace {
+    width: 100%;
+    height: 100%;
+    border: 1px solid red;
 
+    --pos-x: 0;
+    --pos-y: 0;
+    --scale: 1;
+
+    transform: scale(var(--scale)) translate(
+        calc(var(--pos-x)  * 1px),
+        calc(var(--pos-y) * 1px)
+        );
+}
 .graph, .family, .parents, .children {
     display: flex;
     justify-content: center;
@@ -19,15 +32,6 @@ html, body {
     width: 100%;
     height: 100%;
     justify-content: space-evenly;
-
-    --pos-x: 0;
-    --pos-y: 0;
-    --scale: 1;
-
-    transform: scale(var(--scale)) translate(
-        calc(var(--pos-x)  * 1px),
-        calc(var(--pos-y) * 1px)
-        );
 }
 
 .family {

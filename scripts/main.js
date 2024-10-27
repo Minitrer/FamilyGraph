@@ -1,5 +1,6 @@
 import Family from './family.js';
 import Node from './node.js';
+import createConnection from './connection.js';
 
 document.addEventListener("DOMContentLoaded", () => {
     const graph = document.getElementsByClassName("graph")[0];
@@ -22,4 +23,14 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
     const family = new Family(parents, children);
     graph.appendChild(family.div);
+
+    const from = {
+        x: 10,
+        y: 10,
+    }
+    const to = {
+        x: 200,
+        y: 500,
+    }
+    const connection = createConnection(from, to, "right")
 });

@@ -9,8 +9,8 @@ let transformScale = 1;
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    const graph = document.getElementsByClassName("graph")[0];
-    graph.transformPos = {
+    const workspace = document.getElementById("workspace");
+    workspace.transformPos = {
         x: 0,
         y: 0
     }
@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
             draggingElement = event.target.parentElement;
         }
         else {
-            draggingElement = graph;
+            draggingElement = workspace;
         }
 
         document.addEventListener("mousemove", drag);
@@ -56,6 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         transformScale += direction * scaleSensitivity;
 
-        graph.style.setProperty("--scale", transformScale);
+        workspace.style.setProperty("--scale", transformScale);
     });
 });

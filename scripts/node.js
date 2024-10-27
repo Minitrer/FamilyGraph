@@ -32,6 +32,7 @@ export default class Node {
             return;
         });
 
+        // Set up properties to make the div draggable
         this.#div.style.setProperty("--pos-x", 0);
         this.#div.style.setProperty("--pos-y", 0);
 
