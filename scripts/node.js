@@ -6,6 +6,8 @@ export default class Node {
     #parents = [];
     #children = [];
     #div;
+    #transformPos = new Vec2(0, 0);
+    #workspacePos;
 
     constructor(name="Name", family=undefined, spouse=undefined, parents=undefined, children=undefined) {
         if (family) {
@@ -39,7 +41,12 @@ export default class Node {
         this.#div.style.setProperty("--pos-y", 0);
 
         this.#div.style.transform = "translate(calc(var(--pos-x) * 1px), calc(var(--pos-y) * 1px))";
-        this.#div.transformPos = new Vec2(0, 0);
+        this.#div.node = this;
+        // this.#div.transformPos = new Vec2(0, 0);
+        this.#div.workspacePos = new Vec2(
+            this.#div.offsetLeft,
+            this.#div.offsetTop
+        );
     }
     
     get name() {
@@ -59,6 +66,23 @@ export default class Node {
     }
     get div() {
         return this.#div;
+    }
+    get transformPos() {
+        return this.#transformPos;
+    }
+    set transformPos(value) {
+        this.#transformPos = value;
+        this.workspacePos = new Vec2(
+            this.#div.offsetLeft + this.#transformPos.x,
+            this.#div.offsetTop + this.#transformPos.y
+        )
+    }
+    get workspacePos() {
+        return this.#workspacePos;
+    }
+    set workspacePos(value) {
+        this.#workspacePos = value;
+        this.#family.draw(this)
     }
 
     setFamily(family) {
@@ -217,5 +241,15 @@ export default class Node {
 
         this.#spouse = [];
         return true;
+    }
+
+    onDrag(dragAmount) {
+        this.#div.style.setProperty("--pos-x", dragAmount.x);
+        this.#div.style.setProperty("--pos-y", dragAmount.y);
+
+        this.workspacePos = new Vec2(
+            this.#div.offsetLeft + dragAmount.x,
+            this.#div.offsetTop + dragAmount.y
+        );
     }
 }

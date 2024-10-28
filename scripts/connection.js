@@ -10,11 +10,10 @@ export default function createConnection(from, to, direction, color="white") {
     if (direction !== "left" &&
         direction !== "right" &&
         direction !== "up" &&
-        direction !== "down"
-    ) {
-        console.error("Invalid connection direction, check creation function");
-        return;
-    }
+        direction !== "down") {
+            console.error("Invalid connection direction, check creation function");
+            return;
+        }
 
     const dirTo = to.subtract(from);
 

@@ -61,4 +61,12 @@ export default class Family {
     get children_div() {
         return this.#children_div
     }
+
+    draw(node) {
+        // TODO:
+        // Get node connection points
+        // Calculate relationship point
+        // Create connection
+        // Assign node's connection
+    }
 }

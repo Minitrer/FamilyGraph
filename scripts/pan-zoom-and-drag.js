@@ -10,6 +10,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const workspace = document.getElementById("workspace");
     workspace.transformPos = new Vec2(0, 0);
+    workspace.onDrag = (dragAmount) => {
+        workspace.style.setProperty("--pos-x", dragAmount.x);
+        workspace.style.setProperty("--pos-y", dragAmount.y);
+    }
 
     let draggingElement = {};
     function drag(event) {
@@ -18,8 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
             draggingElement.transformPos.y + (event.pageY - clickedPos.y) * (1 / transformScale)
         );
 
-        draggingElement.style.setProperty("--pos-x", newPos.x);
-        draggingElement.style.setProperty("--pos-y", newPos.y);
+        draggingElement.onDrag(newPos);
     }
 
     document.addEventListener("mousedown", (event) => {
@@ -27,10 +30,10 @@ document.addEventListener("DOMContentLoaded", () => {
         clickedPos.y = event.pageY;
 
         if (event.target.classList.contains("node")) {
-            draggingElement = event.target;
+            draggingElement = event.target.node;
         }
         else if (event.target.parentElement.classList.contains("node")) {
-            draggingElement = event.target.parentElement;
+            draggingElement = event.target.parentElement.node;
         }
         else {
             draggingElement = workspace;

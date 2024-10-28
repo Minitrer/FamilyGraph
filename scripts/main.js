@@ -35,12 +35,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const rightup = new Vec2(300, 150);
     const rightdown = new Vec2(300, 250);
 
-    createConnection(from, upleft, "up", "red")
-    createConnection(from, upright, "up", "orange")
-    createConnection(from, leftup, "left", "yellow")
-    createConnection(from, leftdown, "left", "green")
-    createConnection(from, downleft, "down", "blue")
-    createConnection(from, downright, "down", "cyan")
-    createConnection(from, rightup, "right", "purple")
-    createConnection(from, rightdown, "right", "pink")
+    createConnection(from, upleft, "up", "red");
+    createConnection(from, upright, "up", "orange");
+    createConnection(from, leftup, "left", "yellow");
+    createConnection(from, leftdown, "left", "green");
+    createConnection(from, downleft, "down", "blue");
+    createConnection(from, downright, "down", "cyan");
+    createConnection(from, rightup, "right", "purple");
+    createConnection(from, rightdown, "right", "pink");
 });
