@@ -1,6 +1,7 @@
 import Vec2 from "./vec2.js";
 
 const pathWidth = 5;
+const curveT = 0.5;
 const arrowWidth = 5;
 const padding = pathWidth + arrowWidth;
 const workspace = document.getElementById("workspace");
@@ -15,7 +16,7 @@ export default function createConnection(from, to, direction, color="white") {
             return;
         }
 
-    const dirTo = to.subtract(from);
+    const dirTo = to.sub(from);
 
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
@@ -28,7 +29,7 @@ export default function createConnection(from, to, direction, color="white") {
     svg.style.top = `${Math.min(from.y, to.y) - padding}px`;
 
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    let origin = {};
+    let origin = new Vec2();
     switch(direction) {
         case "left":
             origin = new Vec2(
@@ -55,51 +56,101 @@ export default function createConnection(from, to, direction, color="white") {
             );
             break;
     }
-    let cornerPos = {};
     let arrowPositions = [];
-    switch(direction) {
-        case "left":
-        case "right":
-            cornerPos = new Vec2(origin.x + dirTo.x, origin.y);
+    arrowPositions[0] = origin.add(dirTo);
+    arrowPositions[1] = origin.add(dirTo);
 
-            arrowPositions[0] = origin.add(dirTo);
-            arrowPositions[1] = origin.add(dirTo);
-            arrowPositions[0].x += arrowWidth;
-            arrowPositions[1].x -= arrowWidth;
-
-            if (dirTo.y > 0) {
-                arrowPositions[0].y -= arrowWidth;
+    // Connection is a straight line
+    if (from.x === to.x || from.y === to.y) {
+        switch(direction) {
+            case "left":
+                arrowPositions[0].x += arrowWidth;
+                arrowPositions[0].y += arrowWidth;
+                arrowPositions[1].x += arrowWidth;
                 arrowPositions[1].y -= arrowWidth;
                 break;
-            }
-            arrowPositions[0].y += arrowWidth;
-            arrowPositions[1].y += arrowWidth;
-            break;
-        case "up":
-        case "down":
-            cornerPos = new Vec2(origin.x, origin.y + dirTo.y);
-
-            arrowPositions[0] = origin.add(dirTo);
-            arrowPositions[1] = origin.add(dirTo);
-            arrowPositions[0].y += arrowWidth;
-            arrowPositions[1].y -= arrowWidth;
-
-            if (dirTo.x > 0) {
+            case "right":
                 arrowPositions[0].x -= arrowWidth;
+                arrowPositions[0].y += arrowWidth;
                 arrowPositions[1].x -= arrowWidth;
+                arrowPositions[1].y -= arrowWidth;
                 break;
-            }
-            arrowPositions[0].x += arrowWidth;
-            arrowPositions[1].x += arrowWidth;
-            break;
-    }    
-    path.setAttribute("d",
-       `M ${origin.x} ${origin.y}
-        L ${cornerPos.x} ${cornerPos.y}
-        L ${origin.x + dirTo.x} ${origin.y + dirTo.y}
-        L ${arrowPositions[0].x} ${arrowPositions[0].y}
-        M ${origin.x + dirTo.x} ${origin.y + dirTo.y}
-        L ${arrowPositions[1].x} ${arrowPositions[1].y}`);
+            case "up":
+                arrowPositions[0].x += arrowWidth;
+                arrowPositions[0].y += arrowWidth;
+                arrowPositions[1].x -= arrowWidth;
+                arrowPositions[1].y += arrowWidth;
+                break;
+            case "down":
+                arrowPositions[0].x += arrowWidth;
+                arrowPositions[0].y -= arrowWidth;
+                arrowPositions[1].x -= arrowWidth;
+                arrowPositions[1].y -= arrowWidth;
+                break;
+        }
+
+        path.setAttribute("d",
+            `M ${origin.x} ${origin.y}
+             L ${origin.x + dirTo.x} ${origin.y + dirTo.y}
+             L ${arrowPositions[0].x} ${arrowPositions[0].y}
+             M ${origin.x + dirTo.x} ${origin.y + dirTo.y}
+             L ${arrowPositions[1].x} ${arrowPositions[1].y}`);
+    }
+    else {
+        let cornerPos = new Vec2();
+        
+        switch(direction) {
+            case "left":
+            case "right":
+                cornerPos = new Vec2(origin.x + dirTo.x, origin.y);
+    
+                arrowPositions[0].x += arrowWidth;
+                arrowPositions[1].x -= arrowWidth;
+    
+                if (dirTo.y > 0) {
+                    arrowPositions[0].y -= arrowWidth;
+                    arrowPositions[1].y -= arrowWidth;
+                    break;
+                }
+                arrowPositions[0].y += arrowWidth;
+                arrowPositions[1].y += arrowWidth;
+                break;
+            case "up":
+            case "down":
+                cornerPos = new Vec2(origin.x, origin.y + dirTo.y);
+    
+                arrowPositions[0].y += arrowWidth;
+                arrowPositions[1].y -= arrowWidth;
+    
+                if (dirTo.x > 0) {
+                    arrowPositions[0].x -= arrowWidth;
+                    arrowPositions[1].x -= arrowWidth;
+                    break;
+                }
+                arrowPositions[0].x += arrowWidth;
+                arrowPositions[1].x += arrowWidth;
+                break;
+        }   
+    
+        const originToCornerLength = cornerPos.sub(origin).magnitude();
+        const cornerToTargetLength = origin.add(dirTo).sub(cornerPos).magnitude();
+        
+        const curveStart = origin.add(
+            cornerPos.sub(origin).normalized().mult(originToCornerLength * curveT)
+        );
+        const curveEnd = cornerPos.add(
+            origin.add(dirTo).sub(cornerPos).normalized().mult(cornerToTargetLength * (1 - curveT))
+        );
+        path.setAttribute("d",
+            `M ${origin.x} ${origin.y}
+            L ${curveStart.x} ${curveStart.y}
+            Q ${cornerPos.x} ${cornerPos.y} ${curveEnd.x} ${curveEnd.y}
+            L ${origin.x + dirTo.x} ${origin.y + dirTo.y}
+            L ${arrowPositions[0].x} ${arrowPositions[0].y}
+            M ${origin.x + dirTo.x} ${origin.y + dirTo.y}
+            L ${arrowPositions[1].x} ${arrowPositions[1].y}`);
+    }
+
     path.setAttribute("stroke", color);
     path.setAttribute("stroke-width", `${pathWidth}`);
     path.setAttribute("stroke-linecap", "round");

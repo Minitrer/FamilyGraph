@@ -43,4 +43,15 @@ document.addEventListener("DOMContentLoaded", () => {
     createConnection(from, downright, "down", "cyan");
     createConnection(from, rightup, "right", "purple");
     createConnection(from, rightdown, "right", "pink");
+    
+    const fromStraight = new Vec2(400, 200);
+    const toUp = fromStraight.add(new Vec2(0, -50));
+    const toDown = fromStraight.add(new Vec2(0, 50));
+    const toLeft = fromStraight.add(new Vec2(-50));
+    const toRight = fromStraight.add(new Vec2(50));
+
+    createConnection(fromStraight, toUp, "up");
+    createConnection(fromStraight, toDown, "down");
+    createConnection(fromStraight, toLeft, "left");
+    createConnection(fromStraight, toRight, "right");
 });
