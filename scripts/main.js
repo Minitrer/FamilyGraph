@@ -35,14 +35,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const rightup = new Vec2(300, 150);
     const rightdown = new Vec2(300, 250);
 
-    createConnection(from, upleft, "up", "red");
-    createConnection(from, upright, "up", "orange");
-    createConnection(from, leftup, "left", "yellow");
-    createConnection(from, leftdown, "left", "green");
-    createConnection(from, downleft, "down", "blue");
-    createConnection(from, downright, "down", "cyan");
-    createConnection(from, rightup, "right", "purple");
-    createConnection(from, rightdown, "right", "pink");
+    createConnection(from, upleft, "up", "red", false);
+    createConnection(from, upright, "up", "orange", false);
+    createConnection(from, leftup, "left", "yellow", false);
+    createConnection(from, leftdown, "left", "green", false);
+    createConnection(from, downleft, "down", "blue", false);
+    createConnection(from, downright, "down", "cyan", false);
+    createConnection(from, rightup, "right", "purple", false);
+    createConnection(from, rightdown, "right", "pink", false);
     
     const fromStraight = new Vec2(400, 200);
     const toUp = fromStraight.add(new Vec2(0, -50));
@@ -50,8 +50,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const toLeft = fromStraight.add(new Vec2(-50));
     const toRight = fromStraight.add(new Vec2(50));
 
-    createConnection(fromStraight, toUp, "up");
-    createConnection(fromStraight, toDown, "down");
-    createConnection(fromStraight, toLeft, "left");
-    createConnection(fromStraight, toRight, "right");
+    createConnection(fromStraight, toUp, "up", "white", false);
+    createConnection(fromStraight, toDown, "down", "white", false);
+    createConnection(fromStraight, toLeft, "left", "white", false);
+    createConnection(fromStraight, toRight, "right", "white", false);
 });
