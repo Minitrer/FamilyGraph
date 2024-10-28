@@ -1,15 +1,26 @@
 import Vec2 from "./vec2.js";
+let personCount = 0;
 
-export default class Node {
+export default class Person {
+    #id;
     #family;
     #spouse = [];
     #parents = [];
     #children = [];
     #div;
-    #transformPos = new Vec2(0, 0);
-    #workspacePos;
+    #transformPos = new Vec2();
+    #workspacePos = new Vec2();
+    #connectionPoints = {
+        "up": new Vec2(),
+        "down" : new Vec2(),
+        "left" : new Vec2(),
+        "right" : new Vec2()
+    }
 
     constructor(name="Name", family=undefined, spouse=undefined, parents=undefined, children=undefined) {
+        this.#id = personCount;
+        personCount++;
+
         if (family) {
             this.#family = family;
         }
@@ -24,7 +35,7 @@ export default class Node {
         }
 
         this.#div = document.createElement("div");
-        this.#div.setAttribute("class", "node");
+        this.#div.setAttribute("class", "person");
 
         const name_element = document.createElement("h1");
         name_element.textContent = name;
@@ -41,8 +52,9 @@ export default class Node {
         this.#div.style.setProperty("--pos-y", 0);
 
         this.#div.style.transform = "translate(calc(var(--pos-x) * 1px), calc(var(--pos-y) * 1px))";
-        this.#div.node = this;
-        // this.#div.transformPos = new Vec2(0, 0);
+        this.#div.person = this;
+
+        // Position relative to the workspace, needed for connection creation
         this.#div.workspacePos = new Vec2(
             this.#div.offsetLeft,
             this.#div.offsetTop
@@ -82,6 +94,18 @@ export default class Node {
     }
     set workspacePos(value) {
         this.#workspacePos = value;
+
+        const relativeConnectionPoints = {
+            up: new Vec2(this.#div.offsetWidth / 2, 0),
+            down: new Vec2(this.#div.offsetWidth / 2, this.#div.offsetHeight),
+            left: new Vec2(0, this.#div.offsetHeight / 2),
+            right: new Vec2(this.#div.offsetWidth, this.#div.offsetHeight / 2),
+        }
+        this.#connectionPoints.up = this.#workspacePos.add(relativeConnectionPoints.up);
+        this.#connectionPoints.down = this.#workspacePos.add(relativeConnectionPoints.down);
+        this.#connectionPoints.left = this.#workspacePos.add(relativeConnectionPoints.left);
+        this.#connectionPoints.right = this.#workspacePos.add(relativeConnectionPoints.right);
+
         this.#family.draw(this)
     }
 

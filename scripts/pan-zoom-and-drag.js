@@ -29,11 +29,11 @@ document.addEventListener("DOMContentLoaded", () => {
         clickedPos.x = event.pageX;
         clickedPos.y = event.pageY;
 
-        if (event.target.classList.contains("node")) {
-            draggingElement = event.target.node;
+        if (event.target.classList.contains("person")) {
+            draggingElement = event.target.person;
         }
-        else if (event.target.parentElement.classList.contains("node")) {
-            draggingElement = event.target.parentElement.node;
+        else if (event.target.parentElement.classList.contains("person")) {
+            draggingElement = event.target.parentElement.person;
         }
         else {
             draggingElement = workspace;

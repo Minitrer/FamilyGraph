@@ -2,18 +2,19 @@ export default class Family {
     #parents = [];
     #children = [];
     #div;
-    #parents_div;
-    #children_div;
+    #parentsDiv;
+    #childrenDiv;
+    #parent
 
     constructor(parents=undefined, children=undefined) {
         
         // Create divs
         this.#div = document.createElement("div");
         this.#div.setAttribute("class", "family");
-        this.#parents_div = document.createElement("div");
-        this.#parents_div.setAttribute("class", "parents");
-        this.#children_div = document.createElement("div");
-        this.#children_div.setAttribute("class", "children");
+        this.#parentsDiv = document.createElement("div");
+        this.#parentsDiv.setAttribute("class", "parents");
+        this.#childrenDiv = document.createElement("div");
+        this.#childrenDiv.setAttribute("class", "children");
         
         if (parents) {
             this.#parents = parents;
@@ -21,10 +22,10 @@ export default class Family {
             // Set family, add parents to parent div, marry parents together and adopt children
             for (let i = 0, length = this.#parents.length; i < length; i++) {
                 this.#parents[i].setFamily(this);
-                this.#parents_div.appendChild(this.#parents[i].div);
+                this.#parentsDiv.appendChild(this.#parents[i].div);
                 this.#parents[i].adopt(this.#children);
-                if (i === length - 1) {
-                    break;
+                if (i >= length - 1) {
+                    continue;
                 }
                 this.#parents[i].marry(this.#parents.slice(i + 1));
             }
@@ -34,16 +35,16 @@ export default class Family {
 
             // Set family, add children to children div
             this.#children.forEach(child => {
-                this.#children_div.appendChild(child.div);
-                if (typeof child === "Node") {
+                this.#childrenDiv.appendChild(child.div);
+                if (child instanceof Node) {
                     child.setFamily(this);
                 }
             });
         }
 
         // Append divs
-        this.#div.appendChild(this.#parents_div);
-        this.#div.appendChild(this.#children_div);
+        this.#div.appendChild(this.#parentsDiv);
+        this.#div.appendChild(this.#childrenDiv);
     }
 
     get parents() {
@@ -55,18 +56,18 @@ export default class Family {
     get div() {
         return this.#div
     }
-    get parents_div() {
-        return this.#parents_div
+    get parentsDiv() {
+        return this.#parentsDiv
     }
-    get children_div() {
-        return this.#children_div
+    get childrenDiv() {
+        return this.#childrenDiv
     }
 
-    draw(node) {
+    draw(person) {
         // TODO:
-        // Get node connection points
+        // Get person connection points
         // Calculate relationship point
         // Create connection
-        // Assign node's connection
+        // Assign person's connection
     }
 }

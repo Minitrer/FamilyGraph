@@ -47,7 +47,7 @@ html, body, .workspace {
     align-items: flex-start;
 }
 
-.node {
+.person {
     padding: 0.2em;
     display: flex;
     flex-direction: column;
