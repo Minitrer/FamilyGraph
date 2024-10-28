@@ -53,12 +53,6 @@ export default class Person {
 
         this.#div.style.transform = "translate(calc(var(--pos-x) * 1px), calc(var(--pos-y) * 1px))";
         this.#div.person = this;
-
-        // Position relative to the workspace, needed for connection creation
-        this.#div.workspacePos = new Vec2(
-            this.#div.offsetLeft,
-            this.#div.offsetTop
-        );
     }
     
     get name() {
@@ -106,7 +100,12 @@ export default class Person {
         this.#connectionPoints.left = this.#workspacePos.add(relativeConnectionPoints.left);
         this.#connectionPoints.right = this.#workspacePos.add(relativeConnectionPoints.right);
 
-        this.#family.draw(this)
+        if (this.#family) {
+            this.#family.draw(this)
+        }
+    }
+    get connectionPoints() {
+        return this.#connectionPoints;
     }
 
     setFamily(family) {
@@ -274,6 +273,13 @@ export default class Person {
         this.workspacePos = new Vec2(
             this.#div.offsetLeft + dragAmount.x,
             this.#div.offsetTop + dragAmount.y
+        );
+    }
+
+    updateWorkspacePos() {
+        this.workspacePos = new Vec2(
+            this.#div.offsetLeft,
+            this.#div.offsetTop
         );
     }
 }

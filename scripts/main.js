@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
     const family = new Family(parents, children);
     graph.appendChild(family.div);
+    family.updateWorkspacePositions();
 
     const from = new Vec2(200, 200);
     const upleft =  new Vec2(150, 100);

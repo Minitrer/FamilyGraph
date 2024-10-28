@@ -1,10 +1,14 @@
+import Person from "./person.js";
+import Vec2 from "./vec2.js";
+
 export default class Family {
     #parents = [];
     #children = [];
     #div;
     #parentsDiv;
     #childrenDiv;
-    #parent
+    #parentConnectionPoint = new Vec2();
+    #childrenConnectionPoint = new Vec2();
 
     constructor(parents=undefined, children=undefined) {
         
@@ -36,7 +40,7 @@ export default class Family {
             // Set family, add children to children div
             this.#children.forEach(child => {
                 this.#childrenDiv.appendChild(child.div);
-                if (child instanceof Node) {
+                if (child instanceof Person) {
                     child.setFamily(this);
                 }
             });
@@ -66,8 +70,31 @@ export default class Family {
     draw(person) {
         // TODO:
         // Get person connection points
-        // Calculate relationship point
         // Create connection
         // Assign person's connection
+    }
+
+    updateWorkspacePositions() {
+        if (this.#parents) {
+            this.#parents.forEach((parent) => {
+                parent.updateWorkspacePos();
+            });
+
+            if (this.#parents.length === 2) {
+                const parent0Center = this.#parents[0].connectionPoints.left.add(this.#parents[0].connectionPoints.right).div(2);
+                const parent1Center = this.#parents[1].connectionPoints.left.add(this.#parents[1].connectionPoints.right).div(2);
+                this.#parentConnectionPoint = parent0Center.add(parent1Center).div(2);
+                console.debug(this.#parentConnectionPoint);
+            }
+        }
+        if (this.#children) {
+            this.#children.forEach((child) => {
+                if (child instanceof Person) {
+                    child.updateWorkspacePos();
+                    return;
+                }
+                child.updateWorkspacePositions();
+            });
+        }
     }
 }
