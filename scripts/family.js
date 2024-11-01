@@ -73,8 +73,11 @@ export default class Family {
             return;
         }
         if (!this.#parentConnectionPoint) {
+            if (this.#parents.length === 1) {
+                this.#parentConnectionPoint = person.connectionPoints.down;
+            }
             const x = this.#div.offsetLeft  + (this.#div.offsetWidth / 2);
-            const y = this.#parents.length === 2? person.connectionPoints.right.y : person.connectionPoints.right.y + 10;
+            const y = this.#parents.length === 2? person.connectionPoints.right.y : person.connectionPoints.right.y + 50;
             this.#parentConnectionPoint = new Vec2(x, y);
         }
         // Determine closest valid connection point
@@ -114,11 +117,11 @@ export default class Family {
                     }
                     break;
             }
+
             closestPoint = person.connectionPoints[side];
             closestSide = side;
         }
         if (person.connections["parent"]) {
-            console.debug(person.connections["parent"]);
             createConnection(closestPoint, this.#parentConnectionPoint, closestSide, "white", false, person.connections["parent"]);
             return;
         }

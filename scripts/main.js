@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const graph = document.getElementsByClassName("graph")[0];
     const parents = [
         new Person("Parent G0"),
+        new Person("Parent G0"),
         new Person("Parent G0")
     ];
     const children = [
