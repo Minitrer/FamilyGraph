@@ -1,3 +1,4 @@
+import createConnection from "./connection.js";
 import Person from "./person.js";
 import Vec2 from "./vec2.js";
 
@@ -7,8 +8,8 @@ export default class Family {
     #div;
     #parentsDiv;
     #childrenDiv;
-    #parentConnectionPoint = new Vec2();
-    #childrenConnectionPoint = new Vec2();
+    #parentConnectionPoint = undefined;
+    #childrenConnectionPoint = undefined;
 
     constructor(parents=undefined, children=undefined) {
         
@@ -68,10 +69,60 @@ export default class Family {
     }
 
     draw(person) {
-        // TODO:
-        // Get person connection points
-        // Create connection
-        // Assign person's connection
+        if (!this.#parents.includes(person)) {
+            return;
+        }
+        if (!this.#parentConnectionPoint) {
+            const x = this.#div.offsetLeft  + (this.#div.offsetWidth / 2);
+            const y = this.#parents.length === 2? person.connectionPoints.right.y : person.connectionPoints.right.y + 10;
+            this.#parentConnectionPoint = new Vec2(x, y);
+        }
+        // Determine closest valid connection point
+        let closestPoint = undefined;
+        let closestSide = "";
+        for (const side in person.connectionPoints) {
+            if (!closestPoint) {
+                closestPoint = person.connectionPoints[side];
+                closestSide = side;
+                continue;
+            }
+            const lengthCurrentMin = closestPoint.sub(this.#parentConnectionPoint).magnitude();
+            const lengthCurrentSide = person.connectionPoints[side].sub(this.#parentConnectionPoint).magnitude();
+            if (lengthCurrentSide >= lengthCurrentMin) {
+                continue;
+            }
+            // Check if path goes through the person
+            switch (side) {
+                case "up":
+                    if (person.connectionPoints.up.y < this.#parentConnectionPoint.y) {
+                        continue;
+                    }
+                    break;
+                case "down":
+                    if (person.connectionPoints.down.y > this.#parentConnectionPoint.y) {
+                        continue;
+                    }
+                    break;
+                case "left":
+                    if (person.connectionPoints.left.x < this.#parentConnectionPoint.x) {
+                        continue;
+                    }
+                    break;
+                case "right":
+                    if (person.connectionPoints.right.x > this.#parentConnectionPoint.x) {
+                        continue;
+                    }
+                    break;
+            }
+            closestPoint = person.connectionPoints[side];
+            closestSide = side;
+        }
+        if (person.connections["parent"]) {
+            console.debug(person.connections["parent"]);
+            createConnection(closestPoint, this.#parentConnectionPoint, closestSide, "white", false, person.connections["parent"]);
+            return;
+        }
+        person.connections["parent"] = createConnection(closestPoint, this.#parentConnectionPoint, closestSide, "white", false);
     }
 
     updateWorkspacePositions() {
@@ -79,13 +130,6 @@ export default class Family {
             this.#parents.forEach((parent) => {
                 parent.updateWorkspacePos();
             });
-
-            if (this.#parents.length === 2) {
-                const parent0Center = this.#parents[0].connectionPoints.left.add(this.#parents[0].connectionPoints.right).div(2);
-                const parent1Center = this.#parents[1].connectionPoints.left.add(this.#parents[1].connectionPoints.right).div(2);
-                this.#parentConnectionPoint = parent0Center.add(parent1Center).div(2);
-                console.debug(this.#parentConnectionPoint);
-            }
         }
         if (this.#children) {
             this.#children.forEach((child) => {

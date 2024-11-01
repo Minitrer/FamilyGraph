@@ -1,12 +1,12 @@
 import Vec2 from "./vec2.js";
 
 const pathWidth = 5;
-const curveT = 0.5;
+const curveLength = 10;
 const arrowWidth = 5;
 const padding = pathWidth + arrowWidth;
 const workspace = document.getElementById("workspace");
 
-export default function createConnection(from, to, direction, color="white", hasArrow=true) {
+export default function createConnection(from, to, direction, color="white", hasArrow=true, replace=undefined) {
     
     if (direction !== "left" &&
         direction !== "right" &&
@@ -17,9 +17,11 @@ export default function createConnection(from, to, direction, color="white", has
         }
 
     const dirTo = to.sub(from);
-
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-
+    let svg = replace;
+    if (!replace) {
+        svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    }
+    
     svg.setAttribute("height", Math.abs(dirTo.y) + padding * 2);
     svg.setAttribute("width", Math.abs(dirTo.x) + padding * 2);
     svg.setAttribute("viewBox", `0 0 ${Math.abs(dirTo.x) + padding * 2} ${Math.abs(dirTo.y) + padding * 2}`);
@@ -28,7 +30,13 @@ export default function createConnection(from, to, direction, color="white", has
     svg.style.left = `${Math.min(from.x, to.x) - padding}px`;
     svg.style.top = `${Math.min(from.y, to.y) - padding}px`;
 
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    let path;
+    if (replace) {
+        path = replace.children[0];
+    }
+    else {
+        path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    }
     let origin = new Vec2();
     switch(direction) {
         case "left":
@@ -153,10 +161,10 @@ export default function createConnection(from, to, direction, color="white", has
         const cornerToTargetLength = origin.add(dirTo).sub(cornerPos).magnitude();
         
         const curveStart = origin.add(
-            cornerPos.sub(origin).normalized().mult(originToCornerLength * curveT)
+            cornerPos.sub(origin).normalized().mult(Math.max(1, (originToCornerLength - curveLength)))
         );
         const curveEnd = cornerPos.add(
-            origin.add(dirTo).sub(cornerPos).normalized().mult(cornerToTargetLength * (1 - curveT))
+            origin.add(dirTo).sub(cornerPos).normalized().mult(Math.min(curveLength, cornerToTargetLength))
         );
         let pathString = 
            `M ${origin.x} ${origin.y}
@@ -178,7 +186,9 @@ export default function createConnection(from, to, direction, color="white", has
     path.setAttribute("stroke-linejoin", "round");
     path.setAttribute("fill", "none");
     
-    svg.appendChild(path);
-    workspace.appendChild(svg);
+    if (!replace) {
+        svg.appendChild(path);
+        workspace.prepend(svg);
+    }
     return svg;
 }

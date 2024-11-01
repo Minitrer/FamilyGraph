@@ -16,6 +16,7 @@ export default class Person {
         "left" : new Vec2(),
         "right" : new Vec2()
     }
+    connections = [];
 
     constructor(name="Name", family=undefined, spouse=undefined, parents=undefined, children=undefined) {
         this.#id = personCount;
