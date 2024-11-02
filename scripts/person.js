@@ -56,6 +56,9 @@ export default class Person {
         this.#div.person = this;
     }
     
+    get id() {
+        return this.#id;
+    }
     get name() {
         return this.#div.firstElementChild.textContent;
     }

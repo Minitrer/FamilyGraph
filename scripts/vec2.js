@@ -21,4 +21,13 @@ export default class Vec2 {
     normalized() {
         return this.div(this.magnitude());
     }
+    dot(v) {
+        return this.x * v.x + this.y * v.y
+    }
+    angle() {
+        return Math.atan2(this.y, this.x);
+    }
+    angleTo(v) {
+        return Math.asin(this.dot(v) / (this.magnitude() * v.magnitude()))
+    }
 }

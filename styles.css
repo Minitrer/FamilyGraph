@@ -36,7 +36,7 @@ html, body, .workspace {
 
 .family {
     flex-direction: column;
-    gap: 6em;
+    gap: 10em;
 }
 
 .parents, .children {
