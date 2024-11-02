@@ -2,7 +2,8 @@ import createConnection from "./connection.js";
 import Person from "./person.js";
 import Vec2 from "./vec2.js";
 
-const connectionPointGap = 50;
+const connectionPointGap = 30;
+const connectionPointLength = 10;
 
 export default class Family {
     #parents = [];
@@ -75,24 +76,17 @@ export default class Family {
         if (this.#parents.includes(person)) {
             type = "parents";
             if (!this.#parentConnectionPoint) {
-                if (this.#parents.length === 1) {
-                    this.#parentConnectionPoint = person.connectionPoints.down;
-                }
-                const x = this.#div.offsetLeft  + (this.#div.offsetWidth / 2);
-                const y = this.#parents.length === 2? person.connectionPoints.right.y : person.connectionPoints.right.y + connectionPointGap;
-                this.#parentConnectionPoint = new Vec2(x, y);
+                this.createParentConnectionPoint();
             }
             familyConnectionPoint = this.#parentConnectionPoint;
         }
         else {
             type = "children";
             if (!this.#childrenConnectionPoint) {
-                if (this.#children.length === 1) {
-                    this.#childrenConnectionPoint = person.connectionPoints.down;
+                if (!this.#parentConnectionPoint) {
+                    this.createParentConnectionPoint();
                 }
-                const x = this.#div.offsetLeft  + (this.#div.offsetWidth / 2);
-                const y = person.connectionPoints.right.y - connectionPointGap;
-                this.#childrenConnectionPoint = new Vec2(x, y);
+                this.createChildrenConnectionPoint();
             }
             familyConnectionPoint = this.#childrenConnectionPoint;
         }
@@ -180,5 +174,67 @@ export default class Family {
                 child.updateWorkspacePositions();
             });
         }
+    }
+
+    createParentConnectionPoint() {
+        if (this.#parents.length === 1) {
+            this.#parentConnectionPoint = this.#parents[0].connectionPoints.down;
+        }
+        else {
+            const x = this.#div.offsetLeft  + (this.#div.offsetWidth / 2);
+            const y = this.#parents.length === 2? this.#parents[0].connectionPoints.right.y : this.#parents[0].connectionPoints.down.y + connectionPointGap;
+            this.#parentConnectionPoint = new Vec2(x, y);
+        }
+        this.#parentConnectionPoint.updateConnected = () => {
+            this.#parents.forEach((parent) => {
+                this.draw(parent);
+            })
+        }
+        this.#parentConnectionPoint.div = this.createConnectionDiv(this.#parentConnectionPoint);
+    }
+    createChildrenConnectionPoint() {
+        if (this.#children.length === 1 && this.#children[0] instanceof Person) {
+            this.#childrenConnectionPoint = this.#children[0].connectionPoints.up;
+        }
+        else {
+            const x = this.#div.offsetLeft  + (this.#div.offsetWidth / 2);
+            const y = this.#children[0].div.offsetTop - connectionPointGap;
+            this.#childrenConnectionPoint = new Vec2(x, y);
+        }
+        this.#childrenConnectionPoint.updateConnected = () => {
+            this.#children.forEach((child) => {
+                if (!(child instanceof Person)) {
+                    return;
+                }
+                this.draw(child);
+            })
+        }
+        this.#childrenConnectionPoint.div = this.createConnectionDiv(this.#childrenConnectionPoint);
+    }
+    createConnectionDiv(p) {
+        const workspace = document.getElementById("workspace");
+        const div = document.createElement("div")
+        div.setAttribute("class", "point");
+        div.style.width = `${connectionPointLength}px`;
+        div.style.height = `${connectionPointLength}px`;
+        div.style.backgroundColor = "green";
+
+        div.style.position = "absolute";
+        div.style.left = `${p.x - connectionPointLength / 2}px`;
+        div.style.top = `${p.y - connectionPointLength / 2}px`;
+
+        div.transformPos = new Vec2();
+        div.onDrag = (dragAmount) => {
+            div.style.setProperty("--pos-x", dragAmount.x);
+            div.style.setProperty("--pos-y", dragAmount.y);
+
+            p.x = div.offsetLeft + dragAmount.x + connectionPointLength / 2;
+            p.y = div.offsetTop + dragAmount.y + connectionPointLength / 2;
+
+            p.updateConnected();
+        }
+
+        workspace.appendChild(div);
+        return div;
     }
 }

@@ -29,7 +29,10 @@ document.addEventListener("DOMContentLoaded", () => {
         clickedPos.x = event.pageX;
         clickedPos.y = event.pageY;
 
-        if (event.target.classList.contains("person")) {
+        if (event.target.classList.contains("point")) {
+            draggingElement = event.target;
+        }
+        else if (event.target.classList.contains("person")) {
             draggingElement = event.target.person;
         }
         else if (event.target.parentElement.classList.contains("person")) {

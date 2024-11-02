@@ -66,3 +66,14 @@ html, body, .workspace {
     color: white;
     font-size: 2em;
 }
+
+.point {
+    --pos-x: 0;
+    --pos-y: 0;
+    --scale: 1;
+
+    transform: scale(var(--scale)) translate(
+        calc(var(--pos-x)  * 1px),
+        calc(var(--pos-y) * 1px)
+        );
+}
