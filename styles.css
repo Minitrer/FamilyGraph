@@ -65,9 +65,15 @@ html, body, .workspace {
     padding: 0%;
     color: white;
     font-size: 2em;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
 }
 
 .point {
+    background-color: white;
+    border-radius: 50%;
+    
     --pos-x: 0;
     --pos-y: 0;
     --scale: 1;

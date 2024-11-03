@@ -22,9 +22,14 @@ class ParentChildGroup {
             this.parents[i].setFamily(family);
             this.parents[i].addGroup(this); 
             family.parentsDiv.appendChild(this.parents[i].div);
-            if (children && children instanceof Person) {
-                this.parents[i].adopt(children);
-            }
+            if (children) {
+                if (children instanceof Person) {
+                    this.parents[i].adopt(children);
+                }
+                else if (this.#family.subFamilyChild) {
+                    this.parents[i].adopt(this.#family.subFamilyChild);
+                }
+            } 
             if (i >= length - 1) {
                 continue;
             }
@@ -40,6 +45,12 @@ class ParentChildGroup {
                 if (child instanceof Person) {
                     child.setFamily(family);
                     child.addGroup(this);
+                }
+                else if (this.#family.subFamilyChild) {
+                    this.#family.subFamilyChild.addGroup(this);
+                }
+                else {
+                    console.error(`Warning: Sub-family ${child} added without specified subFamilyChild.`);
                 }
             });
         }
@@ -111,6 +122,38 @@ class ParentChildGroup {
         this.parentsConnectionPoint.draw();
         this.childrenConnectionPoint.div = createConnectionDiv(this.childrenConnectionPoint);
     }
+
+    addParent(parent) {
+        this.parents.push(parent);
+        parent.setFamily(family);
+        parent.addGroup(this); 
+        family.parentsDiv.appendChild(parent.div);
+        this.children.forEach((child) => {
+            if (child && child instanceof Person) {
+                parent.adopt(child);
+            }
+        })
+        for (let i = 0, length = this.parents.length - 1; i < length; i++) {
+            parent.marry(this.parents[i]);
+        }
+    }
+
+    addChild(child, subFamilyChild=undefined) {
+        this.children.push(child);
+    
+        // Set family, add child to children div
+        this.#family.childrenDiv.appendChild(child.div);
+        if (child instanceof Person) {
+            child.setFamily(family);
+            child.addGroup(this);
+            return;
+        }
+        if (subFamilyChild) {
+            subFamilyChild.addGroup(this);
+            return
+        }
+        console.error(`Warning: Sub-family ${child} added without specified subFamilyChild.`);
+    }
 }
 
 function createConnectionDiv(p) {
@@ -119,7 +162,6 @@ function createConnectionDiv(p) {
     div.setAttribute("class", "point");
     div.style.width = `${connectionPointLength}px`;
     div.style.height = `${connectionPointLength}px`;
-    div.style.backgroundColor = "green";
 
     div.style.position = "absolute";
     div.style.left = `${p.x - connectionPointLength / 2}px`;
@@ -146,7 +188,11 @@ export default class Family {
     #parentsDiv;
     #childrenDiv;
 
-    constructor(parents, children=undefined) {
+    constructor(parents, children=undefined, subFamilyChild=undefined) {
+        // subFamilyChild determines which parent of a subfamily in the constructor children is a child of the constructor parents
+        if (subFamilyChild) {
+            this.subFamilyChild = subFamilyChild;
+        }
         
         // Create divs
         this.#div = document.createElement("div");
@@ -217,46 +263,7 @@ export default class Family {
                 facingPoint = person.connectionPoints.down;
                 facingSide = "down";
             }
-            // const divCenter = new Vec2(
-            //     person.connectionPoints.up.x,
-            //     person.connectionPoints.left.y
-            // );
-            // const dirTo = familyConnectionPoint.sub(divCenter);
-            // switch (dirTo.angle() < 0) {
-            //     case true:
-            //         const topLeftAngle = new Vec2(person.connectionPoints.left.x, person.connectionPoints.up.y + 20).sub(divCenter).angle();
-            //         if (dirTo.angle() < topLeftAngle) {
-            //             closestPoint = person.connectionPoints.left;
-            //             closestSide = "left";
-            //             break;
-            //         } 
-            //         const topRightAngle = new Vec2(person.connectionPoints.right.x, person.connectionPoints.up.y + 20).sub(divCenter).angle();
-            //         if (dirTo.angle() < topRightAngle) {
-            //             closestPoint = person.connectionPoints.up;
-            //             closestSide = "up";
-            //             break;
-            //         }
-            //         closestPoint = person.connectionPoints.right;
-            //         closestSide = "right";
-            //         break;
-            //     case false:
-            //         const bottomLeftAngle = new Vec2(person.connectionPoints.left.x, person.connectionPoints.down.y - 20).sub(divCenter).angle();
-            //         if (dirTo.angle() > bottomLeftAngle) {
-            //             closestPoint = person.connectionPoints.left;
-            //             closestSide = "left";
-            //             break;
-            //         } 
-            //         const bottomRightAngle = new Vec2(person.connectionPoints.right.x, person.connectionPoints.down.y - 20).sub(divCenter).angle();
-            //         if (dirTo.angle() > bottomRightAngle) {
-            //             closestPoint = person.connectionPoints.down;
-            //             closestSide = "down";
-            //             break;
-            //         }
-            //         closestPoint = person.connectionPoints.right;
-            //         closestSide = "right";
-            //         break;
-            // }
-    
+
             if (person.connections[type]) {
                 createConnection(facingPoint, familyConnectionPoint, facingSide, "white", false, person.connections[type]);
                 return;
@@ -278,5 +285,9 @@ export default class Family {
                 child.updateWorkspacePositions();
             });
         }
+    }
+
+    addGroup(parents, children=undefined) {
+        this.#groups.push(new ParentChildGroup(parents, children, this));
     }
 }
