@@ -11,6 +11,7 @@ class ParentChildGroup {
     children = [];
     parentsConnectionPoint;
     childrenConnectionPoint;
+    parentsToChildrenInbetweenPoint = new Vec2();
     
     constructor(parents, children, family) {
         this.parents = parents;
@@ -55,9 +56,24 @@ class ParentChildGroup {
         }
         this.parentsConnectionPoint.updateConnected = () => {
             this.parents.forEach((parent) => {
-                this.draw(parent);
+                this.#family.draw(parent);
             })
+            if (this.childrenConnectionPoint) {
+                this.parentsConnectionPoint.draw();
+                this.childrenConnectionPoint.draw();
+            }
         }
+
+        this.parentsConnectionPoint.draw = () => {
+            const inbetweenPoint = this.parentsConnectionPoint.add(this.childrenConnectionPoint).div(2);
+            const direction = (this.parentsConnectionPoint.sub(this.childrenConnectionPoint).y > 0)? "up" : "down";
+            if (!this.parentsConnectionPoint.inbetweenConnection) {
+                this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, inbetweenPoint, direction, "white", false);
+                return;
+            }
+            this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, inbetweenPoint, direction, "white", false, this.parentsConnectionPoint.inbetweenConnection);
+        }
+
         this.parentsConnectionPoint.div = createConnectionDiv(this.parentsConnectionPoint);
     }
 
@@ -77,7 +93,22 @@ class ParentChildGroup {
                 }
                 this.#family.draw(child);
             })
+            this.childrenConnectionPoint.draw();
+            this.parentsConnectionPoint.draw();
         }
+
+        this.childrenConnectionPoint.draw = () => {
+            const inbetweenPoint = this.childrenConnectionPoint.add(this.parentsConnectionPoint).div(2);
+            const direction = (this.childrenConnectionPoint.sub(this.parentsConnectionPoint).y > 0)? "up" : "down";
+            if (!this.childrenConnectionPoint.inbetweenConnection) {
+                this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, inbetweenPoint, direction, "white", false);
+                return;
+            }
+            this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, inbetweenPoint, direction, "white", false, this.childrenConnectionPoint.inbetweenConnection);
+        }
+
+        this.childrenConnectionPoint.draw();
+        this.parentsConnectionPoint.draw();
         this.childrenConnectionPoint.div = createConnectionDiv(this.childrenConnectionPoint);
     }
 }
@@ -152,7 +183,7 @@ export default class Family {
             let familyConnectionPoint;
             if (group.parents.includes(person)) {
                 type = "parents";
-                if (!group.parentConnectionPoint) {
+                if (!group.parentsConnectionPoint) {
                     group.createParentConnectionPoint();
                 }
                 familyConnectionPoint = group.parentsConnectionPoint;
