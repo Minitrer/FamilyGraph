@@ -4,6 +4,7 @@ let personCount = 0;
 export default class Person {
     #id;
     #family;
+    #groups = [];
     #spouse = [];
     #parents = [];
     #children = [];
@@ -65,6 +66,9 @@ export default class Person {
     get family() {
         return this.#family;
     }
+    get groups() {
+        return this.#groups;
+    }
     get spouse() {
         return this.#spouse;
     }
@@ -115,6 +119,9 @@ export default class Person {
     setFamily(family) {
         this.#family = family;
     }
+    addGroup(group) {
+        this.#groups.push(group);
+    }
     // Each of these methods update the instance's property
     // They also update the target's corresponding property if the method wasn't called internally
     adopt(child, internal=false) {
@@ -129,7 +136,7 @@ export default class Person {
                 return true;
             }
             this.#children.forEach(_child => {
-                _child.GetAdopted(this, true);
+                _child.getAdopted(this, true);
             });
             return true;
         }
@@ -138,7 +145,7 @@ export default class Person {
         if (internal) {
             return true;
         }
-        child.GetAdopted(this, true);
+        child.getAdopted(this, true);
         return true;
     }
     getAdopted(parent, internal=false) {
