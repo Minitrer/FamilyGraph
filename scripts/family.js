@@ -82,46 +82,6 @@ class ParentChildGroup {
     }
 }
 
-// class ChildrenGroup {
-//     #family;
-//     children = [];
-//     connectionPoint;
-    
-//     constructor(children, family) {
-//         this.#family = family;
-//         this.children = children;
-
-//         // Set family, add children to children div
-//         this.children.forEach(child => {
-//             family.childrenDiv.appendChild(child.div);
-//             if (child instanceof Person) {
-//                 child.setFamily(family);
-//                 child.addGroup(this);
-//             }
-//         });
-//     }
-
-//     createConnectionPoint() {
-//         if (this.children.length === 1 && this.children[0] instanceof Person) {
-//             this.connectionPoint = this.children[0].connectionPoints.up;
-//         }
-//         else {
-//             const x = this.#family.div.offsetLeft  + (this.#family.div.offsetWidth / 2);
-//             const y = this.children[0].div.offsetTop - connectionPointGap;
-//             this.connectionPoint = new Vec2(x, y);
-//         }
-//         this.connectionPoint.updateConnected = () => {
-//             this.children.forEach((child) => {
-//                 if (!(child instanceof Person)) {
-//                     return;
-//                 }
-//                 this.#family.draw(child);
-//             })
-//         }
-//         this.connectionPoint.div = createConnectionDiv(this.connectionPoint);
-//     }
-// }
-
 function createConnectionDiv(p) {
     const workspace = document.getElementById("workspace");
     const div = document.createElement("div")
@@ -166,17 +126,6 @@ export default class Family {
         this.#childrenDiv.setAttribute("class", "children");
         
         this.#groups[0] = new ParentChildGroup(parents, children, this);
-
-        // if (children instanceof Person) {
-        //     this.#parentGroups[0] = new ParentChildGroup(parents, this, children);
-        // }
-        // else {
-        //     this.#parentGroups[0] = new ParentChildGroup(parents, this);
-        // }
-
-        // if (children) {
-        //     this.#childrenGroups[0] = new ChildrenGroup(children, this);
-        // }
 
         // Append divs
         this.#div.appendChild(this.#parentsDiv);
