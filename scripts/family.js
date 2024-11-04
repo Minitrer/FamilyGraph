@@ -2,6 +2,116 @@ import createConnection from "./connection.js";
 import Person from "./person.js";
 import Vec2 from "./vec2.js";
 
+export default class Family {
+    #groups = [];
+    #div;
+    #parentsDiv;
+    #childrenDiv;
+
+    constructor(parents, children=undefined, subFamilyChild=undefined) {
+        // subFamilyChild determines which parent of a subfamily in the constructor children is a child of the constructor parents
+        if (subFamilyChild) {
+            this.subFamilyChild = subFamilyChild;
+        }
+        
+        // Create divs
+        this.#div = document.createElement("div");
+        this.#div.setAttribute("class", "family");
+        this.#parentsDiv = document.createElement("div");
+        this.#parentsDiv.setAttribute("class", "parents");
+        this.#childrenDiv = document.createElement("div");
+        this.#childrenDiv.setAttribute("class", "children");
+        
+        this.#groups[0] = new ParentChildGroup(parents, children, this);
+
+        // Append divs
+        this.#div.appendChild(this.#parentsDiv);
+        this.#div.appendChild(this.#childrenDiv);
+    }
+
+    get groups() {
+        return this.#groups
+    }
+    get div() {
+        return this.#div
+    }
+    get parentsDiv() {
+        return this.#parentsDiv
+    }
+    get childrenDiv() {
+        return this.#childrenDiv
+    }
+    
+
+    draw(person) {
+        person.groups.forEach((group, i) => {
+            let type;
+            let familyConnectionPoint;
+            if (group.parents.includes(person)) {                
+                type = `parents ${i}`;
+                if (group.parents.length === 1) {
+                    if (!group.parentsConnectionPoint) {
+                        group.createParentConnectionPoint();
+                        return;
+                    }
+                    group.parentsConnectionPoint.update();
+                    return;
+                }
+                if (!group.parentsConnectionPoint) {
+                    group.createParentConnectionPoint();
+                }
+                familyConnectionPoint = group.parentsConnectionPoint;
+            }
+            else {
+                type = `children ${i}`;
+                if (group.children.length === 1) {
+                    if (!group.childrenConnectionPoint) {
+                        group.createChildConnectionPoint();
+                        return;
+                    }
+                    group.childrenConnectionPoint.update();
+                    return;
+                }
+                if (!group.childrenConnectionPoint) {
+                    group.createChildConnectionPoint();
+                }
+                familyConnectionPoint = group.childrenConnectionPoint;
+            }
+
+            // Determine valid direction
+            const direction = getPersonToPointDirection(person, familyConnectionPoint);
+            const directionPoint = person.connectionPoints[direction];
+
+            if (person.connections[type]) {
+                createConnection(directionPoint, familyConnectionPoint, direction, "white", false, person.connections[type]);
+                return;
+            }
+            person.connections[type] = createConnection(directionPoint, familyConnectionPoint, direction, "white", false);
+        });
+    }
+
+    updateWorkspacePositions() {
+        this.#groups.forEach((group) => {
+            group.parents.forEach((parent) => {
+                parent.updateWorkspacePos();
+            });
+        });
+        this.#groups.forEach((group) => {
+            group.children.forEach((child) => {
+                if (child instanceof Person) {
+                    child.updateWorkspacePos();
+                    return;
+                }
+                child.updateWorkspacePositions();
+            });
+        });
+    }
+
+    addGroup(parents, children=undefined) {
+        this.#groups.push(new ParentChildGroup(parents, children, this));
+    }
+}
+
 const connectionPointGap = 30;
 const connectionPointLength = 10;
 
@@ -343,114 +453,4 @@ function getPersonToPersonDirection(personA, personB) {
         return (personA.connectionPoints.left.x > personB.connectionPoints.left.x)? "left" : "right";
     }
     return (personA.connectionPoints.up.y > personB.connectionPoints.up.y)? "up" : "down";
-}
-
-export default class Family {
-    #groups = [];
-    #div;
-    #parentsDiv;
-    #childrenDiv;
-
-    constructor(parents, children=undefined, subFamilyChild=undefined) {
-        // subFamilyChild determines which parent of a subfamily in the constructor children is a child of the constructor parents
-        if (subFamilyChild) {
-            this.subFamilyChild = subFamilyChild;
-        }
-        
-        // Create divs
-        this.#div = document.createElement("div");
-        this.#div.setAttribute("class", "family");
-        this.#parentsDiv = document.createElement("div");
-        this.#parentsDiv.setAttribute("class", "parents");
-        this.#childrenDiv = document.createElement("div");
-        this.#childrenDiv.setAttribute("class", "children");
-        
-        this.#groups[0] = new ParentChildGroup(parents, children, this);
-
-        // Append divs
-        this.#div.appendChild(this.#parentsDiv);
-        this.#div.appendChild(this.#childrenDiv);
-    }
-
-    get groups() {
-        return this.#groups
-    }
-    get div() {
-        return this.#div
-    }
-    get parentsDiv() {
-        return this.#parentsDiv
-    }
-    get childrenDiv() {
-        return this.#childrenDiv
-    }
-    
-
-    draw(person) {
-        person.groups.forEach((group, i) => {
-            let type;
-            let familyConnectionPoint;
-            if (group.parents.includes(person)) {                
-                type = `parents ${i}`;
-                if (group.parents.length === 1) {
-                    if (!group.parentsConnectionPoint) {
-                        group.createParentConnectionPoint();
-                        return;
-                    }
-                    group.parentsConnectionPoint.update();
-                    return;
-                }
-                if (!group.parentsConnectionPoint) {
-                    group.createParentConnectionPoint();
-                }
-                familyConnectionPoint = group.parentsConnectionPoint;
-            }
-            else {
-                type = `children ${i}`;
-                if (group.children.length === 1) {
-                    if (!group.childrenConnectionPoint) {
-                        group.createChildConnectionPoint();
-                        return;
-                    }
-                    group.childrenConnectionPoint.update();
-                    return;
-                }
-                if (!group.childrenConnectionPoint) {
-                    group.createChildConnectionPoint();
-                }
-                familyConnectionPoint = group.childrenConnectionPoint;
-            }
-
-            // Determine valid direction
-            const direction = getPersonToPointDirection(person, familyConnectionPoint);
-            const directionPoint = person.connectionPoints[direction];
-
-            if (person.connections[type]) {
-                createConnection(directionPoint, familyConnectionPoint, direction, "white", false, person.connections[type]);
-                return;
-            }
-            person.connections[type] = createConnection(directionPoint, familyConnectionPoint, direction, "white", false);
-        });
-    }
-
-    updateWorkspacePositions() {
-        this.#groups.forEach((group) => {
-            group.parents.forEach((parent) => {
-                parent.updateWorkspacePos();
-            });
-        });
-        this.#groups.forEach((group) => {
-            group.children.forEach((child) => {
-                if (child instanceof Person) {
-                    child.updateWorkspacePos();
-                    return;
-                }
-                child.updateWorkspacePositions();
-            });
-        });
-    }
-
-    addGroup(parents, children=undefined) {
-        this.#groups.push(new ParentChildGroup(parents, children, this));
-    }
 }
