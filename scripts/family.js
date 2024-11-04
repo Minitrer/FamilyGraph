@@ -12,7 +12,7 @@ class ParentChildGroup {
     parentsConnectionPoint;
     childrenConnectionPoint;
     #inBetweenPoint;
-    parentsToChildrenInbetweenPoint = new Vec2();
+    #subFamilyMap = [];
     
     constructor(parents, children, family) {
         this.parents = parents;
@@ -41,18 +41,24 @@ class ParentChildGroup {
             this.children = children;
     
             // Set family, add children to children div
-            this.children.forEach(child => {
+            this.children.forEach((child) => {
                 family.childrenDiv.appendChild(child.div);
                 if (child instanceof Person) {
                     child.setFamily(family);
                     child.addGroup(this);
+                    return;
                 }
-                else if (this.#family.subFamilyChild) {
+                if (this.#family.subFamilyChild) {
                     this.#family.subFamilyChild.addGroup(this);
+                    if (!this.#subFamilyMap[child]) {
+                        this.#subFamilyMap[child] = []
+                        this.#subFamilyMap[child].push(this.#family.subFamilyChild);
+                        return;
+                    }
+                    this.#subFamilyMap[child].push(this.#family.subFamilyChild);
+                    return;
                 }
-                else {
-                    console.error(`Warning: Sub-family ${child} added without specified subFamilyChild.`);
-                }
+                console.error(`Warning: Sub-family ${child} added without specified subFamilyChild.`);
             });
         }
     }
@@ -203,7 +209,21 @@ class ParentChildGroup {
             }
         }
         else {
-            const x = (this.children[0].div.offsetLeft + this.children[(this.children.length - 1)].div.offsetLeft + this.children[(this.children.length - 1)].div.offsetWidth) / 2;;
+            let sumOfCentersX = 0;
+            let total = 0;
+            this.children.forEach((child) => {
+                if (child instanceof Person) {
+                    sumOfCentersX += child.div.offsetLeft + (child.div.offsetWidth / 2);
+                    total++;
+                }
+                else {   
+                    this.#subFamilyMap[child].forEach((_child) => {
+                        sumOfCentersX += _child.div.offsetLeft + (_child.div.offsetWidth / 2);
+                        total++;
+                    });
+                }
+            });
+            const x = sumOfCentersX / total;
             const y = this.children[0].div.offsetTop - connectionPointGap;
             this.childrenConnectionPoint = new Vec2(x, y);
         
@@ -224,12 +244,8 @@ class ParentChildGroup {
         this.childrenConnectionPoint.updateConnected = () => {
             this.children.forEach((child) => {
                 if (!(child instanceof Person)) {
-                    child.groups.forEach((group) => {
-                        group.parents.forEach((parent) => {
-                            if (parent.groups.includes(this)) {
-                                child.draw(parent);
-                            }
-                        })
+                    this.#subFamilyMap[child].forEach((subChild) => {
+                        child.draw(subChild);
                     });
                     return;
                 }
@@ -271,7 +287,13 @@ class ParentChildGroup {
         }
         if (subFamilyChild) {
             subFamilyChild.addGroup(this);
-            return
+            if (!this.#subFamilyMap[child]) {
+                this.#subFamilyMap[child] = []
+                this.#subFamilyMap[child].push(subFamilyChild);
+                return;
+            }
+            this.#subFamilyMap[child].push(subFamilyChild);
+            return;
         }
         console.error(`Warning: Sub-family ${child} added without specified subFamilyChild.`);
     }

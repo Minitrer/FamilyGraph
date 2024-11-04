@@ -22,13 +22,20 @@ document.addEventListener("DOMContentLoaded", () => {
             new Person("Child G2"),
         ]
     );
+    const subFamily1 = new Family([   
+        new Person("Parent G1"),
+    ],[
+        new Person("Child G2"),
+    ]
+);
 
-    family.groups[0].addChild(subFamily, subFamily.groups[0].parents[0]);
+// family.groups[0].addChild(subFamily1, subFamily1.groups[0].parents[0]);
     family.addGroup(
         [new Person("Parent G0")],
-        [family.groups[0].children[0], family.groups[0].children[1]]
+        [family.groups[0].children[0]]
     );
-    graph.appendChild(family.div);
+    family.groups[0].addChild(subFamily, subFamily.groups[0].parents[0]);
+    graph.appendChild(family.div); 
     family.updateWorkspacePositions();
 
     const from = new Vec2(200, 200);
