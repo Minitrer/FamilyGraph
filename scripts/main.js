@@ -20,12 +20,14 @@ document.addEventListener("DOMContentLoaded", () => {
             new Person("Parent G1")
         ],[
             new Person("Child G2"),
-            new Person("Child G2"),
-            new Person("Child G2")
         ]
     );
 
     family.groups[0].addChild(subFamily, subFamily.groups[0].parents[0]);
+    family.addGroup(
+        [new Person("Parent G0")],
+        [family.groups[0].children[0], family.groups[0].children[1]]
+    );
     graph.appendChild(family.div);
     family.updateWorkspacePositions();
 

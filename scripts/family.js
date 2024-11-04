@@ -11,6 +11,7 @@ class ParentChildGroup {
     children = [];
     parentsConnectionPoint;
     childrenConnectionPoint;
+    #inBetweenPoint;
     parentsToChildrenInbetweenPoint = new Vec2();
     
     constructor(parents, children, family) {
@@ -55,16 +56,101 @@ class ParentChildGroup {
             });
         }
     }
+    
+    getInbetweenPoint() {
+        if (this.children.length === 1) {
+            if (this.parents.length === 1) {
+                const parentCenter = this.parents[0].connectionPoints.up.add(this.parents[0].connectionPoints.down).div(2);
+                const childCenter = this.children[0].connectionPoints.up.add(this.children[0].connectionPoints.down).div(2);
+                this.#inBetweenPoint = parentCenter.add(childCenter).div(2);
+                return;
+            }
+
+            const childDirection = getPersonToPointDirection(this.children[0], this.parentsConnectionPoint);
+            if (childDirection === "left" || childDirection === "right") {
+                this.#inBetweenPoint = new Vec2(
+                    (this.parentsConnectionPoint.x + this.children[0].connectionPoints[childDirection].x) / 2,
+                    this.children[0].connectionPoints[childDirection].y
+                )
+                return;
+            }
+            this.#inBetweenPoint = this.parentsConnectionPoint.add(this.children[0].connectionPoints[childDirection]).div(2);
+            return;
+        }
+        if (this.parents.length === 1) {
+            const parentDirection = getPersonToPointDirection(this.parents[0], this.childrenConnectionPoint);
+            if (parentDirection === "left" || parentDirection === "right") {
+                this.#inBetweenPoint = new Vec2(
+                    (this.childrenConnectionPoint.x + this.parents[0].connectionPoints[parentDirection].x) / 2,
+                    this.parents[0].connectionPoints[parentDirection].y
+                )
+                return;
+            }
+            this.#inBetweenPoint = this.childrenConnectionPoint.add(this.parents[0].connectionPoints[parentDirection]).div(2);
+            return;
+        }
+
+        this.#inBetweenPoint = this.parentsConnectionPoint.add(this.childrenConnectionPoint).div(2);
+    }
 
     createParentConnectionPoint() {
         if (this.parents.length === 1) {
-            this.parentsConnectionPoint = this.parents[0].connectionPoints.down;
+            this.parentsConnectionPoint = new Vec2();
+            const direction = "down";
+            this.parentsConnectionPoint = this.parents[0].connectionPoints[direction];
+
+            if (this.children.length === 1) {
+                this.parentsConnectionPoint.updatePos = () => {
+                    const direction = getPersonToPersonDirection(this.parents[0], this.children[0]);
+                    this.parentsConnectionPoint.x = this.parents[0].connectionPoints[direction].x;
+                    this.parentsConnectionPoint.y = this.parents[0].connectionPoints[direction].y;
+                }
+            }
+            else {
+                this.parentsConnectionPoint.updatePos = () => {
+                    const direction = getPersonToPointDirection(this.parents[0], this.childrenConnectionPoint);
+                    this.parentsConnectionPoint.x = this.parents[0].connectionPoints[direction].x;
+                    this.parentsConnectionPoint.y = this.parents[0].connectionPoints[direction].y;
+                }
+            }
+
+            this.parentsConnectionPoint.update = () => {
+                this.parentsConnectionPoint.updatePos();
+
+                this.childrenConnectionPoint.draw();
+                this.parentsConnectionPoint.draw();
+            }
+
+            this.parentsConnectionPoint.draw = () => {
+                this.parentsConnectionPoint.updatePos();
+                const direction = (this.children.length === 1)? getPersonToPersonDirection(this.parents[0], this.children[0]) : getPersonToPointDirection(this.parents[0], this.childrenConnectionPoint);
+                this.getInbetweenPoint();
+
+                if (!this.parentsConnectionPoint.inbetweenConnection) {
+                    this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, this.#inBetweenPoint, direction, "white", false);
+                    return;
+                }
+                this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, this.#inBetweenPoint, direction, "white", false, this.parentsConnectionPoint.inbetweenConnection);
+            }
         }
-        else {
-            const x = this.#family.div.offsetLeft  + (this.#family.div.offsetWidth / 2);
+        else {   
+            const x = (this.parents[0].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetWidth) / 2;
             const y = this.parents.length === 2? this.parents[0].connectionPoints.right.y : this.parents[0].connectionPoints.down.y + connectionPointGap;
             this.parentsConnectionPoint = new Vec2(x, y);
+            
+            this.parentsConnectionPoint.div = createConnectionDiv(this.parentsConnectionPoint);
+
+            this.parentsConnectionPoint.draw = () => {
+                this.getInbetweenPoint();
+                const direction = (this.parentsConnectionPoint.sub(this.childrenConnectionPoint).y > 0)? "up" : "down";
+                if (!this.parentsConnectionPoint.inbetweenConnection) {
+                    this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, this.#inBetweenPoint, direction, "white", false);
+                    return;
+                }
+                this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, this.#inBetweenPoint, direction, "white", false, this.parentsConnectionPoint.inbetweenConnection);
+            }
         }
+
         this.parentsConnectionPoint.updateConnected = () => {
             this.parents.forEach((parent) => {
                 this.#family.draw(parent);
@@ -74,32 +160,77 @@ class ParentChildGroup {
                 this.childrenConnectionPoint.draw();
             }
         }
-
-        this.parentsConnectionPoint.draw = () => {
-            const inbetweenPoint = this.parentsConnectionPoint.add(this.childrenConnectionPoint).div(2);
-            const direction = (this.parentsConnectionPoint.sub(this.childrenConnectionPoint).y > 0)? "up" : "down";
-            if (!this.parentsConnectionPoint.inbetweenConnection) {
-                this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, inbetweenPoint, direction, "white", false);
-                return;
-            }
-            this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, inbetweenPoint, direction, "white", false, this.parentsConnectionPoint.inbetweenConnection);
-        }
-
-        this.parentsConnectionPoint.div = createConnectionDiv(this.parentsConnectionPoint);
     }
 
     createChildConnectionPoint() {
-        if (this.children.length === 1 && this.children[0] instanceof Person) {
-            this.childrenConnectionPoint = this.children[0].connectionPoints.up;
+        if (this.children.length === 1) {
+            this.childrenConnectionPoint = new Vec2();
+            const direction = getPersonToPointDirection(this.children[0], this.parentsConnectionPoint);
+            this.childrenConnectionPoint = this.children[0].connectionPoints[direction];
+
+            if (this.parents.length === 1) {
+                this.childrenConnectionPoint.updatePos = () => {
+                    const direction = getPersonToPersonDirection(this.children[0], this.parents[0]);
+                    this.childrenConnectionPoint.x = this.children[0].connectionPoints[direction].x;
+                    this.childrenConnectionPoint.y = this.children[0].connectionPoints[direction].y;
+                }
+            }
+            else {
+                this.childrenConnectionPoint.updatePos = () => {
+                    const direction = getPersonToPointDirection(this.children[0], this.parentsConnectionPoint);
+                    this.childrenConnectionPoint.x = this.children[0].connectionPoints[direction].x;
+                    this.childrenConnectionPoint.y = this.children[0].connectionPoints[direction].y;
+                }
+            }
+
+            this.childrenConnectionPoint.update = () => {
+                this.childrenConnectionPoint.updatePos();
+
+                this.childrenConnectionPoint.draw();
+                this.parentsConnectionPoint.draw();
+            }
+
+            this.childrenConnectionPoint.draw = () => {
+                this.childrenConnectionPoint.updatePos();
+                const direction = (this.parents.length === 1)? getPersonToPersonDirection(this.children[0], this.parents[0]) : getPersonToPointDirection(this.children[0], this.parentsConnectionPoint);
+                this.getInbetweenPoint();
+
+                if (!this.childrenConnectionPoint.inbetweenConnection) {
+                    this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, "white", false);
+                    return;
+                }
+                this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, "white", false, this.childrenConnectionPoint.inbetweenConnection);
+            }
         }
         else {
-            const x = this.#family.div.offsetLeft  + (this.#family.div.offsetWidth / 2);
+            const x = (this.children[0].div.offsetLeft + this.children[(this.children.length - 1)].div.offsetLeft + this.children[(this.children.length - 1)].div.offsetWidth) / 2;;
             const y = this.children[0].div.offsetTop - connectionPointGap;
             this.childrenConnectionPoint = new Vec2(x, y);
+        
+            this.childrenConnectionPoint.div = createConnectionDiv(this.childrenConnectionPoint);
+
+            this.childrenConnectionPoint.draw = () => {
+                const direction = (this.childrenConnectionPoint.sub(this.parentsConnectionPoint).y > 0)? "up" : "down";
+                this.getInbetweenPoint();
+
+                if (!this.childrenConnectionPoint.inbetweenConnection) {
+                    this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, "white", false);
+                    return;
+                }
+                this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, "white", false, this.childrenConnectionPoint.inbetweenConnection);
+            }
         }
+
         this.childrenConnectionPoint.updateConnected = () => {
             this.children.forEach((child) => {
                 if (!(child instanceof Person)) {
+                    child.groups.forEach((group) => {
+                        group.parents.forEach((parent) => {
+                            if (parent.groups.includes(this)) {
+                                child.draw(parent);
+                            }
+                        })
+                    });
                     return;
                 }
                 this.#family.draw(child);
@@ -108,19 +239,9 @@ class ParentChildGroup {
             this.parentsConnectionPoint.draw();
         }
 
-        this.childrenConnectionPoint.draw = () => {
-            const inbetweenPoint = this.childrenConnectionPoint.add(this.parentsConnectionPoint).div(2);
-            const direction = (this.childrenConnectionPoint.sub(this.parentsConnectionPoint).y > 0)? "up" : "down";
-            if (!this.childrenConnectionPoint.inbetweenConnection) {
-                this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, inbetweenPoint, direction, "white", false);
-                return;
-            }
-            this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, inbetweenPoint, direction, "white", false, this.childrenConnectionPoint.inbetweenConnection);
-        }
-
         this.childrenConnectionPoint.draw();
         this.parentsConnectionPoint.draw();
-        this.childrenConnectionPoint.div = createConnectionDiv(this.childrenConnectionPoint);
+
     }
 
     addParent(parent) {
@@ -182,6 +303,26 @@ function createConnectionDiv(p) {
     return div;
 }
 
+function getPersonToPointDirection(person, point) {
+    if (point.y < person.connectionPoints.up.y) {
+        return "up";
+    }
+    if (point.y < person.connectionPoints.down.y) {
+        if (point.x < person.connectionPoints.left.x) {
+            return "left";
+        }
+        return "right";
+    }
+    return "down";
+}
+function getPersonToPersonDirection(personA, personB) {
+    if ((personA.connectionPoints.down.y >= personB.connectionPoints.up.y && personA.connectionPoints.down.y  <= personB.connectionPoints.down.y) ||
+        (personA.connectionPoints.up.y <= personB.connectionPoints.down.y && personA.connectionPoints.up.y >= personB.connectionPoints.up.y)) {
+        return (personA.connectionPoints.left.x > personB.connectionPoints.left.x)? "left" : "right";
+    }
+    return (personA.connectionPoints.up.y > personB.connectionPoints.up.y)? "up" : "down";
+}
+
 export default class Family {
     #groups = [];
     #div;
@@ -224,67 +365,67 @@ export default class Family {
     
 
     draw(person) {
-        person.groups.forEach((group) => {
+        person.groups.forEach((group, i) => {
             let type;
             let familyConnectionPoint;
-            if (group.parents.includes(person)) {
-                type = "parents";
+            if (group.parents.includes(person)) {                
+                type = `parents ${i}`;
+                if (group.parents.length === 1) {
+                    if (!group.parentsConnectionPoint) {
+                        group.createParentConnectionPoint();
+                        return;
+                    }
+                    group.parentsConnectionPoint.update();
+                    return;
+                }
                 if (!group.parentsConnectionPoint) {
                     group.createParentConnectionPoint();
                 }
                 familyConnectionPoint = group.parentsConnectionPoint;
             }
             else {
-                type = "children";
+                type = `children ${i}`;
+                if (group.children.length === 1) {
+                    if (!group.childrenConnectionPoint) {
+                        group.createChildConnectionPoint();
+                        return;
+                    }
+                    group.childrenConnectionPoint.update();
+                    return;
+                }
                 if (!group.childrenConnectionPoint) {
                     group.createChildConnectionPoint();
                 }
                 familyConnectionPoint = group.childrenConnectionPoint;
             }
-    
-            // Determine facing valid connection point
-            let facingPoint = undefined;
-            let facingSide = "";
-            if (familyConnectionPoint.y < person.connectionPoints.up.y) {
-                facingPoint = person.connectionPoints.up;
-                facingSide = "up";
-            }
-            else if (familyConnectionPoint.y < person.connectionPoints.down.y) {
-                if (familyConnectionPoint.x < person.connectionPoints.left.x) {
-                    facingPoint = person.connectionPoints.left;
-                    facingSide = "left";
-                }
-                else {
-                    facingPoint = person.connectionPoints.right;
-                    facingSide = "right";
-                }
-            }
-            else {
-                facingPoint = person.connectionPoints.down;
-                facingSide = "down";
-            }
+
+            // Determine valid direction
+            const direction = getPersonToPointDirection(person, familyConnectionPoint);
+            const directionPoint = person.connectionPoints[direction];
 
             if (person.connections[type]) {
-                createConnection(facingPoint, familyConnectionPoint, facingSide, "white", false, person.connections[type]);
+                createConnection(directionPoint, familyConnectionPoint, direction, "white", false, person.connections[type]);
                 return;
             }
-            person.connections[type] = createConnection(facingPoint, familyConnectionPoint, facingSide, "white", false);
+            person.connections[type] = createConnection(directionPoint, familyConnectionPoint, direction, "white", false);
         });
     }
 
     updateWorkspacePositions() {
-        for (let i = 0, length = this.#groups.length; i < length; i++) {
-            this.#groups[i].parents.forEach((parent) => {
+        this.#groups.forEach((group) => {
+            group.parents.forEach((parent) => {
                 parent.updateWorkspacePos();
             });
-            this.#groups[i].children.forEach((child) => {
+        });
+        this.#groups.forEach((group) => {
+            group.children.forEach((child) => {
                 if (child instanceof Person) {
                     child.updateWorkspacePos();
                     return;
                 }
                 child.updateWorkspacePositions();
             });
-        }
+        });
     }
 
     addGroup(parents, children=undefined) {
