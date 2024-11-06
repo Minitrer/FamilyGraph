@@ -26,10 +26,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     document.addEventListener("mousedown", (event) => {
-        clickedPos.x = event.pageX;
-        clickedPos.y = event.pageY;
-
-        if (event.target.classList.contains("point")) {
+        if (event.buttons === 2 || event.buttons === 4) {
+            draggingElement = workspace;
+        }
+        else if (event.target.classList.contains("point")) {
             draggingElement = event.target;
         }
         else if (event.target.classList.contains("person")) {
@@ -39,8 +39,11 @@ document.addEventListener("DOMContentLoaded", () => {
             draggingElement = event.target.parentElement.person;
         }
         else {
-            draggingElement = workspace;
+            return;
         }
+
+        clickedPos.x = event.pageX;
+        clickedPos.y = event.pageY;
 
         document.addEventListener("mousemove", drag);
         
@@ -48,7 +51,14 @@ document.addEventListener("DOMContentLoaded", () => {
             draggingElement.transformPos.x += (event.pageX - clickedPos.x) * (1 / transformScale);
             draggingElement.transformPos.y += (event.pageY - clickedPos.y) * (1 / transformScale); 
             document.removeEventListener("mousemove", drag);
+            event.preventDefault();
         }, {once: true});
+
+        document.addEventListener("contextmenu", (event) => {
+            if (event.pageX - clickedPos.x !== 0 && event.pageY - clickedPos.y !== 0) {
+                event.preventDefault();
+            }
+        });
     });
 
     document.addEventListener("wheel", (event) => {

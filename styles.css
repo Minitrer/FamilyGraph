@@ -20,6 +20,42 @@ html, body, .workspace {
         calc(var(--pos-y) * 1px)
         );
 }
+
+#context-menu {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    overflow: hidden;
+
+    display: flex;
+    flex-flow: column wrap;
+    align-content: center;
+
+    background-color: rgb(35, 35, 35);
+    border-radius: 0.6em;
+}
+#context-menu button {
+    padding: 0;
+    background-color: rgb(35, 35, 35);
+    color: rgb(204, 204, 204);
+    border: none;
+    font-weight: 300;
+    font-size: 1em;
+    font-family: Arial, Helvetica, sans-serif;
+    display: inline-block;
+    padding: 0.6em;
+    text-align: left;
+}
+#context-menu button:hover {
+    background-color: rgb(60, 60, 60);
+    color: white;
+}
+#context-menu hr {
+    width: 85%;
+    margin: 2px auto 2px auto;
+    border-color: rgba(70, 70, 70);
+}
+
 .graph, .family, .parents, .children {
     display: flex;
     justify-content: center;
@@ -55,7 +91,8 @@ html, body, .workspace {
     align-items: center;
     align-content: center;
     border: 1px solid white;
-    border-radius: 5px;
+    border-radius: 0.5em;
+    font-family: Arial, Helvetica, sans-serif;
     background-color: rgb(46, 46, 46);
 }
 .name {
