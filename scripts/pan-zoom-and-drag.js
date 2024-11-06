@@ -3,7 +3,7 @@ import Vec2 from "./vec2.js";
 const scaleSensitivity = 0.1;
 const minScale = 0.1;
 
-let clickedPos = new Vec2(0, 0);
+export let clickedPos = new Vec2(0, 0);
 let transformScale = 1;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -53,12 +53,6 @@ document.addEventListener("DOMContentLoaded", () => {
             document.removeEventListener("mousemove", drag);
             event.preventDefault();
         }, {once: true});
-
-        document.addEventListener("contextmenu", (event) => {
-            if (event.pageX - clickedPos.x !== 0 && event.pageY - clickedPos.y !== 0) {
-                event.preventDefault();
-            }
-        });
     });
 
     document.addEventListener("wheel", (event) => {

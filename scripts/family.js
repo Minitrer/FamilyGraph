@@ -60,6 +60,9 @@ export default class Family {
                 if (!group.parentsConnectionPoint) {
                     group.createParentConnectionPoint();
                 }
+                else if (group.parentsConnectionPoint.div.transformPos.x === 0 && group.parentsConnectionPoint.div.transformPos.y === 0) {
+                    group.parentsConnectionPoint.update();
+                }
                 familyConnectionPoint = group.parentsConnectionPoint;
             }
             else {
@@ -75,6 +78,14 @@ export default class Family {
                 if (!group.childrenConnectionPoint) {
                     group.createChildConnectionPoint();
                 }
+                // Check if recently added new child
+                else if (!group.childrenConnectionPoint.div.transformPos) {
+                    group.childrenConnectionPoint.inbetweenConnection.remove();
+                    group.createChildConnectionPoint();
+                }
+                else if (group.childrenConnectionPoint.div.transformPos.x === 0 && group.childrenConnectionPoint.div.transformPos.y === 0) {
+                    group.childrenConnectionPoint.update();
+                }
                 familyConnectionPoint = group.childrenConnectionPoint;
             }
 
@@ -83,10 +94,10 @@ export default class Family {
             const directionPoint = person.connectionPoints[direction];
 
             if (person.connections[type]) {
-                createConnection(directionPoint, familyConnectionPoint, direction, "white", false, person.connections[type]);
+                createConnection(directionPoint, familyConnectionPoint, direction, connectionColor, false, person.connections[type]);
                 return;
             }
-            person.connections[type] = createConnection(directionPoint, familyConnectionPoint, direction, "white", false);
+            person.connections[type] = createConnection(directionPoint, familyConnectionPoint, direction, connectionColor, false);
         });
     }
 
@@ -110,10 +121,26 @@ export default class Family {
     addGroup(parents, children=undefined) {
         this.#groups.push(new ParentChildGroup(parents, children, this));
     }
+
+    static createFamily(parents, children=undefined, source=undefined, subFamilyChild=undefined) {
+        const family = new Family(parents, children, subFamilyChild);
+
+        if (source) {
+            source.div.parentNode.replaceChild(family, source.div);
+            family.updateWorkspacePositions();
+            return family;
+        }
+
+        const graph = document.getElementById("graph");
+        graph.appendChild(family.div);
+        family.updateWorkspacePositions();
+        return family;
+    }
 }
 
 const connectionPointGap = 30;
 const connectionPointLength = 10;
+const connectionColor = "rgb(204, 204, 204)";
 
 class ParentChildGroup {
     #family
@@ -211,6 +238,9 @@ class ParentChildGroup {
 
     createParentConnectionPoint() {
         if (this.parents.length === 1) {
+            if (this.children.length === 0) {
+                return;
+            }
             this.parentsConnectionPoint = new Vec2();
             const direction = "down";
             this.parentsConnectionPoint = this.parents[0].connectionPoints[direction];
@@ -243,10 +273,10 @@ class ParentChildGroup {
                 this.getInbetweenPoint();
 
                 if (!this.parentsConnectionPoint.inbetweenConnection) {
-                    this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, this.#inBetweenPoint, direction, "white", false);
+                    this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, this.#inBetweenPoint, direction, connectionColor, false);
                     return;
                 }
-                this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, this.#inBetweenPoint, direction, "white", false, this.parentsConnectionPoint.inbetweenConnection);
+                this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, this.#inBetweenPoint, direction, connectionColor, false, this.parentsConnectionPoint.inbetweenConnection);
             }
         }
         else {   
@@ -260,10 +290,20 @@ class ParentChildGroup {
                 this.getInbetweenPoint();
                 const direction = (this.parentsConnectionPoint.sub(this.childrenConnectionPoint).y > 0)? "up" : "down";
                 if (!this.parentsConnectionPoint.inbetweenConnection) {
-                    this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, this.#inBetweenPoint, direction, "white", false);
+                    this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, this.#inBetweenPoint, direction, connectionColor, false);
                     return;
                 }
-                this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, this.#inBetweenPoint, direction, "white", false, this.parentsConnectionPoint.inbetweenConnection);
+                this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, this.#inBetweenPoint, direction, connectionColor, false, this.parentsConnectionPoint.inbetweenConnection);
+            }
+
+            this.parentsConnectionPoint.update = () => {
+                const x = (this.parents[0].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetWidth) / 2;
+                const y = this.parents.length === 2? this.parents[0].connectionPoints.right.y : this.parents[0].connectionPoints.down.y + connectionPointGap;
+                this.parentsConnectionPoint.x = x;
+                this.parentsConnectionPoint.y = y;
+
+                this.parentsConnectionPoint.div.style.left = `${x - connectionPointLength / 2}px`;
+                this.parentsConnectionPoint.div.style.top = `${y - connectionPointLength / 2}px`;
             }
         }
 
@@ -312,10 +352,10 @@ class ParentChildGroup {
                 this.getInbetweenPoint();
 
                 if (!this.childrenConnectionPoint.inbetweenConnection) {
-                    this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, "white", false);
+                    this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, connectionColor, false);
                     return;
                 }
-                this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, "white", false, this.childrenConnectionPoint.inbetweenConnection);
+                this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, connectionColor, false, this.childrenConnectionPoint.inbetweenConnection);
             }
         }
         else {
@@ -333,6 +373,7 @@ class ParentChildGroup {
                     });
                 }
             });
+
             const x = sumOfCentersX / total;
             const y = this.children[0].div.offsetTop - connectionPointGap;
             this.childrenConnectionPoint = new Vec2(x, y);
@@ -344,10 +385,35 @@ class ParentChildGroup {
                 this.getInbetweenPoint();
 
                 if (!this.childrenConnectionPoint.inbetweenConnection) {
-                    this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, "white", false);
+                    this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, connectionColor, false);
                     return;
                 }
-                this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, "white", false, this.childrenConnectionPoint.inbetweenConnection);
+                this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, connectionColor, false, this.childrenConnectionPoint.inbetweenConnection);
+            }
+
+            this.childrenConnectionPoint.update = () => {
+                let sumOfCentersX = 0;
+                let total = 0;
+                this.children.forEach((child) => {
+                    if (child instanceof Person) {
+                        sumOfCentersX += child.div.offsetLeft + (child.div.offsetWidth / 2);
+                        total++;
+                    }
+                    else {   
+                        this.#subFamilyMap[child].forEach((_child) => {
+                            sumOfCentersX += _child.div.offsetLeft + (_child.div.offsetWidth / 2);
+                            total++;
+                        });
+                    }
+                });
+
+                const x = sumOfCentersX / total;
+                const y = this.children[0].div.offsetTop - connectionPointGap;
+                this.childrenConnectionPoint.x = x;
+                this.childrenConnectionPoint.y = y;
+
+                this.childrenConnectionPoint.div.style.left = `${x - connectionPointLength / 2}px`;
+                this.childrenConnectionPoint.div.style.top = `${y - connectionPointLength / 2}px`;
             }
         }
 
@@ -371,18 +437,17 @@ class ParentChildGroup {
     }
 
     addParent(parent) {
-        this.parents.push(parent);
-        parent.setFamily(family);
+        parent.marry(this.parents);
+        parent.setFamily(this.#family);
         parent.addGroup(this); 
-        family.parentsDiv.appendChild(parent.div);
-        this.children.forEach((child) => {
-            if (child && child instanceof Person) {
-                parent.adopt(child);
-            }
-        })
-        for (let i = 0, length = this.parents.length - 1; i < length; i++) {
-            parent.marry(this.parents[i]);
-        }
+        parent.adopt(this.children);
+        this.parents.push(parent);
+
+        this.#family.parentsDiv.appendChild(parent.div);
+
+        this.parents.forEach((parent) => {
+            parent.updateWorkspacePos();
+        });
     }
 
     addChild(child, subFamilyChild=undefined) {
@@ -391,8 +456,17 @@ class ParentChildGroup {
         // Set family, add child to children div
         this.#family.childrenDiv.appendChild(child.div);
         if (child instanceof Person) {
-            child.setFamily(family);
+            child.setFamily(this.#family);
             child.addGroup(this);
+            child.getAdopted(this.parents);
+            if (this.children.length === 1) {
+                this.#family.updateWorkspacePositions();
+                return;
+            }
+
+            this.children.forEach((child) => {
+                child.updateWorkspacePos();
+            });
             return;
         }
         if (subFamilyChild) {

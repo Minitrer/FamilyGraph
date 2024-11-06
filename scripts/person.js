@@ -1,11 +1,11 @@
+import Family from "./family.js";
 import Vec2 from "./vec2.js";
-let personCount = 0;
+let people = []
 
 export default class Person {
-    #id;
     #family;
     #groups = [];
-    #spouse = [];
+    #spouses = [];
     #parents = [];
     #children = [];
     #div;
@@ -20,14 +20,13 @@ export default class Person {
     connections = [];
 
     constructor(name="Name", family=undefined, spouse=undefined, parents=undefined, children=undefined) {
-        this.#id = personCount;
-        personCount++;
+        people.push(this);
 
         if (family) {
             this.#family = family;
         }
         if (spouse) {
-            this.#spouse = spouse;
+            this.#spouses = spouse;
         }
         if (parents) {
             this.#parents = parents;
@@ -57,9 +56,6 @@ export default class Person {
         this.#div.person = this;
     }
     
-    get id() {
-        return this.#id;
-    }
     get name() {
         return this.#div.firstElementChild.textContent;
     }
@@ -69,8 +65,8 @@ export default class Person {
     get groups() {
         return this.#groups;
     }
-    get spouse() {
-        return this.#spouse;
+    get spouses() {
+        return this.#spouses;
     }
     get parents() {
         return this.#parents;
@@ -130,7 +126,7 @@ export default class Person {
         }
 
         if (Array.isArray(child)) {
-            this.#children.push(...child);
+            this.#children = this.#children.concat(child);
 
             if (internal) {
                 return true;
@@ -154,13 +150,13 @@ export default class Person {
         }
 
         if (Array.isArray(parent)) {
-            this.#parents.push(...parent);
+            this.#parents = this.#parents.concat(parent);
 
             if (internal) {
                 return true;
             }
             this.#parents.forEach(_parent => {
-                _parent.Adopt(this, true);
+                _parent.adopt(this, true);
             });
             return true;
         }
@@ -226,12 +222,12 @@ export default class Person {
     }
 
     marry(spouse, internal=false) {
-        if (this.#spouse.includes(spouse)) {
+        if (this.#spouses.includes(spouse)) {
             return false;
         }
         if (Array.isArray(spouse)) {
 
-            this.#spouse.push(...spouse);
+            this.#spouses = this.#spouses.concat(spouse);
 
             if (internal) {
                 return true;
@@ -242,7 +238,7 @@ export default class Person {
             return true;
         }
 
-        this.#spouse.push(spouse);
+        this.#spouses.push(spouse);
 
         if (internal) {
             return true;
@@ -252,12 +248,12 @@ export default class Person {
     }
     divorce(spouse=undefined, internal=false) {
         if (spouse) {
-            const index = this.#spouse.indexOf(spouse);
+            const index = this.#spouses.indexOf(spouse);
             if (index < 0) {
                 return false;
             }
 
-            this.#spouse.splice(index, 1);
+            this.#spouses.splice(index, 1);
 
             if (internal) {
                 return true;
@@ -273,7 +269,7 @@ export default class Person {
             });
         }
 
-        this.#spouse = [];
+        this.#spouses = [];
         return true;
     }
 
@@ -292,5 +288,31 @@ export default class Person {
             this.#div.offsetLeft,
             this.#div.offsetTop
         );
+    }
+
+    static createPerson() {
+        const graph = document.getElementById("graph");
+        if (graph.childElementCount === 0) {
+            Family.createFamily([new Person()]);
+        }
+        else {
+            const lastPerson = people[people.length - 1];
+            // lastPerson has parents and is single
+            if (lastPerson.div.parentElement.className === "children") {
+                lastPerson.groups[lastPerson.groups.length - 1].addChild(new Person());
+                return;
+            }
+            if (lastPerson.spouses.length === 0) {
+                // lastPerson is single and an orphan
+                if (lastPerson.div.parentElement.className === "parents") {
+                    lastPerson.groups.forEach((group) => {
+                        group.addParent(new Person());
+                    });
+                    return;
+                }
+            }
+            // lastPerson is a married orphan
+            lastPerson.groups[0].addChild(new Person());
+        }
     }
 }

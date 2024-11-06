@@ -21,10 +21,8 @@ html, body, .workspace {
         );
 }
 
-#context-menu {
+#context-menu.show {
     position: absolute;
-    top: 0px;
-    left: 0px;
     overflow: hidden;
 
     display: flex;
@@ -34,7 +32,10 @@ html, body, .workspace {
     background-color: rgb(35, 35, 35);
     border-radius: 0.6em;
 }
-#context-menu button {
+#context-menu.hidden {
+    display: none;
+}
+#context-menu.show button {
     padding: 0;
     background-color: rgb(35, 35, 35);
     color: rgb(204, 204, 204);
@@ -45,18 +46,19 @@ html, body, .workspace {
     display: inline-block;
     padding: 0.6em;
     text-align: left;
+    cursor: pointer;
 }
-#context-menu button:hover {
+#context-menu.show button:hover {
     background-color: rgb(60, 60, 60);
     color: white;
 }
-#context-menu hr {
-    width: 85%;
+#context-menu.show hr {
+    width: 90%;
     margin: 2px auto 2px auto;
     border-color: rgba(70, 70, 70);
 }
 
-.graph, .family, .parents, .children {
+#graph, .family, .parents, .children {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -64,7 +66,7 @@ html, body, .workspace {
     border: 1px solid cyan;
 }
 
-.graph {
+#graph {
     width: 100%;
     height: 100%;
     justify-content: space-evenly;
@@ -93,14 +95,15 @@ html, body, .workspace {
     border: 1px solid white;
     border-radius: 0.5em;
     font-family: Arial, Helvetica, sans-serif;
-    background-color: rgb(46, 46, 46);
+    background-color: rgb(35, 35, 35);
+    cursor: pointer;
 }
 .name {
     width: auto;
     height: auto;
     margin: 0%;
     padding: 0%;
-    color: white;
+    color: rgb(204, 204, 204);
     font-size: 2em;
     -webkit-user-select: none; /* Safari */
     -ms-user-select: none; /* IE 10 and IE 11 */
