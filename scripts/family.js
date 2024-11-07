@@ -60,6 +60,12 @@ export default class Family {
                 if (!group.parentsConnectionPoint) {
                     group.createParentConnectionPoint();
                 }
+                // Check if recently added new parent
+                else if (!group.parentsConnectionPoint.div.transformPos) {
+                    group.parentsConnectionPoint.inbetweenConnection.remove();
+                    group.createParentConnectionPoint();
+                    group.childrenConnectionPoint.update();
+                }
                 else if (group.parentsConnectionPoint.div.transformPos.x === 0 && group.parentsConnectionPoint.div.transformPos.y === 0) {
                     group.parentsConnectionPoint.update();
                 }
@@ -123,16 +129,24 @@ export default class Family {
     }
 
     static createFamily(parents, children=undefined, source=undefined, subFamilyChild=undefined) {
-        const family = new Family(parents, children, subFamilyChild);
-
-        if (source) {
-            source.div.parentNode.replaceChild(family, source.div);
-            family.updateWorkspacePositions();
-            return family;
+        let _parentElement;
+        if (!source) {
+            _parentElement = document.getElementById("graph");
         }
-
-        const graph = document.getElementById("graph");
-        graph.appendChild(family.div);
+        else {
+            _parentElement = source.div.parentElement;
+            subFamilyChild.groups.forEach((group) => {
+                if (group.children.includes(source)) {
+                    group.convertChildToFamily(source, family);
+                }
+            });
+            // source.div.parentNode.replaceChild(family.div, source.div);
+        }
+        
+        const family = new Family(parents, children, subFamilyChild);
+        _parentElement.appendChild(family.div);
+        console.debug(family);
+        console.debug(subFamilyChild);
         family.updateWorkspacePositions();
         return family;
     }
@@ -160,14 +174,15 @@ class ParentChildGroup {
             this.parents[i].setFamily(family);
             this.parents[i].addGroup(this); 
             family.parentsDiv.appendChild(this.parents[i].div);
-            if (children) {
-                if (children instanceof Person) {
-                    this.parents[i].adopt(children);
-                }
-                else if (this.#family.subFamilyChild) {
-                    this.parents[i].adopt(this.#family.subFamilyChild);
-                }
-            } 
+            // if (children) {
+            //     children.forEach()
+            //     if (children instanceof Person) {
+            //         this.parents[i].adopt(children);
+            //     }
+            //     else if (this.#family.subFamilyChild) {
+            //         this.parents[i].adopt(this.#family.subFamilyChild);
+            //     }
+            // } 
             if (i >= length - 1) {
                 continue;
             }
@@ -181,11 +196,13 @@ class ParentChildGroup {
             this.children.forEach((child) => {
                 family.childrenDiv.appendChild(child.div);
                 if (child instanceof Person) {
+                    child.getAdopted(parents);
                     child.setFamily(family);
                     child.addGroup(this);
                     return;
                 }
                 if (this.#family.subFamilyChild) {
+                    this.#family.subFamilyChild.getAdopted(parents);
                     this.#family.subFamilyChild.addGroup(this);
                     if (!this.#subFamilyMap[child]) {
                         this.#subFamilyMap[child] = []
@@ -201,23 +218,24 @@ class ParentChildGroup {
     }
     
     getInbetweenPoint() {
-        if (this.children.length === 1) {
+        if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[this.children[0]].length === 1)) {
+            const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[this.children[0]][0];
             if (this.parents.length === 1) {
                 const parentCenter = this.parents[0].connectionPoints.up.add(this.parents[0].connectionPoints.down).div(2);
-                const childCenter = this.children[0].connectionPoints.up.add(this.children[0].connectionPoints.down).div(2);
+                const childCenter = singleChild.connectionPoints.up.add(singleChild.connectionPoints.down).div(2);
                 this.#inBetweenPoint = parentCenter.add(childCenter).div(2);
                 return;
             }
 
-            const childDirection = getPersonToPointDirection(this.children[0], this.parentsConnectionPoint);
+            const childDirection = getPersonToPointDirection(singleChild, this.parentsConnectionPoint);
             if (childDirection === "left" || childDirection === "right") {
                 this.#inBetweenPoint = new Vec2(
-                    (this.parentsConnectionPoint.x + this.children[0].connectionPoints[childDirection].x) / 2,
-                    this.children[0].connectionPoints[childDirection].y
+                    (this.parentsConnectionPoint.x + singleChild.connectionPoints[childDirection].x) / 2,
+                    singleChild.connectionPoints[childDirection].y
                 )
                 return;
             }
-            this.#inBetweenPoint = this.parentsConnectionPoint.add(this.children[0].connectionPoints[childDirection]).div(2);
+            this.#inBetweenPoint = this.parentsConnectionPoint.add(singleChild.connectionPoints[childDirection]).div(2);
             return;
         }
         if (this.parents.length === 1) {
@@ -245,9 +263,10 @@ class ParentChildGroup {
             const direction = "down";
             this.parentsConnectionPoint = this.parents[0].connectionPoints[direction];
 
-            if (this.children.length === 1) {
+            if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[this.children[0]].length === 1)) {
+                const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[this.children[0]][0];
                 this.parentsConnectionPoint.updatePos = () => {
-                    const direction = getPersonToPersonDirection(this.parents[0], this.children[0]);
+                    const direction = getPersonToPersonDirection(this.parents[0], singleChild);
                     this.parentsConnectionPoint.x = this.parents[0].connectionPoints[direction].x;
                     this.parentsConnectionPoint.y = this.parents[0].connectionPoints[direction].y;
                 }
@@ -269,7 +288,14 @@ class ParentChildGroup {
 
             this.parentsConnectionPoint.draw = () => {
                 this.parentsConnectionPoint.updatePos();
-                const direction = (this.children.length === 1)? getPersonToPersonDirection(this.parents[0], this.children[0]) : getPersonToPointDirection(this.parents[0], this.childrenConnectionPoint);
+                let direction;
+                if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[this.children[0]].length === 1)) {
+                    const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[this.children[0]][0];
+                    direction = getPersonToPersonDirection(this.parents[0], singleChild);
+                }
+                else {
+                    direction = getPersonToPointDirection(this.parents[0], this.childrenConnectionPoint);
+                }
                 this.getInbetweenPoint();
 
                 if (!this.parentsConnectionPoint.inbetweenConnection) {
@@ -319,23 +345,26 @@ class ParentChildGroup {
     }
 
     createChildConnectionPoint() {
-        if (this.children.length === 1) {
+        if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[this.children[0]].length === 1)) {
+            const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[this.children[0]][0];
+
             this.childrenConnectionPoint = new Vec2();
-            const direction = getPersonToPointDirection(this.children[0], this.parentsConnectionPoint);
-            this.childrenConnectionPoint = this.children[0].connectionPoints[direction];
+
+            const direction = getPersonToPointDirection(singleChild, this.parentsConnectionPoint);
+            this.childrenConnectionPoint = singleChild.connectionPoints[direction];
 
             if (this.parents.length === 1) {
                 this.childrenConnectionPoint.updatePos = () => {
-                    const direction = getPersonToPersonDirection(this.children[0], this.parents[0]);
-                    this.childrenConnectionPoint.x = this.children[0].connectionPoints[direction].x;
-                    this.childrenConnectionPoint.y = this.children[0].connectionPoints[direction].y;
+                    const direction = getPersonToPersonDirection(singleChild, this.parents[0]);
+                    this.childrenConnectionPoint.x = singleChild.connectionPoints[direction].x;
+                    this.childrenConnectionPoint.y = singleChild.connectionPoints[direction].y;
                 }
             }
             else {
                 this.childrenConnectionPoint.updatePos = () => {
-                    const direction = getPersonToPointDirection(this.children[0], this.parentsConnectionPoint);
-                    this.childrenConnectionPoint.x = this.children[0].connectionPoints[direction].x;
-                    this.childrenConnectionPoint.y = this.children[0].connectionPoints[direction].y;
+                    const direction = getPersonToPointDirection(singleChild, this.parentsConnectionPoint);
+                    this.childrenConnectionPoint.x = singleChild.connectionPoints[direction].x;
+                    this.childrenConnectionPoint.y = singleChild.connectionPoints[direction].y;
                 }
             }
 
@@ -348,7 +377,7 @@ class ParentChildGroup {
 
             this.childrenConnectionPoint.draw = () => {
                 this.childrenConnectionPoint.updatePos();
-                const direction = (this.parents.length === 1)? getPersonToPersonDirection(this.children[0], this.parents[0]) : getPersonToPointDirection(this.children[0], this.parentsConnectionPoint);
+                const direction = (this.parents.length === 1)? getPersonToPersonDirection(singleChild, this.parents[0]) : getPersonToPointDirection(singleChild, this.parentsConnectionPoint);
                 this.getInbetweenPoint();
 
                 if (!this.childrenConnectionPoint.inbetweenConnection) {
@@ -440,7 +469,14 @@ class ParentChildGroup {
         parent.marry(this.parents);
         parent.setFamily(this.#family);
         parent.addGroup(this); 
-        parent.adopt(this.children);
+        // parent.adopt(this.children);
+        this.children.forEach((child) => {
+            if (child instanceof Person) {
+                parent.adopt(child);
+                return;
+            }
+            parent.adopt(this.#subFamilyMap[child]);
+        });
         this.parents.push(parent);
 
         this.#family.parentsDiv.appendChild(parent.div);
@@ -480,6 +516,20 @@ class ParentChildGroup {
             return;
         }
         console.error(`Warning: Sub-family ${child} added without specified subFamilyChild.`);
+    }
+
+    convertChildToFamily(child, family) {
+        const index = this.children.indexOf(child);
+
+        this.children[index] = family;
+
+        if (!this.#subFamilyMap[family]) {
+            this.#subFamilyMap[family] = []
+            this.#subFamilyMap[family].push(child);
+            return;
+        }
+        this.#subFamilyMap[family].push(child);
+        return;
     }
 }
 
