@@ -63,11 +63,14 @@ export default class Family {
                 // Check if recently added new parent
                 else if (!group.parentsConnectionPoint.div.transformPos) {
                     group.parentsConnectionPoint.inbetweenConnection.remove();
+                    group.parentsConnectionPoint.inbetweenConnection = undefined;
                     group.createParentConnectionPoint();
                     group.childrenConnectionPoint.update();
-                }
-                else if (group.parentsConnectionPoint.div.transformPos.x === 0 && group.parentsConnectionPoint.div.transformPos.y === 0) {
-                    group.parentsConnectionPoint.update();
+                    if (group.parents.length === 2 && group.children.length === 1) {
+                        group.childrenConnectionPoint.inbetweenConnection.remove();
+                        group.childrenConnectionPoint.inbetweenConnection = undefined;
+                        group.createChildConnectionPoint();
+                    }
                 }
                 familyConnectionPoint = group.parentsConnectionPoint;
             }
@@ -124,8 +127,19 @@ export default class Family {
         });
     }
 
+    updateConnectionPoints() {
+        this.#groups.forEach((group) => {
+            group.parentsConnectionPoint.update();
+            if (group.childrenConnectionPoint) {
+                group.childrenConnectionPoint.update();
+            }
+        });
+    }
+
     addGroup(parents, children=undefined) {
         this.#groups.push(new ParentChildGroup(parents, children, this));
+        this.updateWorkspacePositions();
+        this.updateConnectionPoints();
     }
 
     static createFamily(parents, children=undefined, source=undefined, subFamilyChild=undefined) {
@@ -174,15 +188,6 @@ class ParentChildGroup {
             this.parents[i].setFamily(family);
             this.parents[i].addGroup(this); 
             family.parentsDiv.appendChild(this.parents[i].div);
-            // if (children) {
-            //     children.forEach()
-            //     if (children instanceof Person) {
-            //         this.parents[i].adopt(children);
-            //     }
-            //     else if (this.#family.subFamilyChild) {
-            //         this.parents[i].adopt(this.#family.subFamilyChild);
-            //     }
-            // } 
             if (i >= length - 1) {
                 continue;
             }
@@ -330,6 +335,8 @@ class ParentChildGroup {
 
                 this.parentsConnectionPoint.div.style.left = `${x - connectionPointLength / 2}px`;
                 this.parentsConnectionPoint.div.style.top = `${y - connectionPointLength / 2}px`;
+
+                this.parentsConnectionPoint.updateConnected();
             }
         }
 
@@ -443,6 +450,8 @@ class ParentChildGroup {
 
                 this.childrenConnectionPoint.div.style.left = `${x - connectionPointLength / 2}px`;
                 this.childrenConnectionPoint.div.style.top = `${y - connectionPointLength / 2}px`;
+
+                this.childrenConnectionPoint.updateConnected();
             }
         }
 
@@ -462,7 +471,6 @@ class ParentChildGroup {
 
         this.childrenConnectionPoint.draw();
         this.parentsConnectionPoint.draw();
-
     }
 
     addParent(parent) {
@@ -481,9 +489,8 @@ class ParentChildGroup {
 
         this.#family.parentsDiv.appendChild(parent.div);
 
-        this.parents.forEach((parent) => {
-            parent.updateWorkspacePos();
-        });
+        this.#family.updateWorkspacePositions();
+        this.#family.updateConnectionPoints();
     }
 
     addChild(child, subFamilyChild=undefined) {
@@ -495,14 +502,10 @@ class ParentChildGroup {
             child.setFamily(this.#family);
             child.addGroup(this);
             child.getAdopted(this.parents);
-            if (this.children.length === 1) {
-                this.#family.updateWorkspacePositions();
-                return;
-            }
 
-            this.children.forEach((child) => {
-                child.updateWorkspacePos();
-            });
+            this.#family.updateWorkspacePositions();
+            this.#family.updateConnectionPoints();
+
             return;
         }
         if (subFamilyChild) {

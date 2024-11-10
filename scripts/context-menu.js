@@ -14,92 +14,83 @@ bgAddPerson.addEventListener("click", (e) => {
 });
 const onBackground = [bgAddPerson];
 
-const addParent = document.createElement("button");
-const addSpouce = document.createElement("button");
-const addChild = document.createElement("button");
+const addParentButton = document.createElement("button");
+const addSpouceButton = document.createElement("button");
+const addChildButton = document.createElement("button");
 
-addParent.textContent = "Add parent";
-addSpouce.textContent = "Add spouce";
-addChild.textContent = "Add child";
+addParentButton.textContent = "Add parent";
+addSpouceButton.textContent = "Add spouce";
+addChildButton.textContent = "Add child";
 
-const onPerson = [addParent, addSpouce, addChild];
+const onPerson = [addParentButton, addSpouceButton, addChildButton];
 
-function targetPerson(person) {
-    function addParentAction(e) {
-        e.preventDefault();
-        hideContextMenu();
+let targetPerson;
+function addParent(e) {
+    e.preventDefault();
+    hideContextMenu();
 
-        // person has parents and is single
-        if (person.div.parentElement.className === "children") {
-            for (let i = 0, length = person.groups.length; i < length; i++) {
-                if (person.groups[i].parents.length > 1) {
-                    continue;
-                }
-                person.groups[i].addParent(new Person());
-                return;
+    // targetPerson has parents and is single
+    if (targetPerson.div.parentElement.className === "children") {
+        for (let i = 0, length = targetPerson.groups.length; i < length; i++) {
+            if (targetPerson.groups[i].parents.length > 1) {
+                continue;
             }
-            person.family.addGroup([new Person()], person);
+            targetPerson.groups[i].addParent(new Person());
             return;
         }
-        // person is in a family (either married or has children or both)
-        for (let i = 0, length = person.groups.length; i < length; i++) {
-            if (person.groups[i].children.includes(person.family) && person.groups[i].parents.length < 2) {
-                person.groups[i].addParent(new Person());
-                return;
-            }
-        }
-        // No parent is single
-        if (person.parents.length > 0) {
-            person.parents[0].family.addGroup([new Person()], [person]);
+        targetPerson.family.addGroup([new Person()], targetPerson);
+        return;
+    }
+    // targetPerson is in a family (either married or has children or both)
+    for (let i = 0, length = targetPerson.groups.length; i < length; i++) {
+        if (targetPerson.groups[i].children.includes(targetPerson.family) && targetPerson.groups[i].parents.length < 2) {
+            targetPerson.groups[i].addParent(new Person());
             return;
         }
-        // Find larger family in spouses
-        for (let i = 0, length = person.spouses.length; i < length; i++) {
-            if (person.spouses[i].parents.length > 0) {
-                person.spouses[i].parents.family.addGroup([new Person()], person);
-                return;
-            }
-        }
-        // person is an orphan single parent
-        Family.createFamily([new Person()], [person.family], person.family, person);
-
-        addSpouce.removeEventListener("click", addSpouceAction);
     }
-    function addSpouceAction(e) {
-        e.preventDefault();
-        hideContextMenu();
-
-        if (person.div.parentElement.className === "parents") {
-            for (let i = 0, length = person.groups.length; i < length; i++) {
-                if (person.groups[i].parents.includes(person)) {
-                    person.groups[i].addParent(new Person());
-                    return;
-                }
-            }
-            console.error("addSpouce action failed, person somehow in parent div without being in a group as a parent");
+    // No parent is single
+    if (targetPerson.parents.length > 0) {
+        targetPerson.parents[0].family.addGroup([new Person()], [targetPerson.family]);
+        return;
+    }
+    // Find larger family in spouses
+    for (let i = 0, length = targetPerson.spouses.length; i < length; i++) {
+        if (targetPerson.spouses[i].parents.length > 0) {
+            targetPerson.spouses[i].parents[0].family.addGroup([new Person()], [targetPerson.family]);
             return;
         }
-        Family.createFamily([person, new Person()], undefined, person, person);
-
-        addParent.removeEventListener("click", addParentAction);
-        addChild.removeEventListener("click", addChildAction);
     }
-    function addChildAction(e) {
-        e.preventDefault();
-        hideContextMenu();
-
-        addSpouce.removeEventListener("click", addSpouceAction);
-        addParent.removeEventListener("click", addParentAction);
-    }
-
-    addParent.addEventListener("click", addParentAction, {once:true});
-    addSpouce.addEventListener("click", addSpouceAction, {once:true});
-    addChild.addEventListener("click", addChildAction, {once:true});
+    // targetPerson is an orphan single parent
+    Family.createFamily([new Person()], [targetPerson.family], targetPerson.family, targetPerson);
 }
+function addSpouce(e) {
+    e.preventDefault();
+    hideContextMenu();
+
+    if (targetPerson.div.parentElement.className === "parents") {
+        for (let i = 0, length = targetPerson.groups.length; i < length; i++) {
+            if (targetPerson.groups[i].parents.includes(targetPerson)) {
+                targetPerson.groups[i].addParent(new Person());
+                return;
+            }
+        }
+        console.error("addSpouce action failed, targetPerson somehow in parent div without being in a group as a parent");
+        return;
+    }
+    Family.createFamily([targetPerson, new Person()], undefined, targetPerson, targetPerson);
+}
+function addChild(e) {
+    e.preventDefault();
+    hideContextMenu();
+}
+
+addParentButton.addEventListener("click", addParent);
+addSpouceButton.addEventListener("click", addSpouce);
+addChildButton.addEventListener("click", addChild);
 
 function setContextMenu(target) {
     if (target) {
-        targetPerson(target);
+        targetPerson = target;
         contextMenu.replaceChildren(...onPerson);
         return;
     }
