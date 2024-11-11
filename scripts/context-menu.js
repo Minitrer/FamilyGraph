@@ -38,7 +38,7 @@ function addParent(e) {
             targetPerson.groups[i].addParent(new Person());
             return;
         }
-        targetPerson.family.addGroup([new Person()], targetPerson);
+        targetPerson.family.addGroup([new Person()], [targetPerson]);
         return;
     }
     // targetPerson is in a family (either married or has children or both)
@@ -65,7 +65,24 @@ function addParent(e) {
         }
     }
     // targetPerson is an orphan single parent
-    Family.createFamily([new Person()], [targetPerson.family], targetPerson.family, subFamilyMap);
+    // Check if targetPerson is oldest generation
+    if (targetPerson.family.div.parentElement.id === "graph")
+    {
+        Family.createFamily([new Person()], [targetPerson.family], targetPerson.family, subFamilyMap);
+        return;
+    }
+    // Find larger family in other parents
+    for (let i = 0, length = targetPerson.family.groups.length; i < length; i++) {
+        if (targetPerson.family.groups[i].parents.includes(targetPerson)) {
+            continue;
+        }
+        for (let j = 0, lengthJ = targetPerson.family.groups[i].parents.length; j < lengthJ; j++) {
+            if (targetPerson.family.groups[i].parents[j].parents.length > 0) {
+                targetPerson.family.groups[i].parents[j].parents[0].family.addGroup([new Person()], [targetPerson.family], subFamilyMap);
+                return;
+            }
+        }
+    }
 }
 function addSpouce(e) {
     e.preventDefault();
@@ -86,6 +103,18 @@ function addSpouce(e) {
 function addChild(e) {
     e.preventDefault();
     hideContextMenu();
+
+    if (targetPerson.div.parentElement.className === "parents") {
+        for (let i = 0, length = targetPerson.groups.length; i < length; i++) {
+            if (targetPerson.groups[i].parents.includes(targetPerson)) {
+                targetPerson.groups[i].addChild(new Person());
+                return;
+            }
+        }
+        console.error("addChild action failed, targetPerson somehow in parent div without being in a group as a parent");
+        return;
+    }
+    Family.createFamily([targetPerson], [new Person()], targetPerson);
 }
 
 addParentButton.addEventListener("click", addParent);
