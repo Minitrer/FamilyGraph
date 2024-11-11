@@ -1,8 +1,10 @@
 import Family from "./family.js";
 import Vec2 from "./vec2.js";
-let people = []
+
+let people = [];
 
 export default class Person {
+    #id
     #family;
     #groups = [];
     #spouses = [];
@@ -20,6 +22,7 @@ export default class Person {
     connections = [];
 
     constructor(name="Name", family=undefined, spouse=undefined, parents=undefined, children=undefined) {
+        this.#id = people.length;
         people.push(this);
 
         if (family) {

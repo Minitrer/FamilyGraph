@@ -48,20 +48,24 @@ function addParent(e) {
             return;
         }
     }
+
+    const subFamilyMap = {};
+    subFamilyMap[targetPerson.family.id] = targetPerson;
+
     // No parent is single
     if (targetPerson.parents.length > 0) {
-        targetPerson.parents[0].family.addGroup([new Person()], [targetPerson.family]);
+        targetPerson.parents[0].family.addGroup([new Person()], [targetPerson.family], subFamilyMap);
         return;
     }
     // Find larger family in spouses
     for (let i = 0, length = targetPerson.spouses.length; i < length; i++) {
         if (targetPerson.spouses[i].parents.length > 0) {
-            targetPerson.spouses[i].parents[0].family.addGroup([new Person()], [targetPerson.family]);
+            targetPerson.spouses[i].parents[0].family.addGroup([new Person()], [targetPerson.family], subFamilyMap);
             return;
         }
     }
     // targetPerson is an orphan single parent
-    Family.createFamily([new Person()], [targetPerson.family], targetPerson.family, targetPerson);
+    Family.createFamily([new Person()], [targetPerson.family], targetPerson.family, subFamilyMap);
 }
 function addSpouce(e) {
     e.preventDefault();
@@ -77,7 +81,7 @@ function addSpouce(e) {
         console.error("addSpouce action failed, targetPerson somehow in parent div without being in a group as a parent");
         return;
     }
-    Family.createFamily([targetPerson, new Person()], undefined, targetPerson, targetPerson);
+    Family.createFamily([targetPerson, new Person()], undefined, targetPerson);
 }
 function addChild(e) {
     e.preventDefault();
