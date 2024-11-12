@@ -131,7 +131,7 @@ function setContextMenu(target) {
 }
 function hideContextMenu() {
     contextMenu.replaceChildren();
-    contextMenu.className = "hide"
+    contextMenu.className = "hide";
 }
 
 document.addEventListener("DOMContentLoaded", () => {

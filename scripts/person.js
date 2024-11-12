@@ -288,8 +288,8 @@ export default class Person {
 
     updateWorkspacePos() {
         this.workspacePos = new Vec2(
-            this.#div.offsetLeft,
-            this.#div.offsetTop
+            this.#div.offsetLeft + this.#transformPos.x,
+            this.#div.offsetTop + this.#transformPos.y
         );
     }
 

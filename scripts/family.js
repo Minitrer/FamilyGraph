@@ -349,8 +349,9 @@ class ParentChildGroup {
             this.parentsConnectionPoint.update = () => {
                 const x = (this.parents[0].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetWidth) / 2;
                 const y = this.parents.length === 2? this.parents[0].connectionPoints.right.y : this.parents[0].connectionPoints.down.y + connectionPointGap;
-                this.parentsConnectionPoint.x = x;
-                this.parentsConnectionPoint.y = y;
+
+                this.parentsConnectionPoint.x = x + this.parentsConnectionPoint.div.transformPos.x;
+                this.parentsConnectionPoint.y = y + this.parentsConnectionPoint.div.transformPos.y;
 
                 this.parentsConnectionPoint.div.style.left = `${x - connectionPointLength / 2}px`;
                 this.parentsConnectionPoint.div.style.top = `${y - connectionPointLength / 2}px`;
@@ -462,8 +463,8 @@ class ParentChildGroup {
 
                 const x = sumOfCentersX / total;
                 const y = this.children[0].div.offsetTop - connectionPointGap;
-                this.childrenConnectionPoint.x = x;
-                this.childrenConnectionPoint.y = y;
+                this.childrenConnectionPoint.x = x + this.childrenConnectionPoint.div.transformPos.x;
+                this.childrenConnectionPoint.y = y + this.childrenConnectionPoint.div.transformPos.y;
 
                 this.childrenConnectionPoint.div.style.left = `${x - connectionPointLength / 2}px`;
                 this.childrenConnectionPoint.div.style.top = `${y - connectionPointLength / 2}px`;
@@ -492,7 +493,7 @@ class ParentChildGroup {
         parent.marry(this.parents);
         parent.setFamily(this.#family);
         parent.addGroup(this); 
-        // parent.adopt(this.children);
+        
         this.children.forEach((child) => {
             if (child instanceof Person) {
                 parent.adopt(child);
