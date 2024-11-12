@@ -493,7 +493,7 @@ class ParentChildGroup {
         parent.marry(this.parents);
         parent.setFamily(this.#family);
         parent.addGroup(this); 
-        
+
         this.children.forEach((child) => {
             if (child instanceof Person) {
                 parent.adopt(child);
@@ -551,7 +551,7 @@ class ParentChildGroup {
 
 function createConnectionDiv(p) {
     const workspace = document.getElementById("workspace");
-    const div = document.createElement("div")
+    const div = document.createElement("div");
     div.setAttribute("class", "point");
     div.style.width = `${connectionPointLength}px`;
     div.style.height = `${connectionPointLength}px`;

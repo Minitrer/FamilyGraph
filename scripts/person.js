@@ -293,6 +293,19 @@ export default class Person {
         );
     }
 
+    resetTransform() {
+        this.#div.style.setProperty("--pos-x", 0);
+        this.#div.style.setProperty("--pos-y", 0);
+
+        this.transformPos = new Vec2();
+    }
+
+    static resetAllTransforms() {
+        people.forEach((person) => {
+            person.resetTransform();
+        });
+    }
+
     static createPerson() {
         const graph = document.getElementById("graph");
         if (graph.childElementCount === 0) {

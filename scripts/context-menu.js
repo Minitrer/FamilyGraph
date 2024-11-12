@@ -3,32 +3,44 @@ import { clickedPos } from "./pan-zoom-and-drag.js";
 import Person from "./person.js";
 
 const contextMenu = document.getElementById("context-menu");
+const horizontalRule = document.createElement("hr");
 
-const bgAddPerson = document.createElement("button");
-bgAddPerson.textContent = "Add person";
-bgAddPerson.addEventListener("click", (e) => {
+const bgAddPersonButton = document.createElement("button");
+const bgResetTransforms = document.createElement("button");
+
+bgAddPersonButton.textContent = "Add person";
+bgResetTransforms.textContent = "Reset all positions";
+
+const onBackground = [bgAddPersonButton, horizontalRule, bgResetTransforms];
+
+bgAddPersonButton.addEventListener("click", (e) => {
     e.preventDefault();
+    hideContextMenu();
     
     Person.createPerson();
-    hideContextMenu();
 });
-const onBackground = [bgAddPerson];
+
+bgResetTransforms.addEventListener("click", (e) => {
+    e.preventDefault();
+    hideContextMenu();
+
+    Person.resetAllTransforms();
+});
 
 const addParentButton = document.createElement("button");
 const addSpouceButton = document.createElement("button");
 const addChildButton = document.createElement("button");
+const resetTransformButton = document.createElement("button");
 
 addParentButton.textContent = "Add parent";
 addSpouceButton.textContent = "Add spouce";
 addChildButton.textContent = "Add child";
+resetTransformButton.textContent = "Reset Position";
 
-const onPerson = [addParentButton, addSpouceButton, addChildButton];
+const onPerson = [addParentButton, addSpouceButton, addChildButton, horizontalRule, resetTransformButton];
 
 let targetPerson;
-function addParent(e) {
-    e.preventDefault();
-    hideContextMenu();
-
+function addParent() {
     // targetPerson has parents and is single
     if (targetPerson.div.parentElement.className === "children") {
         for (let i = 0, length = targetPerson.groups.length; i < length; i++) {
@@ -84,10 +96,7 @@ function addParent(e) {
         }
     }
 }
-function addSpouce(e) {
-    e.preventDefault();
-    hideContextMenu();
-
+function addSpouce() {
     if (targetPerson.div.parentElement.className === "parents") {
         for (let i = 0, length = targetPerson.groups.length; i < length; i++) {
             if (targetPerson.groups[i].parents.includes(targetPerson)) {
@@ -100,10 +109,7 @@ function addSpouce(e) {
     }
     Family.createFamily([targetPerson, new Person()], undefined, targetPerson);
 }
-function addChild(e) {
-    e.preventDefault();
-    hideContextMenu();
-
+function addChild() {
     if (targetPerson.div.parentElement.className === "parents") {
         for (let i = 0, length = targetPerson.groups.length; i < length; i++) {
             if (targetPerson.groups[i].parents.includes(targetPerson)) {
@@ -117,9 +123,30 @@ function addChild(e) {
     Family.createFamily([targetPerson], [new Person()], targetPerson);
 }
 
-addParentButton.addEventListener("click", addParent);
-addSpouceButton.addEventListener("click", addSpouce);
-addChildButton.addEventListener("click", addChild);
+addParentButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    hideContextMenu();
+
+    addParent()
+});
+addSpouceButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    hideContextMenu();
+    
+    addSpouce()
+});
+addChildButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    hideContextMenu();
+    
+    addChild()
+});
+resetTransformButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    hideContextMenu();
+    
+    targetPerson.resetTransform();
+});
 
 function setContextMenu(target) {
     if (target) {
