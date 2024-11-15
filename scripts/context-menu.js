@@ -31,13 +31,15 @@ const addParentButton = document.createElement("button");
 const addSpouceButton = document.createElement("button");
 const addChildButton = document.createElement("button");
 const resetTransformButton = document.createElement("button");
+const deleteButton = document.createElement("button");
 
 addParentButton.textContent = "Add parent";
 addSpouceButton.textContent = "Add spouce";
 addChildButton.textContent = "Add child";
 resetTransformButton.textContent = "Reset Position";
+deleteButton.textContent = "Delete";
 
-const onPerson = [addParentButton, addSpouceButton, addChildButton, horizontalRule, resetTransformButton];
+const onPerson = [addParentButton, addSpouceButton, addChildButton, horizontalRule, resetTransformButton, deleteButton];
 
 let targetPerson;
 function addParent() {
@@ -146,6 +148,12 @@ resetTransformButton.addEventListener("click", (e) => {
     hideContextMenu();
     
     targetPerson.resetTransform();
+});
+deleteButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    hideContextMenu();
+
+    targetPerson.delete();
 });
 
 function setContextMenu(target) {

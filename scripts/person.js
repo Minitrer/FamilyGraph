@@ -19,10 +19,9 @@ export default class Person {
         "left" : new Vec2(),
         "right" : new Vec2()
     }
-    connections = [];
+    connections = {};
 
     constructor(name="Name", family=undefined, spouse=undefined, parents=undefined, children=undefined) {
-        this.#id = people.length;
         people.push(this);
 
         if (family) {
@@ -59,6 +58,9 @@ export default class Person {
         this.#div.person = this;
     }
     
+    get id() {
+        return people.indexOf(this);
+    }
     get name() {
         return this.#div.firstElementChild.textContent;
     }
@@ -298,6 +300,27 @@ export default class Person {
         this.#div.style.setProperty("--pos-y", 0);
 
         this.transformPos = new Vec2();
+    }
+
+    delete() {
+        this.divorce(this.#parents);
+        this.orphanSelf(this.#parents);
+        this.orphan(this.#children);
+
+        Object.values(this.connections).forEach((connection) => {
+            connection.remove();
+        });
+        this.connections = null;
+        
+        people.splice(people.indexOf(this), 1);
+        
+        this.#div.remove();
+        this.#div = null;
+
+        this.#groups.forEach((group) => {
+            group.remove(this);
+        });
+        this.#groups = null;
     }
 
     static resetAllTransforms() {

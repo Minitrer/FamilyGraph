@@ -14,13 +14,12 @@ export default class Family {
     constructor(parents, children=undefined, subFamilyMap=undefined) {
         // subFamilyMap is a dictionary with subfamilies's ids as keys and one of their parents as values
 
-        this.#id = families.length;
         families.push(this);
         
         // Create divs
         this.#div = document.createElement("div");
         this.#div.setAttribute("class", "family");
-        this.#div.id = `family ${this.#id}`;
+        this.#div.id = `family ${this.id}`;
         this.#parentsDiv = document.createElement("div");
         this.#parentsDiv.setAttribute("class", "parents");
         this.#childrenDiv = document.createElement("div");
@@ -34,7 +33,7 @@ export default class Family {
     }
 
     get id() {
-        return this.#id;
+        return families.indexOf(this);
     }
     get groups() {
         return this.#groups;
@@ -151,6 +150,19 @@ export default class Family {
 
     addGroup(parents, children=undefined, subFamilyChildren=undefined) {
         this.#groups.push(new ParentChildGroup(parents, children, this, subFamilyChildren));
+        Family.updateAll();
+    }
+
+    delete() {
+        for (let i = this.id + 1, length = families.length; i < length; i++) {
+            families[i].div.id = `family ${i - 1}`;
+        }
+        families.splice(this.id, 1);
+
+        this.#parentsDiv.remove();
+        this.#childrenDiv.remove();
+        this.#div.remove();
+    
         Family.updateAll();
     }
 
@@ -532,6 +544,122 @@ class ParentChildGroup {
             return;
         }
         console.error(`Warning: Sub-family ${child} added without specified subFamilyChild.`);
+    }
+
+    remove(person) {
+        const parentIndex = this.parents.indexOf(person);
+        if (parentIndex > -1) {
+            this.parents.splice(parentIndex, 1);
+
+            // TODO: Fix deletion of outer family
+            if (this.parents.length === 0 && this.children.length === 0) {
+                this.delete();
+                return;
+            }
+            if (this.parents.length < 3) {
+                this.deleteParentsConnectionPoint();
+
+                this.parents.forEach((parent) => {
+                    const index = parent.groups.indexOf(this)
+                    parent.connections[`parents ${index}`].remove();
+                    delete parent.connections[`parents ${index}`];
+                });
+
+                this.createParentConnectionPoint();
+            }
+            if (this.children.length === 0) {
+                Family.updateAll();
+                return;
+            }
+            for (const child in this.children) {
+                if (child.parents.length === 0) {
+                    Family.updateAll();
+                    return;
+                }
+            }
+            this.delete();
+            return;
+        }
+        const childIndex = this.children.indexOf(person);
+        this.children.splice(childIndex, 1);
+
+        if (this.parents.length === 0 && this.children.length === 0) {
+            this.delete();
+            return;
+        }
+        if (this.children.length < 2) {
+            this.deleteChildConnectionPoint();
+
+            if (this.children.length > 0) {
+                this.createChildConnectionPoint();
+            }
+            else {
+                this.deleteParentsConnectionPoint();
+            }
+            Family.updateAll();
+        }
+    }
+
+    delete() {
+        this.parents.forEach((parent) => {
+            const index = parent.groups.indexOf(this);
+            parent.connections[`parents ${index}`].remove();
+            delete parent.connections[`parents ${index}`];
+            parent.groups.splice(index, 1);
+        });
+        this.children.forEach((child) => {
+            const index = child.groups.indexOf(this);
+            child.connections[`children ${index}`].remove();
+            delete child.connections[`children ${index}`];
+            child.groups.splice(index, 1);
+        });
+
+        if (this.parentsConnectionPoint) {
+            if (this.parentsConnectionPoint.inbetweenConnection) {
+                this.parentsConnectionPoint.inbetweenConnection.remove();
+                delete this.parentsConnectionPoint.inbetweenConnection;
+            }
+            this.parentsConnectionPoint.div.remove();
+            delete this.parentsConnectionPoint;
+        }
+
+        if (this.childrenConnectionPoint) {
+            if (this.childrenConnectionPoint.inbetweenConnection) {
+                this.childrenConnectionPoint.inbetweenConnection.remove();
+                delete this.childrenConnectionPoint.inbetweenConnection;
+            }
+            this.childrenConnectionPoint.div.remove();
+            delete this.childrenConnectionPoint;
+        }
+
+        this.#family.groups.splice(this.#family.groups.indexOf(this), 1);
+        if (this.#family.groups.length === 0) {
+            this.#family.delete();
+            return;
+        }
+        Family.updateAll();
+    }
+
+    deleteParentsConnectionPoint() {
+        if (this.parentsConnectionPoint.inbetweenConnection) {
+            this.parentsConnectionPoint.inbetweenConnection.remove();
+            delete this.parentsConnectionPoint.inbetweenConnection;
+        }
+        if (this.parentsConnectionPoint.div.transformPos) {
+            this.parentsConnectionPoint.div.remove();
+        }
+        this.parentsConnectionPoint = undefined;
+    }
+    deleteChildConnectionPoint() {
+        if (this.childrenConnectionPoint.inbetweenConnection) {
+            this.childrenConnectionPoint.inbetweenConnection.remove();
+            delete this.childrenConnectionPoint.inbetweenConnection;
+        }
+        if (this.childrenConnectionPoint.div.transformPos) {
+            this.childrenConnectionPoint.div.remove();
+        }
+        delete this.childrenConnectionPoint.inbetweenConnection;
+        this.childrenConnectionPoint = undefined;
     }
 
     convertChildToFamily(child, family) {
