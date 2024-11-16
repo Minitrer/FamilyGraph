@@ -170,7 +170,7 @@ export default class Person {
         if (internal) {
             return true;
         }
-        parent.Adopt(this, true);
+        parent.adopt(this, true);
         return true;
     }
     orphan(child=undefined, internal=false) {
@@ -185,14 +185,14 @@ export default class Person {
             if (internal) {
                 return true;
             }
-            child.OrphanSelf(this, true);
+            child.orphanSelf(this, true);
             return true;
         }
 
         
         if (!internal) {
             this.#children.forEach(_child => {
-                _child.OrphanSelf(this, true);
+                _child.orphanSelf(this, true);
             });
         }
         
@@ -211,14 +211,14 @@ export default class Person {
             if (internal) {
                 return true;
             }
-            parent.Orphan(this, true);
+            parent.orphan(this, true);
             return true;
         }
 
         
         if (!internal) {
             this.#parents.forEach(_parent => {
-                _parent.Orphan(this, true);
+                _parent.orphan(this, true);
             });
         }
         
@@ -263,14 +263,14 @@ export default class Person {
             if (internal) {
                 return true;
             }
-            spouse.Divorce(this, true);
+            spouse.divorce(this, true);
             return true;
         }
 
         
         if (!internal) {
-            spouse.forEach(_spouse => {
-                _spouse.Divorce(this, true);
+            this.#spouses.forEach(_spouse => {
+                _spouse.divorce(this, true);
             });
         }
 
@@ -303,9 +303,9 @@ export default class Person {
     }
 
     delete() {
-        this.divorce(this.#parents);
-        this.orphanSelf(this.#parents);
-        this.orphan(this.#children);
+        this.divorce();
+        this.orphanSelf();
+        this.orphan();
 
         Object.values(this.connections).forEach((connection) => {
             connection.remove();

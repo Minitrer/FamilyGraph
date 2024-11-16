@@ -156,13 +156,32 @@ export default class Family {
     delete() {
         for (let i = this.id + 1, length = families.length; i < length; i++) {
             families[i].div.id = `family ${i - 1}`;
+
+            // Correct SubFamilyMaps
+            if (families[i].div.parentElement.className === "children") {
+                const largerFamilyID = families[i].div.parentElement.parentElement.id.substring(7);
+                if (largerFamilyID === this.id) {
+                    continue;
+                }
+                families[largerFamilyID].groups.forEach((group) => {
+                    if (group.subFamilyMap[`${families[i].id}`]) {
+                        group.subFamilyMap[`${families[i].id - 1}`] = group.subFamilyMap[`${families[i].id}`];
+                        delete group.subFamilyMap[`${families[i].id}`];
+                    }
+                });
+            }
         }
         families.splice(this.id, 1);
 
         this.#parentsDiv.remove();
         this.#childrenDiv.remove();
-        this.#div.remove();
-    
+        if (this.#childrenDiv.childElementCount === 1 && this.#childrenDiv.firstElementChild.className === "family") {
+            this.#div.replaceWith(this.#childrenDiv.firstElementChild);
+        }
+        else {
+            this.#div.remove();
+        }
+        
         Family.updateAll();
     }
 
@@ -209,7 +228,7 @@ class ParentChildGroup {
     parentsConnectionPoint;
     childrenConnectionPoint;
     #inBetweenPoint;
-    #subFamilyMap;
+    #subFamilyMap = {};
     
     constructor(parents, children, family, subFamilyMap=undefined) {
         this.parents = parents;
@@ -239,9 +258,9 @@ class ParentChildGroup {
                     child.addGroup(this);
                     return;
                 }
-                if (subFamilyMap[child.id]) {
-                    subFamilyMap[child.id].getAdopted(parents);
-                    subFamilyMap[child.id].addGroup(this);
+                if (subFamilyMap[`${child.id}`]) {
+                    subFamilyMap[`${child.id}`].getAdopted(parents);
+                    subFamilyMap[`${child.id}`].addGroup(this);
                     return;
                 }
                 console.error(`Warning: Sub-family ${child} added without specified subFamilyChild.`);
@@ -254,8 +273,8 @@ class ParentChildGroup {
     }
     
     getInbetweenPoint() {
-        if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[this.children[0].id])) {
-            const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[this.children[0].id];
+        if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[`${this.children[0].id}`])) {
+            const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[`${this.children[0].id}`];
             if (this.parents.length === 1) {
                 const parentCenter = this.parents[0].connectionPoints.up.add(this.parents[0].connectionPoints.down).div(2);
                 const childCenter = singleChild.connectionPoints.up.add(singleChild.connectionPoints.down).div(2);
@@ -299,8 +318,8 @@ class ParentChildGroup {
             const direction = "down";
             this.parentsConnectionPoint = this.parents[0].connectionPoints[direction];
 
-            if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[this.children[0].id])) {
-                const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[this.children[0].id];
+            if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[`${this.children[0].id}`])) {
+                const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[`${this.children[0].id}`];
                 this.parentsConnectionPoint.updatePos = () => {
                     const direction = getPersonToPersonDirection(this.parents[0], singleChild);
                     this.parentsConnectionPoint.x = this.parents[0].connectionPoints[direction].x;
@@ -325,8 +344,8 @@ class ParentChildGroup {
             this.parentsConnectionPoint.draw = () => {
                 this.parentsConnectionPoint.updatePos();
                 let direction;
-                if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[this.children[0].id])) {
-                    const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[this.children[0].id];
+                if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[`${this.children[0].id}`])) {
+                    const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[`${this.children[0].id}`];
                     direction = getPersonToPersonDirection(this.parents[0], singleChild);
                 }
                 else {
@@ -384,8 +403,8 @@ class ParentChildGroup {
     }
 
     createChildConnectionPoint() {
-        if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[this.children[0].id])) {
-            const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[this.children[0].id];
+        if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[`${this.children[0].id}`])) {
+            const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[`${this.children[0].id}`];
 
             this.childrenConnectionPoint = new Vec2();
 
@@ -435,7 +454,7 @@ class ParentChildGroup {
                     total++;
                 }
                 else {   
-                    const subFamilyChild = this.#subFamilyMap[child.id]
+                    const subFamilyChild = this.#subFamilyMap[`${child.id}`]
                     sumOfCentersX += subFamilyChild.div.offsetLeft + (subFamilyChild.div.offsetWidth / 2);
                     total++;
                 }
@@ -467,7 +486,7 @@ class ParentChildGroup {
                         total++;
                     }
                     else {   
-                        const subFamilyChild = this.#subFamilyMap[_child.id]
+                        const subFamilyChild = this.#subFamilyMap[`${_child.id}`]
                         sumOfCentersX += subFamilyChild.div.offsetLeft + (subFamilyChild.div.offsetWidth / 2);
                         total++;
                     }
@@ -488,17 +507,21 @@ class ParentChildGroup {
         this.childrenConnectionPoint.updateConnected = () => {
             this.children.forEach((child) => {
                 if (!(child instanceof Person)) {
-                    child.draw(this.#subFamilyMap[child.id]);
+                    child.draw(this.#subFamilyMap[`${child.id}`]);
                     return;
                 }
                 this.#family.draw(child);
             })
+            if (this.parents.length > 0) {
+                this.childrenConnectionPoint.draw();
+                this.parentsConnectionPoint.draw();
+            }
+        }
+
+        if (this.parents.length > 0) {
             this.childrenConnectionPoint.draw();
             this.parentsConnectionPoint.draw();
         }
-
-        this.childrenConnectionPoint.draw();
-        this.parentsConnectionPoint.draw();
     }
 
     addParent(parent) {
@@ -511,11 +534,16 @@ class ParentChildGroup {
                 parent.adopt(child);
                 return;
             }
-            parent.adopt(this.#subFamilyMap[child.id]);
+            parent.adopt(this.#subFamilyMap[`${child.id}`]);
         });
         this.parents.push(parent);
 
-        this.parents[this.parents.length - 2].div.after(parent.div);
+        if (this.parents.length !== 1) {
+            this.parents[this.parents.length - 2].div.after(parent.div);
+        }
+        else {
+            this.#family.parentsDiv.appendChild(parent.div);
+        }
 
         Family.updateAll();
     }
@@ -537,7 +565,7 @@ class ParentChildGroup {
         if (subFamilyChild) {
             subFamilyChild.addGroup(this);
             subFamilyChild.getAdopted(this.parents);
-            this.#subFamilyMap[child.id] = subFamilyChild;
+            this.#subFamilyMap[`${child.id}`] = subFamilyChild;
 
             Family.updateAll();
 
@@ -552,7 +580,7 @@ class ParentChildGroup {
             this.parents.splice(parentIndex, 1);
 
             // TODO: Fix deletion of outer family
-            if (this.parents.length === 0 && this.children.length === 0) {
+            if (this.parents.length === 0 && (this.children.length === 0 || (this.children.length === 1 && this.children[0] instanceof Family))) {
                 this.delete();
                 return;
             }
@@ -565,14 +593,19 @@ class ParentChildGroup {
                     delete parent.connections[`parents ${index}`];
                 });
 
-                this.createParentConnectionPoint();
+                if (this.parents.length > 0) {
+                    this.createParentConnectionPoint();
+                }
+                else {
+                    this.deleteChildConnectionPoint();
+                }
             }
             if (this.children.length === 0) {
                 Family.updateAll();
                 return;
             }
-            for (const child in this.children) {
-                if (child.parents.length === 0) {
+            for (const child of this.children) {
+                if ((child instanceof Family && this.#subFamilyMap[`${child.id}`]) || child.parents.length === 0) {
                     Family.updateAll();
                     return;
                 }
@@ -590,6 +623,12 @@ class ParentChildGroup {
         if (this.children.length < 2) {
             this.deleteChildConnectionPoint();
 
+            this.children.forEach((child) => {
+                const index = child.groups.indexOf(this)
+                child.connections[`children ${index}`].remove();
+                delete child.connections[`children ${index}`];
+            });
+
             if (this.children.length > 0) {
                 this.createChildConnectionPoint();
             }
@@ -601,39 +640,38 @@ class ParentChildGroup {
     }
 
     delete() {
-        this.parents.forEach((parent) => {
-            const index = parent.groups.indexOf(this);
-            parent.connections[`parents ${index}`].remove();
-            delete parent.connections[`parents ${index}`];
-            parent.groups.splice(index, 1);
-        });
         this.children.forEach((child) => {
+            if (child instanceof Family) {
+                const subChild = this.#subFamilyMap[`${child.id}`];
+                const index = subChild.groups.indexOf(this);
+                if (subChild.connections[`children ${index}`]) {
+                    subChild.connections[`children ${index}`].remove();
+                    delete subChild.connections[`children ${index}`];
+                }
+                subChild.groups.splice(index, 1);
+                return;
+            }
+
             const index = child.groups.indexOf(this);
-            child.connections[`children ${index}`].remove();
-            delete child.connections[`children ${index}`];
+            if (child.connections[`children ${index}`]) {
+                child.connections[`children ${index}`].remove();
+                delete child.connections[`children ${index}`];
+            }
             child.groups.splice(index, 1);
         });
 
         if (this.parentsConnectionPoint) {
-            if (this.parentsConnectionPoint.inbetweenConnection) {
-                this.parentsConnectionPoint.inbetweenConnection.remove();
-                delete this.parentsConnectionPoint.inbetweenConnection;
-            }
-            this.parentsConnectionPoint.div.remove();
-            delete this.parentsConnectionPoint;
+            this.deleteParentsConnectionPoint();
         }
 
         if (this.childrenConnectionPoint) {
-            if (this.childrenConnectionPoint.inbetweenConnection) {
-                this.childrenConnectionPoint.inbetweenConnection.remove();
-                delete this.childrenConnectionPoint.inbetweenConnection;
-            }
-            this.childrenConnectionPoint.div.remove();
-            delete this.childrenConnectionPoint;
+            this.deleteChildConnectionPoint();
         }
 
         this.#family.groups.splice(this.#family.groups.indexOf(this), 1);
-        if (this.#family.groups.length === 0) {
+
+        const replaceCondition = this.#family.parentsDiv.childElementCount === 0 && this.#family.childrenDiv.childElementCount === 1 && this.#family.childrenDiv.firstElementChild.className === "family";
+        if (replaceCondition || this.#family.groups.length === 0) {
             this.#family.delete();
             return;
         }
@@ -669,10 +707,10 @@ class ParentChildGroup {
 
         if (!this.#subFamilyMap) {
             this.#subFamilyMap = {}
-            this.#subFamilyMap[family.id] = child;
+            this.#subFamilyMap[`${family.id}`] = child;
             return;
         }
-        this.#subFamilyMap[family.id] = child;
+        this.#subFamilyMap[`${family.id}`] = child;
         return;
     }
 }
