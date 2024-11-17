@@ -51,71 +51,85 @@ export default class Family {
     draw(person) {
         person.groups.forEach((group, i) => {
             let type;
-            let familyConnectionPoint;
-            if (group.parents.includes(person)) {                
-                type = `parents ${i}`;
-                if (group.parents.length === 1) {
-                    if (!group.parentsConnectionPoint) {
-                        group.createParentConnectionPoint();
+            function handleConnectionPoints(parameters) {
+                if (parameters.partyA.length === 1) {
+                    if (!parameters.connectionPointA) {
+                        parameters.createConnectionPointA();
                         return;
                     }
-                    group.parentsConnectionPoint.update();
+                    parameters.connectionPointA.update();
                     return;
                 }
-                if (!group.parentsConnectionPoint) {
-                    group.createParentConnectionPoint();
+                if (!parameters.connectionPointA) {
+                    parameters.createConnectionPointA();
                 }
-                // Check if recently added new parent
-                else if (!group.parentsConnectionPoint.div.transformPos) {
-                    group.parentsConnectionPoint.inbetweenConnection.remove();
-                    group.parentsConnectionPoint.inbetweenConnection = undefined;
-                    group.createParentConnectionPoint();
-                    group.childrenConnectionPoint.update();
-                    if (group.parents.length === 2 && group.children.length === 1) {
-                        group.childrenConnectionPoint.inbetweenConnection.remove();
-                        group.childrenConnectionPoint.inbetweenConnection = undefined;
-                        group.createChildConnectionPoint();
+                // Check if recently added new person
+                else if (!parameters.connectionPointA.div.transformPos) {
+                    parameters.connectionPointA.inbetweenConnection.remove();
+                    parameters.connectionPointA.inbetweenConnection = undefined;
+                    parameters.createConnectionPointA();
+                    parameters.connectionPointB.update();
+                    if (parameters.partyB.length === 2 && parameters.partyA.length === 1) {
+                        parameters.connectionPointB.inbetweenConnection.remove();
+                        parameters.connectionPointB.inbetweenConnection = undefined;
+                        parameters.createConnectionPointB();
                     }
                 }
-                familyConnectionPoint = group.parentsConnectionPoint;
+                const familyConnectionPoint = parameters.connectionPointA;
+                // Determine valid direction
+                const direction = getPersonToPointDirection(person, familyConnectionPoint);
+                const directionPoint = person.connectionPoints[direction];
+
+                if (person.connections[type]) {
+                    createConnection(directionPoint, familyConnectionPoint, direction, connectionColor, false, person.connections[type]);
+                    return;
+                }
+                person.connections[type] = createConnection(directionPoint, familyConnectionPoint, direction, connectionColor, false);
+            }
+            if (group.parents.includes(person)) {                
+                type = `parents ${i}`;
+                const parentParameters = {
+                    get partyA() {
+                        return group.parents;
+                    },
+                    get partyB() {
+                        return group.children;
+                    },
+
+                    get connectionPointA() {
+                        return group.parentsConnectionPoint;
+                    },
+                    get connectionPointB() {
+                        return group.childrenConnectionPoint;
+                    },
+
+                    createConnectionPointA() { group.createParentConnectionPoint() },
+                    createConnectionPointB() { group.createChildConnectionPoint() },
+                }
+                handleConnectionPoints(parentParameters);
             }
             else {
                 type = `children ${i}`;
-                if (group.children.length === 1) {
-                    if (!group.childrenConnectionPoint) {
-                        group.createChildConnectionPoint();
-                        return;
-                    }
-                    group.childrenConnectionPoint.update();
-                    return;
-                }
-                if (!group.childrenConnectionPoint) {
-                    group.createChildConnectionPoint();
-                }
-                // Check if recently added new child
-                else if (!group.childrenConnectionPoint.div.transformPos) {
-                    group.childrenConnectionPoint.inbetweenConnection.remove();
-                    group.childrenConnectionPoint.inbetweenConnection = undefined;
-                    group.createChildConnectionPoint();
-                    group.parentsConnectionPoint.update();
-                    if (group.parents.length === 1 && group.children.length === 2) {
-                        group.parentsConnectionPoint.inbetweenConnection.remove();
-                        group.parentsConnectionPoint.inbetweenConnection = undefined;     
-                        group.createParentConnectionPoint();                   
-                    }
-                }
-                familyConnectionPoint = group.childrenConnectionPoint;
-            }
+                const childParameters = {
+                    get partyA() {
+                        return group.children;
+                    },
+                    get partyB() {
+                        return group.parents;
+                    },
 
-            // Determine valid direction
-            const direction = getPersonToPointDirection(person, familyConnectionPoint);
-            const directionPoint = person.connectionPoints[direction];
+                    get connectionPointA() {
+                        return group.childrenConnectionPoint;
+                    },
+                    get connectionPointB() {
+                        return group.parentsConnectionPoint;
+                    },
 
-            if (person.connections[type]) {
-                createConnection(directionPoint, familyConnectionPoint, direction, connectionColor, false, person.connections[type]);
-                return;
+                    createConnectionPointA() { group.createChildConnectionPoint() },
+                    createConnectionPointB() { group.createParentConnectionPoint() },
+                }
+                handleConnectionPoints(childParameters);
             }
-            person.connections[type] = createConnection(directionPoint, familyConnectionPoint, direction, connectionColor, false);
         });
     }
 

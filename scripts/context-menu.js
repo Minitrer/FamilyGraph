@@ -15,17 +15,11 @@ bgResetTransforms.textContent = "Reset all positions";
 const onBackground = [bgAddPersonButton, horizontalRule, bgResetTransforms];
 
 bgAddPersonButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    hideContextMenu();
-    
-    Person.createPerson();
+    onClick(e, Person.createPerson);
 });
 
 bgResetTransforms.addEventListener("click", (e) => {
-    e.preventDefault();
-    hideContextMenu();
-
-    Person.resetAllTransforms();
+    onClick(e, Person.resetAllTransforms);
 });
 
 const addParentButton = document.createElement("button");
@@ -138,34 +132,19 @@ function addChild() {
 }
 
 addParentButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    hideContextMenu();
-
-    addParent()
+    onClick(e, addParent);
 });
 addSpouceButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    hideContextMenu();
-    
-    addSpouce()
+    onClick(e, addSpouce);
 });
 addChildButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    hideContextMenu();
-    
-    addChild()
+    onClick(e, addChild);
 });
 resetTransformButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    hideContextMenu();
-    
-    targetPerson.resetTransform();
+    onClick(e, () => { targetPerson.resetTransform() });
 });
 deleteButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    hideContextMenu();
-
-    targetPerson.delete();
+    onClick(e, () => { targetPerson.delete() });
 });
 
 function setContextMenu(target) {
@@ -179,6 +158,12 @@ function setContextMenu(target) {
 function hideContextMenu() {
     contextMenu.replaceChildren();
     contextMenu.className = "hide";
+}
+function onClick(e, action) {
+    e.preventDefault();
+    hideContextMenu();
+
+    action();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
