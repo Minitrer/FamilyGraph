@@ -1,6 +1,7 @@
 import Family from "./family.js";
-import { clickedPos } from "./pan-zoom-and-drag.js";
 import Person from "./person.js";
+import { FAMILIES } from "./family.js";
+import { CLICKEDPOS } from "./pan-zoom-and-drag.js";
 
 const contextMenu = document.getElementById("context-menu");
 const horizontalRule = document.createElement("hr");
@@ -97,6 +98,17 @@ function addParent() {
             }
         }
     }
+    // Find larger family through DOM tree
+    // Maybe figure out a different way cause this is bad
+    if (targetPerson.family.div.parentElement.className === "children") {
+        const largerFamilyDiv = targetPerson.family.div.parentElement.parentElement;
+        const largerFamilyID = Family.getIDFromDiv(largerFamilyDiv);
+
+        FAMILIES[largerFamilyID].addGroup([new Person()], [targetPerson.family], subFamilyMap);
+        return;
+    }
+
+    console.error(`Failed to add parent of ${targetPerson}`);
 }
 function addSpouce() {
     if (targetPerson.div.parentElement.className === "parents") {
@@ -172,7 +184,7 @@ function hideContextMenu() {
 document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("contextmenu", (event) => {
         event.preventDefault();
-        if (event.pageX - clickedPos.x !== 0 && event.pageY - clickedPos.y !== 0) {
+        if (event.pageX - CLICKEDPOS.x !== 0 && event.pageY - CLICKEDPOS.y !== 0) {
             return;
         }
 

@@ -3,7 +3,7 @@ import Vec2 from "./vec2.js";
 const scaleSensitivity = 0.1;
 const minScale = 0.1;
 
-export let clickedPos = new Vec2(0, 0);
+export let CLICKEDPOS = new Vec2(0, 0);
 let transformScale = 1;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -18,8 +18,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let draggingElement = {};
     function drag(event) {
         const newPos = new Vec2(
-            draggingElement.transformPos.x + (event.pageX - clickedPos.x) * (1 / transformScale),
-            draggingElement.transformPos.y + (event.pageY - clickedPos.y) * (1 / transformScale)
+            draggingElement.transformPos.x + (event.pageX - CLICKEDPOS.x) * (1 / transformScale),
+            draggingElement.transformPos.y + (event.pageY - CLICKEDPOS.y) * (1 / transformScale)
         );
 
         draggingElement.onDrag(newPos);
@@ -42,14 +42,14 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        clickedPos.x = event.pageX;
-        clickedPos.y = event.pageY;
+        CLICKEDPOS.x = event.pageX;
+        CLICKEDPOS.y = event.pageY;
 
         document.addEventListener("mousemove", drag);
         
         document.addEventListener("mouseup", (event) => {
-            draggingElement.transformPos.x += (event.pageX - clickedPos.x) * (1 / transformScale);
-            draggingElement.transformPos.y += (event.pageY - clickedPos.y) * (1 / transformScale); 
+            draggingElement.transformPos.x += (event.pageX - CLICKEDPOS.x) * (1 / transformScale);
+            draggingElement.transformPos.y += (event.pageY - CLICKEDPOS.y) * (1 / transformScale); 
             document.removeEventListener("mousemove", drag);
             event.preventDefault();
         }, {once: true});

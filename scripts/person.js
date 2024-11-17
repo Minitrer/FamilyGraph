@@ -1,7 +1,7 @@
 import Family from "./family.js";
 import Vec2 from "./vec2.js";
 
-let people = [];
+let PEOPLE = [];
 
 export default class Person {
     #id
@@ -22,7 +22,7 @@ export default class Person {
     connections = {};
 
     constructor(name="Name", family=undefined, spouse=undefined, parents=undefined, children=undefined) {
-        people.push(this);
+        PEOPLE.push(this);
 
         if (family) {
             this.#family = family;
@@ -59,7 +59,7 @@ export default class Person {
     }
     
     get id() {
-        return people.indexOf(this);
+        return PEOPLE.indexOf(this);
     }
     get name() {
         return this.#div.firstElementChild.textContent;
@@ -312,7 +312,7 @@ export default class Person {
         });
         this.connections = null;
         
-        people.splice(people.indexOf(this), 1);
+        PEOPLE.splice(PEOPLE.indexOf(this), 1);
         
         this.#div.remove();
         this.#div = null;
@@ -321,10 +321,12 @@ export default class Person {
             group.remove(this);
         });
         this.#groups = null;
+
+        Family.updateAll();
     }
 
     static resetAllTransforms() {
-        people.forEach((person) => {
+        PEOPLE.forEach((person) => {
             person.resetTransform();
         });
     }
@@ -335,7 +337,7 @@ export default class Person {
             Family.createFamily([new Person()]);
         }
         else {
-            const lastPerson = people[people.length - 1];
+            const lastPerson = PEOPLE[PEOPLE.length - 1];
             // lastPerson has parents and is single
             if (lastPerson.div.parentElement.className === "children") {
                 lastPerson.groups[lastPerson.groups.length - 1].addChild(new Person());

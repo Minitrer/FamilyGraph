@@ -2,10 +2,9 @@ import createConnection from "./connection.js";
 import Person from "./person.js";
 import Vec2 from "./vec2.js";
 
-let families = [];
+export let FAMILIES = [];
 
 export default class Family {
-    #id;
     #groups = [];
     #div;
     #parentsDiv;
@@ -14,7 +13,7 @@ export default class Family {
     constructor(parents, children=undefined, subFamilyMap=undefined) {
         // subFamilyMap is a dictionary with subfamilies's ids as keys and one of their parents as values
 
-        families.push(this);
+        FAMILIES.push(this);
         
         // Create divs
         this.#div = document.createElement("div");
@@ -33,7 +32,7 @@ export default class Family {
     }
 
     get id() {
-        return families.indexOf(this);
+        return FAMILIES.indexOf(this);
     }
     get groups() {
         return this.#groups;
@@ -132,9 +131,14 @@ export default class Family {
                     child.updateWorkspacePos();
                     return;
                 }
-                child.updateWorkspacePositions();
             });
         });
+        // Update subfamilies
+        const subFamiliesDivs = this.#childrenDiv.getElementsByClassName("family");
+        for (const familyDiv of subFamiliesDivs) {
+            const index = Family.getIDFromDiv(familyDiv);
+            FAMILIES[index].updateWorkspacePositions();
+        }
     }
 
     updateConnectionPoints() {
@@ -154,24 +158,24 @@ export default class Family {
     }
 
     delete() {
-        for (let i = this.id + 1, length = families.length; i < length; i++) {
-            families[i].div.id = `family ${i - 1}`;
+        for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
+            FAMILIES[i].div.id = `family ${i - 1}`;
 
             // Correct SubFamilyMaps
-            if (families[i].div.parentElement.className === "children") {
-                const largerFamilyID = families[i].div.parentElement.parentElement.id.substring(7);
+            if (FAMILIES[i].div.parentElement.className === "children") {
+                const largerFamilyID = Family.getIDFromDiv(FAMILIES[i].div.parentElement.parentElement);
                 if (largerFamilyID === this.id) {
                     continue;
                 }
-                families[largerFamilyID].groups.forEach((group) => {
-                    if (group.subFamilyMap[`${families[i].id}`]) {
-                        group.subFamilyMap[`${families[i].id - 1}`] = group.subFamilyMap[`${families[i].id}`];
-                        delete group.subFamilyMap[`${families[i].id}`];
+                FAMILIES[largerFamilyID].groups.forEach((group) => {
+                    if (group.subFamilyMap[`${FAMILIES[i].id}`]) {
+                        group.subFamilyMap[`${FAMILIES[i].id - 1}`] = group.subFamilyMap[`${FAMILIES[i].id}`];
+                        delete group.subFamilyMap[`${FAMILIES[i].id}`];
                     }
                 });
             }
         }
-        families.splice(this.id, 1);
+        FAMILIES.splice(this.id, 1);
 
         this.#parentsDiv.remove();
         this.#childrenDiv.remove();
@@ -186,9 +190,9 @@ export default class Family {
     }
 
     static updateAll() {
-        const largestFamilyIndex = Number(graph.firstElementChild.id.substring(7));
-        families[largestFamilyIndex].updateWorkspacePositions();
-        families.forEach((_family) => {
+        const largestFamilyIndex = Family.getIDFromDiv(graph.firstElementChild);
+        FAMILIES[largestFamilyIndex].updateWorkspacePositions();
+        FAMILIES.forEach((_family) => {
             _family.updateConnectionPoints();
         });
     }
@@ -214,6 +218,10 @@ export default class Family {
         _parentElement.appendChild(family.div);
         Family.updateAll();
         return family;
+    }
+
+    static getIDFromDiv(div) {
+        return Number(div.id.substring(7));
     }
 }
 
@@ -404,6 +412,9 @@ class ParentChildGroup {
 
     createChildConnectionPoint() {
         if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[`${this.children[0].id}`])) {
+            if (this.parents.length === 0) {
+                return;
+            }
             const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[`${this.children[0].id}`];
 
             this.childrenConnectionPoint = new Vec2();
@@ -585,7 +596,7 @@ class ParentChildGroup {
                 return;
             }
             if (this.parents.length < 3) {
-                this.deleteParentsConnectionPoint();
+                this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);
 
                 this.parents.forEach((parent) => {
                     const index = parent.groups.indexOf(this)
@@ -597,23 +608,12 @@ class ParentChildGroup {
                     this.createParentConnectionPoint();
                 }
                 else {
-                    this.deleteChildConnectionPoint();
+                    this.childrenConnectionPoint = deleteConnectionPoint(this.childrenConnectionPoint);
                 }
             }
-            if (this.children.length === 0) {
-                Family.updateAll();
-                return;
-            }
-            for (const child of this.children) {
-                if ((child instanceof Family && this.#subFamilyMap[`${child.id}`]) || child.parents.length === 0) {
-                    Family.updateAll();
-                    return;
-                }
-            }
-            this.delete();
             return;
         }
-        const childIndex = this.children.indexOf(person);
+        const childIndex = (this.children.indexOf(person) > -1)? this.children.indexOf(person) : this.children.indexOf(person.family);
         this.children.splice(childIndex, 1);
 
         if (this.parents.length === 0 && this.children.length === 0) {
@@ -621,21 +621,19 @@ class ParentChildGroup {
             return;
         }
         if (this.children.length < 2) {
-            this.deleteChildConnectionPoint();
-
-            this.children.forEach((child) => {
-                const index = child.groups.indexOf(this)
-                child.connections[`children ${index}`].remove();
-                delete child.connections[`children ${index}`];
-            });
+            this.childrenConnectionPoint = deleteConnectionPoint(this.childrenConnectionPoint);
 
             if (this.children.length > 0) {
+                const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[`${this.children[0].id}`];
+                const index = singleChild.groups.indexOf(this);
+                singleChild.connections[`children ${index}`].remove();
+                delete singleChild.connections[`children ${index}`];
+
                 this.createChildConnectionPoint();
             }
             else {
-                this.deleteParentsConnectionPoint();
+                this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);
             }
-            Family.updateAll();
         }
     }
 
@@ -661,11 +659,11 @@ class ParentChildGroup {
         });
 
         if (this.parentsConnectionPoint) {
-            this.deleteParentsConnectionPoint();
+            this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);
         }
 
         if (this.childrenConnectionPoint) {
-            this.deleteChildConnectionPoint();
+            this.childrenConnectionPoint = deleteConnectionPoint(this.childrenConnectionPoint);
         }
 
         this.#family.groups.splice(this.#family.groups.indexOf(this), 1);
@@ -676,28 +674,6 @@ class ParentChildGroup {
             return;
         }
         Family.updateAll();
-    }
-
-    deleteParentsConnectionPoint() {
-        if (this.parentsConnectionPoint.inbetweenConnection) {
-            this.parentsConnectionPoint.inbetweenConnection.remove();
-            delete this.parentsConnectionPoint.inbetweenConnection;
-        }
-        if (this.parentsConnectionPoint.div.transformPos) {
-            this.parentsConnectionPoint.div.remove();
-        }
-        this.parentsConnectionPoint = undefined;
-    }
-    deleteChildConnectionPoint() {
-        if (this.childrenConnectionPoint.inbetweenConnection) {
-            this.childrenConnectionPoint.inbetweenConnection.remove();
-            delete this.childrenConnectionPoint.inbetweenConnection;
-        }
-        if (this.childrenConnectionPoint.div.transformPos) {
-            this.childrenConnectionPoint.div.remove();
-        }
-        delete this.childrenConnectionPoint.inbetweenConnection;
-        this.childrenConnectionPoint = undefined;
     }
 
     convertChildToFamily(child, family) {
@@ -713,6 +689,17 @@ class ParentChildGroup {
         this.#subFamilyMap[`${family.id}`] = child;
         return;
     }
+}
+
+function deleteConnectionPoint(point) {
+    if (point.inbetweenConnection) {
+        point.inbetweenConnection.remove();
+        delete point.inbetweenConnection;
+    }
+    if (point.div.transformPos) {
+        point.div.remove();
+    }
+    return undefined;
 }
 
 function createConnectionDiv(p) {
