@@ -5,6 +5,11 @@ html, body, .workspace {
     margin: 0%;
     background-color: black;
     overflow: hidden;
+
+    --black-1: rgb(35, 35, 35);
+    --black-2: rgb(60, 60, 60);
+    --gray: rgba(70, 70, 70);
+    --white: rgb(204, 204, 204);
 }
 #workspace {
     width: 100%;
@@ -29,7 +34,7 @@ html, body, .workspace {
     flex-flow: column wrap;
     align-content: center;
 
-    background-color: rgb(35, 35, 35);
+    background-color: var(--black-1);
     border-radius: 0.6em;
 }
 #context-menu.hidden {
@@ -37,8 +42,8 @@ html, body, .workspace {
 }
 #context-menu.show button {
     padding: 0;
-    background-color: rgb(35, 35, 35);
-    color: rgb(204, 204, 204);
+    background-color: var(--black-1);
+    color: var(--white);
     border: none;
     font-weight: 300;
     font-size: 1em;
@@ -49,13 +54,13 @@ html, body, .workspace {
     cursor: pointer;
 }
 #context-menu.show button:hover {
-    background-color: rgb(60, 60, 60);
+    background-color: var(--black-2);
     color: white;
 }
 #context-menu.show hr {
     width: 90%;
     margin: 2px auto 2px auto;
-    border-color: rgba(70, 70, 70);
+    border-color: var(--gray);
 }
 
 #graph, .family, .parents, .children {
@@ -63,7 +68,7 @@ html, body, .workspace {
     justify-content: center;
     align-items: center;
     align-content: center;
-    border: 1px solid cyan;
+    /* border: 1px solid cyan; */
 }
 
 #graph {
@@ -86,28 +91,48 @@ html, body, .workspace {
 }
 
 .person {
-    padding: 0.2em;
+    padding: 0.2em 0.4em 0.2em 0.4em;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     align-content: center;
-    border: 1px solid white;
     border-radius: 0.5em;
+    border: none;
+    transition: box-shadow 0.2s;
+    transition-timing-function: ease-in;
     font-family: Arial, Helvetica, sans-serif;
-    background-color: rgb(35, 35, 35);
+    background-color: var(--black-1);
     cursor: pointer;
+}
+.person:focus-within {
+    box-shadow: 0px 0px 0.4em var(--white) inset;
 }
 .name {
     width: auto;
     height: auto;
     margin: 0%;
     padding: 0%;
-    color: rgb(204, 204, 204);
+    color: var(--white);
     font-size: 2em;
     -webkit-user-select: none; /* Safari */
-    -ms-user-select: none; /* IE 10 and IE 11 */
     user-select: none; /* Standard syntax */
+}
+.name:focus {
+    outline: none;
+}
+.name[placeholder]:empty:before {
+    content: attr(placeholder);
+}
+
+.name[placeholder]:empty:focus:before {
+    content: "";
+}
+.name::selection {
+    background-color: transparent;
+}
+.name:focus::selection {
+    background-color: rgb(50, 50, 255);
 }
 
 .point {

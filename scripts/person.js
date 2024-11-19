@@ -40,10 +40,24 @@ export default class Person {
         this.#div = document.createElement("div");
         this.#div.setAttribute("class", "person");
 
-        const name_element = document.createElement("h1");
-        name_element.textContent = name;
-        name_element.setAttribute("class", "name")
-        this.#div.appendChild(name_element);
+        const nameElement = document.createElement("h1");
+        nameElement.textContent = name;
+        nameElement.setAttribute("placeholder", "Name");
+        nameElement.className = "name";
+        nameElement.contentEditable = true;
+        nameElement.spellcheck = false;
+        nameElement.autofocus = true;
+        nameElement.addEventListener("focus", (e) => {
+            if (this.name === "Name") {
+                nameElement.textContent = "";
+            }
+            let selection = document.getSelection();
+            let range = document.createRange();
+            range.selectNodeContents(nameElement);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        });
+        this.#div.appendChild(nameElement);
 
         this.#div.addEventListener("mousedown", (e) => {
             e.preventDefault();
@@ -56,6 +70,11 @@ export default class Person {
 
         this.#div.style.transform = "translate(calc(var(--pos-x) * 1px), calc(var(--pos-y) * 1px))";
         this.#div.person = this;
+
+        const observer = new ResizeObserver(() => {
+            Family.updateAll();
+        });
+        observer.observe(this.#div);
     }
     
     get id() {
@@ -333,27 +352,31 @@ export default class Person {
 
     static createPerson() {
         const graph = document.getElementById("graph");
+        const newPerson = new Person();
         if (graph.childElementCount === 0) {
-            Family.createFamily([new Person()]);
+            Family.createFamily([newPerson]);
+            newPerson.div.firstElementChild.focus();
+            return;
         }
-        else {
-            const lastPerson = PEOPLE[PEOPLE.length - 1];
-            // lastPerson has parents and is single
-            if (lastPerson.div.parentElement.className === "children") {
-                lastPerson.groups[lastPerson.groups.length - 1].addChild(new Person());
+        const lastPerson = PEOPLE[PEOPLE.length - 2];
+        // lastPerson has parents and is single
+        if (lastPerson.div.parentElement.className === "children") {
+            lastPerson.groups[lastPerson.groups.length - 1].addChild(newPerson);
+            newPerson.div.firstElementChild.focus();
+            return;
+        }
+        if (lastPerson.spouses.length === 0) {
+            // lastPerson is single and an orphan
+            if (lastPerson.div.parentElement.className === "parents") {
+                lastPerson.groups.forEach((group) => {
+                    group.addParent(newPerson);
+                    newPerson.div.firstElementChild.focus();
+                });
                 return;
             }
-            if (lastPerson.spouses.length === 0) {
-                // lastPerson is single and an orphan
-                if (lastPerson.div.parentElement.className === "parents") {
-                    lastPerson.groups.forEach((group) => {
-                        group.addParent(new Person());
-                    });
-                    return;
-                }
-            }
-            // lastPerson is a married orphan
-            lastPerson.groups[0].addChild(new Person());
         }
+        // lastPerson is a married orphan
+        lastPerson.groups[0].addChild(newPerson);
+        newPerson.div.firstElementChild.focus();
     }
 }

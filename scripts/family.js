@@ -51,7 +51,7 @@ export default class Family {
     draw(person) {
         person.groups.forEach((group, i) => {
             let type;
-            function handleConnectionPoints(parameters) {
+            function drawConnections(parameters) {
                 if (parameters.partyA.length === 1) {
                     if (!parameters.connectionPointA) {
                         parameters.createConnectionPointA();
@@ -106,30 +106,29 @@ export default class Family {
                     createConnectionPointA() { group.createParentConnectionPoint() },
                     createConnectionPointB() { group.createChildConnectionPoint() },
                 }
-                handleConnectionPoints(parentParameters);
+                drawConnections(parentParameters);
+                return;
             }
-            else {
-                type = `children ${i}`;
-                const childParameters = {
-                    get partyA() {
-                        return group.children;
-                    },
-                    get partyB() {
-                        return group.parents;
-                    },
+            type = `children ${i}`;
+            const childParameters = {
+                get partyA() {
+                    return group.children;
+                },
+                get partyB() {
+                    return group.parents;
+                },
 
-                    get connectionPointA() {
-                        return group.childrenConnectionPoint;
-                    },
-                    get connectionPointB() {
-                        return group.parentsConnectionPoint;
-                    },
+                get connectionPointA() {
+                    return group.childrenConnectionPoint;
+                },
+                get connectionPointB() {
+                    return group.parentsConnectionPoint;
+                },
 
-                    createConnectionPointA() { group.createChildConnectionPoint() },
-                    createConnectionPointB() { group.createParentConnectionPoint() },
-                }
-                handleConnectionPoints(childParameters);
+                createConnectionPointA() { group.createChildConnectionPoint() },
+                createConnectionPointB() { group.createParentConnectionPoint() },
             }
+            drawConnections(childParameters);
         });
     }
 
@@ -383,7 +382,13 @@ class ParentChildGroup {
             }
         }
         else {   
-            const x = (this.parents[0].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetWidth) / 2;
+            let x;
+            if (this.parents.length === 2) {
+                x = (this.parents[0].div.offsetLeft + this.parents[0].div.offsetWidth + this.parents[1].div.offsetLeft) / 2;
+            }
+            else {
+                x = (this.parents[0].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetWidth) / 2;
+            }
             const y = this.parents.length === 2? this.parents[0].connectionPoints.right.y : this.parents[0].connectionPoints.down.y + connectionPointGap;
             this.parentsConnectionPoint = new Vec2(x, y);
             
@@ -400,7 +405,13 @@ class ParentChildGroup {
             }
 
             this.parentsConnectionPoint.update = () => {
-                const x = (this.parents[0].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetWidth) / 2;
+                let x;
+                if (this.parents.length === 2) {
+                    x = (this.parents[0].div.offsetLeft + this.parents[0].div.offsetWidth + this.parents[1].div.offsetLeft) / 2;
+                }
+                else {
+                    x = (this.parents[0].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetLeft + this.parents[(this.parents.length - 1)].div.offsetWidth) / 2;
+                }
                 const y = this.parents.length === 2? this.parents[0].connectionPoints.right.y : this.parents[0].connectionPoints.down.y + connectionPointGap;
 
                 this.parentsConnectionPoint.x = x + this.parentsConnectionPoint.div.transformPos.x;
@@ -604,7 +615,6 @@ class ParentChildGroup {
         if (parentIndex > -1) {
             this.parents.splice(parentIndex, 1);
 
-            // TODO: Fix deletion of outer family
             if (this.parents.length === 0 && (this.children.length === 0 || (this.children.length === 1 && this.children[0] instanceof Family))) {
                 this.delete();
                 return;
@@ -746,13 +756,13 @@ function getPersonToPointDirection(person, point) {
     if (point.y < person.connectionPoints.up.y) {
         return "up";
     }
-    if (point.y < person.connectionPoints.down.y) {
-        if (point.x < person.connectionPoints.left.x) {
-            return "left";
-        }
-        return "right";
+    if (point.y >= person.connectionPoints.down.y) {
+        return "down";
     }
-    return "down";
+    if (point.x < person.connectionPoints.left.x) {
+        return "left";
+    }
+    return "right";
 }
 function getPersonToPersonDirection(personA, personB) {
     if ((personA.connectionPoints.down.y >= personB.connectionPoints.up.y && personA.connectionPoints.down.y  <= personB.connectionPoints.down.y) ||
