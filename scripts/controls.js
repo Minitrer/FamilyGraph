@@ -2,6 +2,16 @@ import Person from "./person.js";
 import { CLICKEDPOS } from "./pan-zoom-and-drag.js";
 import * as Actions from "./actions.js";
 
+let targetPerson;
+let selected = [];
+
+const genderOptions = document.getElementsByName("gender");
+for (const option of genderOptions) {
+    option.onchange = () => {
+        console.log(option.value);
+    }
+}
+
 const contextMenu = document.getElementById("context-menu");
 const horizontalRule = document.createElement("hr");
 
@@ -35,7 +45,6 @@ deleteButton.textContent = "Delete";
 
 const onPerson = [addParentButton, addSpouceButton, addChildButton, horizontalRule, resetTransformButton, deleteButton];
 
-let targetPerson;
 addParentButton.addEventListener("click", (e) => {
     onClick(e, () => { Actions.addParent(targetPerson) });
 });
@@ -103,10 +112,10 @@ document.addEventListener("dblclick", (event) => {
     event.preventDefault();
 
     let target = undefined;
-    if (event.target.className === "person") {
+    if (event.target.classList.contains("person")) {
         target = event.target.firstElementChild;
     }
-    else if (event.target.className === "name") {
+    else if (event.target.classList.contains("name")) {
         target = event.target;
     }
 
@@ -116,3 +125,30 @@ document.addEventListener("dblclick", (event) => {
     }
     Person.createPerson();
 })
+
+document.addEventListener("click", (event) => {
+    if (event.target.tagName === "FORM" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL") {
+        return;
+    }
+    event.preventDefault();
+
+    let target = undefined;
+    if (event.target.classList.contains("person")) {
+        target = event.target;
+    }
+    else if (event.target.classList.contains("name")) {
+        target = event.target.parentElement;
+    }
+
+    if (target) {
+        target.classList.add("selected");
+        selected = [target];
+        targetPerson = target;
+        return;
+    }
+
+    selected.forEach((selection) => {
+        selection.classList.remove("selected");
+        selected = [];
+    });
+});

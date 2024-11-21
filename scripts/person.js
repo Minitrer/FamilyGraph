@@ -2,9 +2,11 @@ import Family from "./family.js";
 import Vec2 from "./vec2.js";
 
 let PEOPLE = [];
+const observer = new ResizeObserver(() => {
+    Family.updateAll();
+});
 
 export default class Person {
-    #id
     #family;
     #groups = [];
     #spouses = [];
@@ -71,9 +73,6 @@ export default class Person {
         this.#div.style.transform = "translate(calc(var(--pos-x) * 1px), calc(var(--pos-y) * 1px))";
         this.#div.person = this;
 
-        const observer = new ResizeObserver(() => {
-            Family.updateAll();
-        });
         observer.observe(this.#div);
     }
     
@@ -208,7 +207,6 @@ export default class Person {
             return true;
         }
 
-        
         if (!internal) {
             this.#children.forEach(_child => {
                 _child.orphanSelf(this, true);
@@ -333,14 +331,19 @@ export default class Person {
         
         PEOPLE.splice(PEOPLE.indexOf(this), 1);
         
+        observer.unobserve(this.#div);
+
         this.#div.remove();
         this.#div = null;
-
+        
         this.#groups.forEach((group) => {
             group.remove(this);
         });
         this.#groups = null;
-
+                
+        if (PEOPLE.length === 0) {
+            return;
+        }
         Family.updateAll();
     }
 

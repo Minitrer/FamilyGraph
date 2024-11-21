@@ -26,6 +26,9 @@ html, body, .workspace {
         );
 }
 
+.hidden {
+    display: none;
+}
 #context-menu.show {
     position: absolute;
     overflow: hidden;
@@ -37,11 +40,7 @@ html, body, .workspace {
     background-color: var(--black-1);
     border-radius: 0.6em;
 }
-#context-menu.hidden {
-    display: none;
-}
 #context-menu.show button {
-    padding: 0;
     background-color: var(--black-1);
     color: var(--white);
     border: none;
@@ -61,6 +60,82 @@ html, body, .workspace {
     width: 90%;
     margin: 2px auto 2px auto;
     border-color: var(--gray);
+}
+#gender-menu.show hr {
+    margin: 0;
+    border-color: var(--white);
+}
+#gender-menu.show {
+    left: 0px;
+    top: 0px;
+
+    position: absolute;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-content: center;
+    align-items: center;   
+}
+#gender-menu-buttons {
+    border: none;
+    border-radius: 0.6em;
+    overflow: hidden;
+
+    display: flex;
+    margin: 0;
+    padding: 0;
+
+    flex-flow: row wrap;
+    justify-content: space-evenly;
+
+
+    background-color: var(--black-1);
+}
+#gender-menu-buttons input {
+    display: none;
+}
+#gender-menu-buttons label {
+    display: block;
+    padding: 0.2em;
+
+    font-weight: 300;
+    font-size: 2em;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--white);
+}
+#neutral:hover+label {
+    background-color: rgb(60, 60, 60);
+    color: rgb(240, 240, 240);
+}
+#neutral:checked+label {
+    background-color: rgb(12, 12, 12);
+    color: rgb(180, 180, 180);
+}
+#male+label {
+    background-color: rgb(0, 80, 170);
+    color: white;
+}
+#male:hover+label {
+    background-color: rgb(120, 170, 255);
+    color: rgb(0, 0, 90);
+}
+#male:checked+label {
+    background-color: rgb(10, 60, 120);
+    color: rgb(204, 240, 240);
+}
+#female+label {
+    background-color: rgb(255, 120, 250);
+    color: rgb(0, 0, 75);
+}
+#female:hover+label {
+    background-color: rgb(255, 188, 253);
+    color: rgb(28, 28, 127);
+}
+#female:checked+label {
+    background-color: rgb(255, 50, 250);
+    color: black;
 }
 
 #graph, .family, .parents, .children {
@@ -108,6 +183,13 @@ html, body, .workspace {
 .person:focus-within {
     box-shadow: 0px 0px 0.4em var(--white) inset;
 }
+.person.selected:focus-within {
+    box-shadow: 0px 0px 0.4em var(--white) inset, 0px 0px 1em var(--white);
+}
+.person.selected{
+    box-shadow: 0px 0px 1em var(--white);
+}
+
 .name {
     width: auto;
     height: auto;

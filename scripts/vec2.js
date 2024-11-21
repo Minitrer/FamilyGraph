@@ -6,20 +6,20 @@ export default class Vec2 {
     add(v) {
         return new Vec2(this.x + v.x, this.y + v.y);
     }
-    sub(v) {
+    subtract(v) {
         return new Vec2(this.x - v.x, this.y - v.y);
     }
-    div(k) {
+    divide(k) {
         return new Vec2(this.x / k, this.y / k);
     }
-    mult(k) {
+    multiply(k) {
         return new Vec2(this.x * k, this.y * k);
     }
     magnitude() {
         return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
     }
     normalized() {
-        return this.div(this.magnitude());
+        return this.divide(this.magnitude());
     }
     dot(v) {
         return this.x * v.x + this.y * v.y

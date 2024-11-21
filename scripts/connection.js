@@ -16,7 +16,7 @@ export default function createConnection(from, to, direction, color="white", has
             return;
         }
 
-    const dirTo = to.sub(from);
+    const dirTo = to.subtract(from);
     let svg = replace;
     if (!replace) {
         svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -157,14 +157,14 @@ export default function createConnection(from, to, direction, color="white", has
                 break;
         }   
     
-        const originToCornerLength = cornerPos.sub(origin).magnitude();
-        const cornerToTargetLength = origin.add(dirTo).sub(cornerPos).magnitude();
+        const originToCornerLength = cornerPos.subtract(origin).magnitude();
+        const cornerToTargetLength = origin.add(dirTo).subtract(cornerPos).magnitude();
         
         const curveStart = origin.add(
-            cornerPos.sub(origin).normalized().mult(Math.max(1, (originToCornerLength - curveLength)))
+            cornerPos.subtract(origin).normalized().multiply(Math.max(1, (originToCornerLength - curveLength)))
         );
         const curveEnd = cornerPos.add(
-            origin.add(dirTo).sub(cornerPos).normalized().mult(Math.min(curveLength, cornerToTargetLength))
+            origin.add(dirTo).subtract(cornerPos).normalized().multiply(Math.min(curveLength, cornerToTargetLength))
         );
         let pathString = 
            `M ${origin.x} ${origin.y}

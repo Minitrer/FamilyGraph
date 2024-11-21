@@ -64,7 +64,7 @@ export default class Family {
                     parameters.createConnectionPointA();
                 }
                 // Check if recently added new person
-                else if (!parameters.connectionPointA.div.transformPos) {
+                else if (!parameters.connectionPointA.div || !parameters.connectionPointA.div.transformPos) {
                     parameters.connectionPointA.inbetweenConnection.remove();
                     parameters.connectionPointA.inbetweenConnection = undefined;
                     parameters.createConnectionPointA();
@@ -199,6 +199,9 @@ export default class Family {
             this.#div.remove();
         }
         
+        if (FAMILIES.length === 0) {
+            return;
+        }
         Family.updateAll();
     }
 
@@ -297,9 +300,9 @@ class ParentChildGroup {
         if (this.children.length === 1 && (this.children[0] instanceof Person || this.#subFamilyMap[`${this.children[0].id}`])) {
             const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[`${this.children[0].id}`];
             if (this.parents.length === 1) {
-                const parentCenter = this.parents[0].connectionPoints.up.add(this.parents[0].connectionPoints.down).div(2);
-                const childCenter = singleChild.connectionPoints.up.add(singleChild.connectionPoints.down).div(2);
-                this.#inBetweenPoint = parentCenter.add(childCenter).div(2);
+                const parentCenter = this.parents[0].connectionPoints.up.add(this.parents[0].connectionPoints.down).divide(2);
+                const childCenter = singleChild.connectionPoints.up.add(singleChild.connectionPoints.down).divide(2);
+                this.#inBetweenPoint = parentCenter.add(childCenter).divide(2);
                 return;
             }
 
@@ -311,7 +314,7 @@ class ParentChildGroup {
                 )
                 return;
             }
-            this.#inBetweenPoint = this.parentsConnectionPoint.add(singleChild.connectionPoints[childDirection]).div(2);
+            this.#inBetweenPoint = this.parentsConnectionPoint.add(singleChild.connectionPoints[childDirection]).divide(2);
             return;
         }
         if (this.parents.length === 1) {
@@ -323,11 +326,11 @@ class ParentChildGroup {
                 )
                 return;
             }
-            this.#inBetweenPoint = this.childrenConnectionPoint.add(this.parents[0].connectionPoints[parentDirection]).div(2);
+            this.#inBetweenPoint = this.childrenConnectionPoint.add(this.parents[0].connectionPoints[parentDirection]).divide(2);
             return;
         }
 
-        this.#inBetweenPoint = this.parentsConnectionPoint.add(this.childrenConnectionPoint).div(2);
+        this.#inBetweenPoint = this.parentsConnectionPoint.add(this.childrenConnectionPoint).divide(2);
     }
 
     createParentConnectionPoint() {
@@ -396,7 +399,7 @@ class ParentChildGroup {
 
             this.parentsConnectionPoint.draw = () => {
                 this.getInbetweenPoint();
-                const direction = (this.parentsConnectionPoint.sub(this.childrenConnectionPoint).y > 0)? "up" : "down";
+                const direction = (this.parentsConnectionPoint.subtract(this.childrenConnectionPoint).y > 0)? "up" : "down";
                 if (!this.parentsConnectionPoint.inbetweenConnection) {
                     this.parentsConnectionPoint.inbetweenConnection = createConnection(this.parentsConnectionPoint, this.#inBetweenPoint, direction, connectionColor, false);
                     return;
@@ -503,7 +506,7 @@ class ParentChildGroup {
             this.childrenConnectionPoint.div = createConnectionDiv(this.childrenConnectionPoint);
 
             this.childrenConnectionPoint.draw = () => {
-                const direction = (this.childrenConnectionPoint.sub(this.parentsConnectionPoint).y > 0)? "up" : "down";
+                const direction = (this.childrenConnectionPoint.subtract(this.parentsConnectionPoint).y > 0)? "up" : "down";
                 this.getInbetweenPoint();
 
                 if (!this.childrenConnectionPoint.inbetweenConnection) {
@@ -697,6 +700,10 @@ class ParentChildGroup {
             this.#family.delete();
             return;
         }
+
+        if (FAMILIES.length === 0) {
+            return;
+        }
         Family.updateAll();
     }
 
@@ -720,7 +727,7 @@ function deleteConnectionPoint(point) {
         point.inbetweenConnection.remove();
         delete point.inbetweenConnection;
     }
-    if (point.div.transformPos) {
+    if (point.div) {
         point.div.remove();
     }
     return undefined;
