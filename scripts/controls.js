@@ -1,17 +1,26 @@
+import Vec2 from "./vec2.js";
 import Person from "./person.js";
+import { PEOPLE } from "./person.js";
 import { CLICKEDPOS } from "./pan-zoom-and-drag.js";
+import makeDraggableBasic from "./pan-zoom-and-drag.js";
 import * as Actions from "./actions.js";
 
 let targetPerson;
 let selected = [];
+export let RELATIONSHIPTEXTS = new Map();
+
+export const GENDERMENU = document.getElementById("gender-menu");
+makeDraggableBasic(GENDERMENU);
 
 const genderOptions = document.getElementsByName("gender");
 for (const option of genderOptions) {
     option.onchange = () => {
-        console.log(option.value);
+        if (targetPerson) {
+            targetPerson.gender = option.value;
+        }
     }
 }
-
+// Context menu options on background
 const contextMenu = document.getElementById("context-menu");
 const horizontalRule = document.createElement("hr");
 
@@ -24,13 +33,13 @@ bgResetTransforms.textContent = "Reset all positions";
 const onBackground = [bgAddPersonButton, horizontalRule, bgResetTransforms];
 
 bgAddPersonButton.addEventListener("click", (e) => {
-    onClick(e, Person.createPerson);
+    onMenuClick(e, Person.createPerson);
 });
 
 bgResetTransforms.addEventListener("click", (e) => {
-    onClick(e, Person.resetAllTransforms);
+    onMenuClick(e, Person.resetAllTransforms);
 });
-
+// Context menu option on person
 const addParentButton = document.createElement("button");
 const addSpouceButton = document.createElement("button");
 const addChildButton = document.createElement("button");
@@ -46,19 +55,19 @@ deleteButton.textContent = "Delete";
 const onPerson = [addParentButton, addSpouceButton, addChildButton, horizontalRule, resetTransformButton, deleteButton];
 
 addParentButton.addEventListener("click", (e) => {
-    onClick(e, () => { Actions.addParent(targetPerson) });
+    onMenuClick(e, () => { Actions.addParent(targetPerson) });
 });
 addSpouceButton.addEventListener("click", (e) => {
-    onClick(e, () => { Actions.addSpouce(targetPerson) });
+    onMenuClick(e, () => { Actions.addSpouce(targetPerson) });
 });
 addChildButton.addEventListener("click", (e) => {
-    onClick(e, () => { Actions.addChild(targetPerson) });
+    onMenuClick(e, () => { Actions.addChild(targetPerson) });
 });
 resetTransformButton.addEventListener("click", (e) => {
-    onClick(e, () => { targetPerson.resetTransform() });
+    onMenuClick(e, () => { targetPerson.resetTransform() });
 });
 deleteButton.addEventListener("click", (e) => {
-    onClick(e, () => { targetPerson.delete() });
+    onMenuClick(e, () => { targetPerson.delete() });
 });
 
 function setContextMenu(target) {
@@ -73,11 +82,60 @@ function hideContextMenu() {
     contextMenu.replaceChildren();
     contextMenu.className = "hide";
 }
-function onClick(e, action) {
+function onMenuClick(e, action) {
     e.preventDefault();
     hideContextMenu();
 
     action();
+}
+function selectPeople(selection) {
+    selected.forEach((selection) => {
+        selection.classList.remove("selected");
+    });
+    selection.forEach((person) => {
+        person.classList.add("selected");
+    });
+    selected = selection;
+    for (const text of RELATIONSHIPTEXTS.values()) {
+        text.remove();
+    }
+    targetPerson = selected[0].person;
+    createRelationshipText(targetPerson);
+
+    GENDERMENU.className = "show";
+    const x = selected[0].offsetLeft + selected[0].person.transformPos.x + selected[0].offsetWidth / 2 - GENDERMENU.offsetWidth / 2;
+    const y = selected[0].offsetTop + selected[0].person.transformPos.y - GENDERMENU.offsetHeight;
+    GENDERMENU.style.left = `${x}px`;
+    GENDERMENU.style.top = `${y}px`;
+}
+function resetGenderMenuPosition() {
+    GENDERMENU.style.setProperty("--pos-x", 0);
+    GENDERMENU.style.setProperty("--pos-y", 0);
+    GENDERMENU.transformPos.x = 0;
+    GENDERMENU.transformPos.y = 0;
+}
+
+const workspace = document.getElementById("workspace");
+function createRelationshipText(person) {
+    for (const [id, relationship] of person.relationships) {
+        const text = document.createElement("h2");
+
+        text.classList.add("relationship");
+        text.textContent = relationship().at(0).toUpperCase().concat(relationship().slice(1));
+        workspace.appendChild(text);
+
+        const x = PEOPLE[id].div.offsetLeft + PEOPLE[id].transformPos.x + PEOPLE[id].div.offsetWidth / 2 - text.offsetWidth / 2;
+        const y = PEOPLE[id].div.offsetTop + PEOPLE[id].transformPos.y + PEOPLE[id].div.offsetHeight;
+        text.style.left = `${x}px`;
+        text.style.top = `${y}px`;
+
+        text.style.setProperty("--pos-x", 0);
+        text.style.setProperty("--pos-y", 0);
+        text.style.transform = "translate(calc(var(--pos-x) * 1px), calc(var(--pos-y) * 1px))";
+        makeDraggableBasic(text);
+
+        RELATIONSHIPTEXTS.set(id, text);
+    }
 }
 
 document.addEventListener("contextmenu", (event) => {
@@ -124,7 +182,7 @@ document.addEventListener("dblclick", (event) => {
         return;
     }
     Person.createPerson();
-})
+});
 
 document.addEventListener("click", (event) => {
     if (event.target.tagName === "FORM" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL") {
@@ -133,6 +191,7 @@ document.addEventListener("click", (event) => {
     event.preventDefault();
 
     let target = undefined;
+    targetPerson = undefined;
     if (event.target.classList.contains("person")) {
         target = event.target;
     }
@@ -141,14 +200,25 @@ document.addEventListener("click", (event) => {
     }
 
     if (target) {
-        target.classList.add("selected");
-        selected = [target];
-        targetPerson = target;
+        if (CLICKEDPOS.x !== event.pageX || CLICKEDPOS.y !== event.pageY) {
+            return;
+        }
+        resetGenderMenuPosition();
+        const currentGenderOption = document.getElementById(target.person.gender);
+        currentGenderOption.checked = true;
+        selectPeople([target]);
         return;
     }
 
     selected.forEach((selection) => {
         selection.classList.remove("selected");
-        selected = [];
     });
+    selected = [];
+    for (const text of RELATIONSHIPTEXTS.values()) {
+        text.remove();
+    }
+    RELATIONSHIPTEXTS.clear;
+
+    GENDERMENU.className = "hidden";
+    resetGenderMenuPosition();
 });

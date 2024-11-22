@@ -1,7 +1,8 @@
 import Family from "./family.js";
 import Vec2 from "./vec2.js";
+import Noun from "./noun.js";
 
-let PEOPLE = [];
+export let PEOPLE = [];
 const observer = new ResizeObserver(() => {
     Family.updateAll();
 });
@@ -12,6 +13,8 @@ export default class Person {
     #spouses = [];
     #parents = [];
     #children = [];
+    #gender = "neutral";
+    #relationships = new Map();
     #div;
     #transformPos = new Vec2();
     #workspacePos = new Vec2();
@@ -85,6 +88,15 @@ export default class Person {
     get family() {
         return this.#family;
     }
+    get gender() {
+        return this.#gender;
+    }
+    set gender(value) {
+        this.#gender = value;
+    }
+    get relationships() {
+        return this.#relationships;
+    }
     get groups() {
         return this.#groups;
     }
@@ -143,52 +155,71 @@ export default class Person {
     }
     // Each of these methods update the instance's property
     // They also update the target's corresponding property if the method wasn't called internally
-    adopt(child, internal=false) {
-        if (this.#children.includes(child)) {
+    adopt(children, internal=false) {
+        if (this.#children.includes(children)) {
             return false;
         }
 
-        if (Array.isArray(child)) {
-            this.#children = this.#children.concat(child);
+        const setRelationship = (child) => {
+            this.#relationships.set(child.id, () => { return Noun.Child[child.gender] });
+        }
+
+        if (Array.isArray(children)) {
+            this.#children = this.#children.concat(children);
+
+            children.forEach((child) => {
+                setRelationship(child);
+            });
 
             if (internal) {
                 return true;
             }
-            this.#children.forEach(_child => {
-                _child.getAdopted(this, true);
+            children.forEach(child => {
+                child.getAdopted(this, true);
             });
             return true;
         }
-        this.#children.push(child);
+        this.#children.push(children);
+        setRelationship(children);
 
         if (internal) {
             return true;
         }
-        child.getAdopted(this, true);
+        children.getAdopted(this, true);
         return true;
     }
-    getAdopted(parent, internal=false) {
-        if (this.#parents.includes(parent)) {
+    getAdopted(parents, internal=false) {
+        if (this.#parents.includes(parents)) {
             return false;
         }
 
-        if (Array.isArray(parent)) {
-            this.#parents = this.#parents.concat(parent);
+        const setRelationship = (parent) => {
+            this.#relationships.set(parent.id, () => { return Noun.Parent[parent.gender] });
+        }
+
+        if (Array.isArray(parents)) {
+            this.#parents = this.#parents.concat(parents);
+
+            parents.forEach(parent => {
+                setRelationship(parent);
+            });
 
             if (internal) {
                 return true;
             }
-            this.#parents.forEach(_parent => {
-                _parent.adopt(this, true);
+            this.#parents.forEach(parent => {
+                parent.adopt(this, true);
             });
             return true;
         }
-        this.#parents.push(parent);
+        this.#parents.push(parents);
+
+        setRelationship(parents);
 
         if (internal) {
             return true;
         }
-        parent.adopt(this, true);
+        parents.adopt(this, true);
         return true;
     }
     orphan(child=undefined, internal=false) {
@@ -199,6 +230,7 @@ export default class Person {
             }
 
             this.#children.splice(index, 1);
+            this.#relationships.delete(child.id);
 
             if (internal) {
                 return true;
@@ -213,6 +245,9 @@ export default class Person {
             });
         }
         
+        this.#children.forEach((child) => {
+            this.#relationships.delete(child.id);
+        });
         this.#children = [];
         return true;
     }
@@ -224,6 +259,7 @@ export default class Person {
             }
 
             this.#parents.splice(index, 1);
+            this.#relationships.delete(parent.id);
 
             if (internal) {
                 return true;
@@ -239,33 +275,47 @@ export default class Person {
             });
         }
         
+        this.#parents.forEach((parent) => {
+            this.#relationships.delete(parent);
+        });
         this.#parents = [];
         return true;
     }
 
-    marry(spouse, internal=false) {
-        if (this.#spouses.includes(spouse)) {
+    marry(spouses, internal=false) {
+        if (this.#spouses.includes(spouses)) {
             return false;
         }
-        if (Array.isArray(spouse)) {
 
-            this.#spouses = this.#spouses.concat(spouse);
+        const setRelationship = (spouce) => {
+            this.#relationships.set(spouce.id, () => { return Noun.Spouce[spouce.gender] });
+        }
+
+        if (Array.isArray(spouses)) {
+
+            this.#spouses = this.#spouses.concat(spouses);
+
+            spouses.forEach((spouse) => {
+                setRelationship(spouse);
+            })
 
             if (internal) {
                 return true;
             }
-            spouse.forEach(_spouse => {
-                _spouse.marry(this, true);
+            spouses.forEach((spouse) => {
+                spouse.marry(this, true);
             });
             return true;
         }
 
-        this.#spouses.push(spouse);
+        this.#spouses.push(spouses);
+
+        setRelationship(spouses);
 
         if (internal) {
             return true;
         }
-        spouse.marry(this, true);
+        spouses.marry(this, true);
         return true;
     }
     divorce(spouse=undefined, internal=false) {
@@ -276,6 +326,7 @@ export default class Person {
             }
 
             this.#spouses.splice(index, 1);
+            this.#relationships.delete(spouse);
 
             if (internal) {
                 return true;
@@ -291,6 +342,9 @@ export default class Person {
             });
         }
 
+        this.#spouses.forEach((spouse) => {
+            this.#relationships.delete(spouse);
+        });
         this.#spouses = [];
         return true;
     }

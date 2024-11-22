@@ -1,42 +1,61 @@
 import Vec2 from "./vec2.js";
+import { GENDERMENU } from "./controls.js";
+import { RELATIONSHIPTEXTS } from "./controls.js";
 
 const scaleSensitivity = 0.1;
 const minScale = 0.1;
 
 export let CLICKEDPOS = new Vec2(0, 0);
-let transformScale = 1;
+export let TRANSFORMSCALE = 1;
+
+export default function makeDraggableBasic(element) {
+    element.transformPos = new Vec2();
+    element.onDrag = (dragAmount) => {
+        element.style.setProperty("--pos-x", dragAmount.x);
+        element.style.setProperty("--pos-y", dragAmount.y);
+    }
+}
 
 document.addEventListener("DOMContentLoaded", () => {
 
     const workspace = document.getElementById("workspace");
-    workspace.transformPos = new Vec2(0, 0);
-    workspace.onDrag = (dragAmount) => {
-        workspace.style.setProperty("--pos-x", dragAmount.x);
-        workspace.style.setProperty("--pos-y", dragAmount.y);
-    }
+    makeDraggableBasic(workspace);
 
-    let draggingElement = {};
+    let draggingElements = [];
     function drag(event) {
-        const newPos = new Vec2(
-            draggingElement.transformPos.x + (event.pageX - CLICKEDPOS.x) * (1 / transformScale),
-            draggingElement.transformPos.y + (event.pageY - CLICKEDPOS.y) * (1 / transformScale)
-        );
-
-        draggingElement.onDrag(newPos);
+        draggingElements.forEach((element) => {
+            const newPos = new Vec2(
+                element.transformPos.x + (event.pageX - CLICKEDPOS.x) * (1 / TRANSFORMSCALE),
+                element.transformPos.y + (event.pageY - CLICKEDPOS.y) * (1 / TRANSFORMSCALE)
+            );
+    
+            element.onDrag(newPos);
+        });
     }
 
     document.addEventListener("mousedown", (event) => {
+        function addUIElements(person) {
+            if (person.div.classList.contains("selected")) {
+                draggingElements.push(GENDERMENU);
+                return;
+            }
+            if (RELATIONSHIPTEXTS.has(person.id)) {
+                draggingElements.push(RELATIONSHIPTEXTS.get(person.id));
+            }
+        }
         if (event.buttons === 2 || event.buttons === 4) {
-            draggingElement = workspace;
+            draggingElements = [workspace];
         }
         else if (event.target.classList.contains("point")) {
-            draggingElement = event.target;
+            draggingElements = [event.target];
         }
         else if (event.target.classList.contains("person")) {
-            draggingElement = event.target.person;
+            draggingElements = [event.target.person];
+            addUIElements(event.target.person);
         }
         else if (event.target.parentElement.classList.contains("person")) {
-            draggingElement = event.target.parentElement.person;
+            draggingElements = [event.target.parentElement.person];
+            addUIElements(event.target.parentElement.person);
         }
         else {
             return;
@@ -48,8 +67,11 @@ document.addEventListener("DOMContentLoaded", () => {
         document.addEventListener("mousemove", drag);
         
         document.addEventListener("mouseup", (event) => {
-            draggingElement.transformPos.x += (event.pageX - CLICKEDPOS.x) * (1 / transformScale);
-            draggingElement.transformPos.y += (event.pageY - CLICKEDPOS.y) * (1 / transformScale); 
+            draggingElements.forEach((element) => {
+                element.transformPos.x += (event.pageX - CLICKEDPOS.x) * (1 / TRANSFORMSCALE);
+                element.transformPos.y += (event.pageY - CLICKEDPOS.y) * (1 / TRANSFORMSCALE); 
+            });
+            
             document.removeEventListener("mousemove", drag);
             event.preventDefault();
         }, {once: true});
@@ -57,11 +79,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.addEventListener("wheel", (event) => {
         const direction = Math.sign(event.deltaY);
-        if (transformScale + direction * scaleSensitivity < minScale) {
+        if (TRANSFORMSCALE + direction * scaleSensitivity < minScale) {
             return;
         }
-        transformScale += direction * scaleSensitivity;
+        TRANSFORMSCALE += direction * scaleSensitivity;
 
-        workspace.style.setProperty("--scale", transformScale);
+        workspace.style.setProperty("--scale", TRANSFORMSCALE);
     });
 });

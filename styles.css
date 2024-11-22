@@ -77,6 +77,14 @@ html, body, .workspace {
     justify-content: flex-start;
     align-content: center;
     align-items: center;   
+
+    --pos-x: 0;
+    --pos-y: 0;
+
+    transform: translate(
+        calc(var(--pos-x)  * 1px),
+        calc(var(--pos-y) * 1px)
+        );
 }
 #gender-menu-buttons {
     border: none;
@@ -90,7 +98,6 @@ html, body, .workspace {
     flex-flow: row wrap;
     justify-content: space-evenly;
 
-
     background-color: var(--black-1);
 }
 #gender-menu-buttons input {
@@ -103,6 +110,9 @@ html, body, .workspace {
     font-weight: 300;
     font-size: 2em;
     font-family: Arial, Helvetica, sans-serif;
+}
+#neutral+label {
+    background-color: var(--black-1);
     color: var(--white);
 }
 #neutral:hover+label {
@@ -215,6 +225,19 @@ html, body, .workspace {
 }
 .name:focus::selection {
     background-color: rgb(50, 50, 255);
+}
+
+.relationship {
+    position: absolute;
+    margin: 0;
+    margin-top: 0.3em;
+    display: block;
+
+    color: var(--white);
+    font-weight: 300;
+    font-size: 1em;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
 }
 
 .point {
