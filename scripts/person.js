@@ -160,15 +160,11 @@ export default class Person {
             return false;
         }
 
-        const setRelationship = (child) => {
-            this.#relationships.set(child.id, () => { return Noun.Child[child.gender] });
-        }
-
         if (Array.isArray(children)) {
             this.#children = this.#children.concat(children);
 
             children.forEach((child) => {
-                setRelationship(child);
+                Noun.setChildRelationships(this, child);
             });
 
             if (internal) {
@@ -180,7 +176,8 @@ export default class Person {
             return true;
         }
         this.#children.push(children);
-        setRelationship(children);
+
+        Noun.setChildRelationships(this, children);
 
         if (internal) {
             return true;
@@ -193,15 +190,11 @@ export default class Person {
             return false;
         }
 
-        const setRelationship = (parent) => {
-            this.#relationships.set(parent.id, () => { return Noun.Parent[parent.gender] });
-        }
-
         if (Array.isArray(parents)) {
             this.#parents = this.#parents.concat(parents);
 
             parents.forEach(parent => {
-                setRelationship(parent);
+                Noun.setParentRelationships(this, parent);
             });
 
             if (internal) {
@@ -214,7 +207,7 @@ export default class Person {
         }
         this.#parents.push(parents);
 
-        setRelationship(parents);
+        Noun.setParentRelationships(this, parents);
 
         if (internal) {
             return true;
