@@ -164,7 +164,7 @@ export default class Person {
             this.#children = this.#children.concat(children);
 
             children.forEach((child) => {
-                Noun.setChildRelationships(this, child);
+                Noun.setRelationships(child, this, "Child");
             });
 
             if (internal) {
@@ -177,7 +177,7 @@ export default class Person {
         }
         this.#children.push(children);
 
-        Noun.setChildRelationships(this, children);
+        Noun.setRelationships(children, this, "Child");
 
         if (internal) {
             return true;
@@ -194,7 +194,7 @@ export default class Person {
             this.#parents = this.#parents.concat(parents);
 
             parents.forEach(parent => {
-                Noun.setParentRelationships(this, parent);
+                Noun.setRelationships(parent, this, "Parent");
             });
 
             if (internal) {
@@ -207,7 +207,7 @@ export default class Person {
         }
         this.#parents.push(parents);
 
-        Noun.setParentRelationships(this, parents);
+        Noun.setRelationships(parents, this, "Parent");
 
         if (internal) {
             return true;
@@ -280,16 +280,12 @@ export default class Person {
             return false;
         }
 
-        const setRelationship = (spouce) => {
-            this.#relationships.set(spouce.id, () => { return Noun.Spouce[spouce.gender] });
-        }
-
         if (Array.isArray(spouses)) {
 
             this.#spouses = this.#spouses.concat(spouses);
 
             spouses.forEach((spouse) => {
-                setRelationship(spouse);
+                Noun.setRelationships(spouse, this, "Spouce");
             })
 
             if (internal) {
@@ -303,7 +299,7 @@ export default class Person {
 
         this.#spouses.push(spouses);
 
-        setRelationship(spouses);
+        Noun.setRelationships(spouses, this, "Spouce");
 
         if (internal) {
             return true;
