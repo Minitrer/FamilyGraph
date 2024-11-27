@@ -223,7 +223,9 @@ export default class Person {
             }
 
             this.#children.splice(index, 1);
-            this.#relationships.delete(child.id);
+            if (this.#relationships && child.relationship) {
+                this.#relationships.delete(child.id);
+            }
 
             if (internal) {
                 return true;
@@ -239,7 +241,9 @@ export default class Person {
         }
         
         this.#children.forEach((child) => {
-            this.#relationships.delete(child.id);
+            if (this.#relationships && child.relationship) {
+                this.#relationships.delete(child.id);
+            }
         });
         this.#children = [];
         return true;
@@ -252,7 +256,9 @@ export default class Person {
             }
 
             this.#parents.splice(index, 1);
-            this.#relationships.delete(parent.id);
+            if (this.#relationships && parent.relationship) {
+                this.#relationships.delete(parent.id);
+            }
 
             if (internal) {
                 return true;
@@ -269,7 +275,9 @@ export default class Person {
         }
         
         this.#parents.forEach((parent) => {
-            this.#relationships.delete(parent);
+            if (this.#relationships && parent.relationship) {
+                this.#relationships.delete(parent.id);
+            }
         });
         this.#parents = [];
         return true;
@@ -315,7 +323,9 @@ export default class Person {
             }
 
             this.#spouses.splice(index, 1);
-            this.#relationships.delete(spouse);
+            if (this.#relationships && spouse.relationship) {
+                this.#relationships.delete(spouse);
+            }
 
             if (internal) {
                 return true;
@@ -332,7 +342,9 @@ export default class Person {
         }
 
         this.#spouses.forEach((spouse) => {
-            this.#relationships.delete(spouse);
+            if (this.#relationships && spouse.relationship) {
+                this.#relationships.delete(spouse);
+            }
         });
         this.#spouses = [];
         return true;
@@ -363,6 +375,18 @@ export default class Person {
     }
 
     delete() {
+         // Correct relationships
+         for (const id of this.relationships.keys()) {
+            const higherIds = Array.from(PEOPLE[id].relationships.keys().filter(_id => _id > id), (x) => x - 1).sort();
+
+            higherIds.forEach(i => {
+                PEOPLE[id].relationships.set(i, PEOPLE[id].relationships.get(i + 1));
+            });
+            PEOPLE[id].relationships.delete(higherIds[higherIds.length - 1] + 1);
+        }
+        this.#relationships.clear();
+        this.#relationships = null;
+        
         this.divorce();
         this.orphanSelf();
         this.orphan();

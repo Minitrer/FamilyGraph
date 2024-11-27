@@ -44,15 +44,21 @@ export default class Noun {
         to.relationships.set(from.id, createRelationship(from, type));
         switch (type) {
             case "Parent":
-                for (const [id, relationship] of from.relationships) 
+                for (const [id, relationship] of from.relationships) {
                     switch (true) {
                     case (to.relationships.has(id) || id === to.id):
                         continue;
 
                     case isChild(relationship):
                         if (relationship().includes("Grand")) {
-                            to.relationships.set(id, createRelationship(PEOPLE[id], "Nibling"));
-                            PEOPLE[id].relationships.set(to.id, createRelationship(to, "Pibling"));
+                            const amount = getGreatAmount(relationship());
+                            if (amount === 0) {
+                                to.relationships.set(id, createRelationship(PEOPLE[id], "Nibling"));
+                                PEOPLE[id].relationships.set(to.id, createRelationship(to, "Pibling"));
+                                continue;    
+                            }
+                            to.relationships.set(id, addGreat(createRelationship(PEOPLE[id], "Nibling"), "Nibling", PEOPLE[id], amount));
+                            PEOPLE[id].relationships.set(to.id, addGreat(createRelationship(to, "Pibling"), "Pibling", to, amount));
                             continue;
                         }
                         to.relationships.set(id, createRelationship(PEOPLE[id], "Sibling"));
@@ -66,20 +72,62 @@ export default class Noun {
                         to.relationships.set(id, addGreat(relationship, "Pibling", PEOPLE[id]));
                         PEOPLE[id].relationships.set(to.id, addGreat(PEOPLE[id].relationships.get(from.id), "Nibling", to));
                         continue;
-                    case isNibling(relationship):
+                    case isNibling(relationship): {
+                        const relationshipText = relationship();
+                        if (relationshipText.includes("Grand")) {
+                            const amount = getGreatAmount(relationshipText) + 1;
+                            const seperation = getAdverbial(amount)
+                            to.relationships.set(id, createCousinRelationship(PEOPLE[id], "1st", "", seperation));
+                            PEOPLE[id].relationships.set(to.id, createCousinRelationship(to, "1st", "", seperation));
+                            continue;
+                        }
                         to.relationships.set(id, createCousinRelationship(PEOPLE[id], "1st"));
-                        PEOPLE[id].relationships.set(to.id, createCousinRelationship(PEOPLE[id], "1st"));
+                        PEOPLE[id].relationships.set(to.id, createCousinRelationship(to, "1st"));
                         continue;
+                    }
                     case isParent(relationship):
                         to.relationships.set(id, addGreat(relationship, "Parent", PEOPLE[id]));
                         PEOPLE[id].relationships.set(to.id, addGreat(PEOPLE[id].relationships.get(from.id), "Child", to));
                         continue;
+                    // case isSpouce(relationship)):
+                    //     continue;
                     case isCousin(relationship):
-                        // TODO: In case of seperation: Look in the parents of PEOPLE[id] for a Cousin, if found no Cousin, PEOPLE[id] is higher, 
-                        // if found cousin's seperation reduced, parent is higher, if increased, parent is lower 
+                        
+                        const relationshipText = relationship();
+                        if (!relationshipText.includes("removed")) {
+                            to.relationships.set(id, addCousinSeperation(relationship, PEOPLE[id]));
+                            PEOPLE[id].relationships.set(to.id, addCousinSeperation(relationship, to));
+                            continue;
+                        }
+                        // We can see whether the parent is a generation older by checking the cousin's parents, seeing if one of them is also the parent's cousin 
+                        // and comparing the seperations, or if there's no cousins to be found
+                        let isParentHigher = false;
+                        for (const parent of PEOPLE[id].parents) {
+                            const parentRelationship = from.relationships.get(parent.id);
+                            if (!isCousin(parentRelationship)) {
+                                continue;
+                            }
+                            
+                            const parentRelationshipText = parentRelationship();
+                            const parentSeperationAmount = getSeperationAmount(parentRelationshipText);
+
+                            const seperationAmount = getSeperationAmount(relationshipText);
+                            if (parentSeperationAmount > seperationAmount) {
+                                break;
+                            }
+                            isParentHigher = true;
+                            break;
+                        }
+                        if (isParentHigher) {
+                            to.relationships.set(id, addCousinNumber(addCousinSeperation(relationship, PEOPLE[id], -1), PEOPLE[id]));
+                            PEOPLE[id].relationships.set(to.id, addCousinNumber(addCousinSeperation(relationship, to, -1), to));
+                            continue;
+                        }
+                        // Cousin is higher
+                        to.relationships.set(id, addCousinSeperation(relationship, PEOPLE[id]));
+                        PEOPLE[id].relationships.set(to.id, addCousinSeperation(relationship, to));
                         continue;
-                        // case isSpouce(relationship)):
-                        //     continue;
+                    }
                 }
                 return;
             case "Child":
@@ -117,10 +165,10 @@ export default class Noun {
                         continue;
                     }
                     
-                    const toType = getType(relationship(), PEOPLE[id].gender);
-                    const peopleType = getType(PEOPLE[id].relationships.get(from.id)(), from.gender);
-                    to.relationships.set(id, addInLaw(relationship, toType, PEOPLE[id]));
-                    PEOPLE[id].relationships.set(to.id, addInLaw(PEOPLE[id].relationships.get(from.id), peopleType, to))
+                    const typeA = getType(relationship(), PEOPLE[id].gender);
+                    const typeB = getType(PEOPLE[id].relationships.get(from.id)(), from.gender);
+                    to.relationships.set(id, addInLaw(relationship, typeA, PEOPLE[id]));
+                    PEOPLE[id].relationships.set(to.id, addInLaw(PEOPLE[id].relationships.get(from.id), typeB, to));
                 }
                 return;
             default:
@@ -192,16 +240,23 @@ function getSuffix(relationshipText) {
     }
     return "";
 }
+function getGreatAmount(relationshipText) {
+    return Array.from(relationshipText.matchAll("Great"), (m) => m[0]).length;
+}
 
-function addGreat(relationship, type, person) {
+function addGreat(relationship, type, person, addAmount=1) {
     const relationshipText = relationship();
     const prefix = getPrefix(relationshipText);
     const suffix = getSuffix(relationshipText);
     if  (!relationshipText.includes("Grand")) {
-        const newRelationship = function() { return `${prefix}Grand${Noun[type][this.gender]}${suffix}`; }.bind(person);
+        if (addAmount === 1) {
+            const newRelationship = function() { return `${prefix}Grand${Noun[type][this.gender]}${suffix}`; }.bind(person);
+            return newRelationship;
+        }
+        const newRelationship = function() { return `${"Great ".repeat(addAmount - 1)}${prefix}Grand${Noun[type][this.gender]}${suffix}` }.bind(person);
         return newRelationship;
     }
-    const repetitions = relationshipText.matchAll("Great").length;
+    const repetitions = getGreatAmount(relationshipText) + addAmount;
     const newRelationship = function() { return `${"Great ".repeat(repetitions)}${prefix}Grand${Noun[type][this.gender]}${suffix}` }.bind(person);
     return newRelationship;
 }
@@ -232,35 +287,29 @@ function addStep(relationship, type, person) {
 
 const cousinNumberRE = /\d\w+/;
 const numberRE = /\d+/;
-const cousinSeperationRE = /\w+(?=\sremoved)/;
+const cousinSeperationRE = /\S+(?=\sremoved)/;
 function addCousinNumber(relationship, person) {
     const relationshipText = relationship();
-    const ordinal = relationshipText.match(cousinNumberRE)[0];
+    const number = getCousinNumber(relationshipText);
     const match = relationshipText.match(cousinSeperationRE);
     const adverbial = match? match[0] : null;
 
-    const number = Number(ordinal.match(numberRE)[0]);
     const newOrdinal = getOrdinal(number + 1);
 
     return createCousinRelationship(person, newOrdinal, relationshipText, adverbial);
 }
-function addCousinSeperation(relationship, person) {
+function addCousinSeperation(relationship, person, addAmount=1) {
     const relationshipText = relationship();
     const ordinal = relationshipText.match(cousinNumberRE)[0];
-    const match = relationshipText.match(cousinSeperationRE);
-    const adverbial = match? match[0] : null;
+    const seperationNumber = getSeperationAmount(relationshipText);
 
-    let newAdverbial;
-    if (adverbial) {
-        const seperationNumber = getNumberFromAdverbial(adverbial);
-        newAdverbial = getAdverbial(seperationNumber + 1);
+    if (seperationNumber + addAmount !== 0) {
+        const newAdverbial = getAdverbial(seperationNumber + addAmount);
+        return createCousinRelationship(person, ordinal, relationshipText, newAdverbial);
     }
-    else {
-        newAdverbial = getAdverbial(1);
-    }
-
-    return createCousinRelationship(person, ordinal, relationshipText, newAdverbial);
+    return createCousinRelationship(person, ordinal, relationshipText);
 }
+
 function createCousinRelationship(person, number, relationshipText="", seperation=null) {
     const prefix = getPrefix(relationshipText);
     const suffix = getSuffix(relationshipText);
@@ -308,4 +357,14 @@ function getNumberFromAdverbial(adverbial) {
         default:
             return Number(adverbial.match(numberRE)[0]);
     }
+}
+function getSeperationAmount(relationshipText) {
+    const match = relationshipText.match(cousinSeperationRE);
+    if (!match) {
+        return 0;
+    }
+    return getNumberFromAdverbial(match[0]);
+}
+function getCousinNumber(relationshipText) {
+    return Number(relationshipText.match(cousinNumberRE)[0].match(numberRE)[0]);
 }
