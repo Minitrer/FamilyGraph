@@ -1,6 +1,6 @@
 import { PEOPLE } from "./person.js";
 
-export default class Noun {
+class Noun  {
     static Spouce = Object.freeze({
         male: "husband",
         neutral: "spouce",
@@ -39,121 +39,201 @@ export default class Noun {
         neutral: "cousin",
         female: "cousin",
     });
+}
 
+export default class Relationship {
+    #type;
+    #person;
+    #GCount;
+    #prefix;
+    #suffix;
+    #text;
+
+    #cousinNumber;
+    #cousinSeperation;
+
+    constructor (type, person, GCount=0, prefix="", suffix="", cousinNumber=0, cousinSeperation=0) {
+        this.type = type;
+        this.#person = person;
+        this.GCount = GCount;
+        this.#prefix = prefix;
+        this.#suffix = suffix;
+        
+        this.#cousinNumber = cousinNumber;
+        this.cousinSeperation = cousinSeperation;
+        if (!this.#text) {
+            this.#text = () => `${this.#prefix}${Noun[this.#type][this.#person.gender]}${this.#suffix}`;
+        }
+    }
+
+    get text() {
+        return this.#text();
+    }
+    get GCount() {
+        return this.#GCount;
+    }
+    set GCount(count) {
+        this.#GCount = count;
+
+        if (count > 0) {
+            this.#text = () => `${"Great ".repeat(this.#GCount - 1)}${this.#prefix}Grand${Noun[this.#type][this.#person.gender]}${this.#suffix}`;
+        }
+    }
+    get type() {
+        return this.#type;
+    }
+    set type(type) {
+        this.#type = type;
+        if (type !== "Cousin") {
+            return;
+        }
+
+        if (this.#cousinSeperation > 0) {
+            this.#text = () => `${getOrdinal(this.#cousinNumber)} ${this.#prefix}${Noun.Cousin[this.#person.gender]}${this.#suffix} ${getAdverbial(this.#cousinSeperation)} removed`;
+            return;
+        }
+        this.#text = () => `${getOrdinal(this.#cousinNumber)} ${this.#prefix}${Noun.Cousin[this.#person.gender]}${this.#suffix}`;
+    }
+    get cousinSeperation() {
+        return this.#cousinSeperation
+    }
+    set cousinSeperation(number) {
+        this.#cousinSeperation = number;
+        
+        if (number > 0) {
+            this.#text = () => `${getOrdinal(this.#cousinNumber)} ${this.#prefix}${Noun.Cousin[this.#person.gender]}${this.#suffix} ${getAdverbial(this.#cousinSeperation)} removed`;
+            return;
+        }
+        if (this.#type === "Cousin") {
+            this.#text = () => `${getOrdinal(this.#cousinNumber)} ${this.#prefix}${Noun.Cousin[this.#person.gender]}${this.#suffix}`;
+        }
+    }
+
+    addGreat(addAmount=1) {
+        this.GCount += addAmount;
+        return this;
+    }
+    addCousinNumber(addAmount=1) {
+        this.#cousinNumber += addAmount;
+        return this;
+    }
+    addCousinSeperation(addAmount=1) {
+        this.cousinSeperation += addAmount;
+        return this;
+    }
+    setInLaw(isInLaw=true) {
+        this.#suffix = isInLaw? "-in-law" : "";
+        return this;
+    }
+    setStep(isStep=true) {
+        this.#prefix = isStep? "Step-" : "";
+        return this;
+    }
+    copy(type=this.#type, person=this.#person, GCount=this.#GCount, prefix=this.#prefix, suffix=this.#suffix, cousinNumber=this.#cousinNumber, cousinSeperation=this.#cousinSeperation) {
+        return new Relationship(type, person, GCount, prefix, suffix, cousinNumber, cousinSeperation);
+    }
     static setRelationships(from, to, type) {
-        to.relationships.set(from.id, createRelationship(from, type));
+        to.relationships.set(from.id, new Relationship(type, from));
         switch (type) {
             case "Parent":
                 for (const [id, relationship] of from.relationships) {
-                    switch (true) {
-                    case (to.relationships.has(id) || id === to.id):
-                        continue;
-
-                    case isChild(relationship):
-                        if (relationship().includes("Grand")) {
-                            const amount = getGreatAmount(relationship());
-                            if (amount === 0) {
-                                to.relationships.set(id, createRelationship(PEOPLE[id], "Nibling"));
-                                PEOPLE[id].relationships.set(to.id, createRelationship(to, "Pibling"));
-                                continue;    
-                            }
-                            to.relationships.set(id, addGreat(createRelationship(PEOPLE[id], "Nibling"), "Nibling", PEOPLE[id], amount));
-                            PEOPLE[id].relationships.set(to.id, addGreat(createRelationship(to, "Pibling"), "Pibling", to, amount));
-                            continue;
-                        }
-                        to.relationships.set(id, createRelationship(PEOPLE[id], "Sibling"));
-                        PEOPLE[id].relationships.set(to.id, createRelationship(to, "Sibling"));
-                        continue;
-                    case isSibling(relationship):
-                        to.relationships.set(id, createRelationship(PEOPLE[id], "Pibling"));
-                        PEOPLE[id].relationships.set(to.id, createRelationship(to, "Nibling")); 
-                        continue;
-                    case isPibling(relationship):
-                        to.relationships.set(id, addGreat(relationship, "Pibling", PEOPLE[id]));
-                        PEOPLE[id].relationships.set(to.id, addGreat(PEOPLE[id].relationships.get(from.id), "Nibling", to));
-                        continue;
-                    case isNibling(relationship): {
-                        const relationshipText = relationship();
-                        if (relationshipText.includes("Grand")) {
-                            const amount = getGreatAmount(relationshipText) + 1;
-                            const seperation = getAdverbial(amount)
-                            to.relationships.set(id, createCousinRelationship(PEOPLE[id], "1st", "", seperation));
-                            PEOPLE[id].relationships.set(to.id, createCousinRelationship(to, "1st", "", seperation));
-                            continue;
-                        }
-                        to.relationships.set(id, createCousinRelationship(PEOPLE[id], "1st"));
-                        PEOPLE[id].relationships.set(to.id, createCousinRelationship(to, "1st"));
+                    if (to.relationships.has(id) || id === to.id) {
                         continue;
                     }
-                    case isParent(relationship):
-                        to.relationships.set(id, addGreat(relationship, "Parent", PEOPLE[id]));
-                        PEOPLE[id].relationships.set(to.id, addGreat(PEOPLE[id].relationships.get(from.id), "Child", to));
-                        continue;
-                    // case isSpouce(relationship)):
-                    //     continue;
-                    case isCousin(relationship):
-                        
-                        const relationshipText = relationship();
-                        if (!relationshipText.includes("removed")) {
-                            to.relationships.set(id, addCousinSeperation(relationship, PEOPLE[id]));
-                            PEOPLE[id].relationships.set(to.id, addCousinSeperation(relationship, to));
+
+                    switch (relationship.type) {
+                        case "Child":
+                            if (relationship.GCount > 0) {
+                                to.relationships.set(id, new Relationship("Nibling", PEOPLE[id], relationship.GCount - 1));
+                                PEOPLE[id].relationships.set(to.id, new Relationship("Pibling", to, relationship.GCount - 1));
+                                continue;    
+                            }
+                            to.relationships.set(id, new Relationship("Sibling", PEOPLE[id]));
+                            PEOPLE[id].relationships.set(to.id, new Relationship("Sibling", to));
                             continue;
-                        }
-                        // We can see whether the parent is a generation older by checking the cousin's parents, seeing if one of them is also the parent's cousin 
-                        // and comparing the seperations, or if there's no cousins to be found
-                        let isParentHigher = false;
-                        for (const parent of PEOPLE[id].parents) {
-                            const parentRelationship = from.relationships.get(parent.id);
-                            if (!isCousin(parentRelationship)) {
+                        case "Sibling":
+                            to.relationships.set(id, new Relationship("Pibling", PEOPLE[id]));
+                            PEOPLE[id].relationships.set(to.id, new Relationship("Nibling", to)); 
+                            continue;
+                        case "Pibling":
+                            to.relationships.set(id, relationship.copy("Pibling", PEOPLE[id], relationship.GCount + 1));
+                            const otherRelationship = PEOPLE[id].relationships.get(from.id)
+                            PEOPLE[id].relationships.set(to.id, otherRelationship.copy("Nibling", to));
+                            continue;
+                        case "Nibling": {
+                            if (relationship.GCount > 0) {
+                                const seperationAmount = relationship.GCount;
+                                to.relationships.set(id, new Relationship("Cousin", PEOPLE[id], 0, "", "", 1, seperationAmount));
+                                PEOPLE[id].relationships.set(to.id, new Relationship("Cousin", to, 0, "", "", 1, seperationAmount));
                                 continue;
                             }
-                            
-                            const parentRelationshipText = parentRelationship();
-                            const parentSeperationAmount = getSeperationAmount(parentRelationshipText);
-
-                            const seperationAmount = getSeperationAmount(relationshipText);
-                            if (parentSeperationAmount > seperationAmount) {
-                                break;
-                            }
-                            isParentHigher = true;
-                            break;
-                        }
-                        if (isParentHigher) {
-                            to.relationships.set(id, addCousinNumber(addCousinSeperation(relationship, PEOPLE[id], -1), PEOPLE[id]));
-                            PEOPLE[id].relationships.set(to.id, addCousinNumber(addCousinSeperation(relationship, to, -1), to));
+                            to.relationships.set(id, new Relationship("Cousin", PEOPLE[id], 0, "", "", 1));
+                            PEOPLE[id].relationships.set(to.id, new Relationship("Cousin", to, 0, "", "", 1));
                             continue;
                         }
-                        // Cousin is higher
-                        to.relationships.set(id, addCousinSeperation(relationship, PEOPLE[id]));
-                        PEOPLE[id].relationships.set(to.id, addCousinSeperation(relationship, to));
-                        continue;
+                        case "Parent": {
+                            to.relationships.set(id, relationship.copy("Parent", PEOPLE[id], relationship.GCount + 1));
+                            const otherRelationship = PEOPLE[id].relationships.get(from.id);
+                            PEOPLE[id].relationships.set(to.id, otherRelationship.copy("Child", to, otherRelationship.GCount + 1));
+                            continue;
+                        }
+                        case "Cousin":
+                            if (relationship.cousinSeperation === 0) {
+                                to.relationships.set(id, relationship.copy("Cousin", PEOPLE[id]).addCousinSeperation());
+                                PEOPLE[id].relationships.set(to.id, relationship.copy("Cousin", to).addCousinSeperation());
+                                continue;
+                            }
+                            // We can see whether the parent is in an older generation by checking the cousin's parents, seeing if one of them is also the parent's cousin 
+                            // and comparing the seperations, or if there's no cousins to be found
+                            let isParentHigher = false;
+                            for (const parent of PEOPLE[id].parents) {
+                                const parentRelationship = from.relationships.get(parent.id);
+                                if (parentRelationship.type !== "Cousin") {
+                                    continue;
+                                }
+                                
+                                if (parentRelationship.cousinSeperation > relationship.cousinSeperation) {
+                                    break;
+                                }
+                                isParentHigher = true;
+                                break;
+                            }
+                            if (isParentHigher) {
+                                to.relationships.set(id, relationship.copy("Cousin", PEOPLE[id])
+                                    .addCousinSeperation(-1)
+                                    .addCousinNumber());
+                                PEOPLE[id].relationships.set(to.id, relationship.copy("Cousin", to)
+                                    .addCousinSeperation(-1)
+                                    .addCousinNumber());
+                                continue;
+                            }
+                            // Cousin is higher
+                            to.relationships.set(id, relationship.copy("Cousin", PEOPLE[id])
+                                .addCousinSeperation());
+                            PEOPLE[id].relationships.set(to.id, relationship.copy("Cousin", to)
+                                .addCousinSeperation());
+                            continue;
                     }
                 }
                 return;
             case "Child":
-                for (const [id, relationship] of from.relationships) 
-                    switch (true) {
-                    case (to.relationships.has(id) || id === to.id):
+                for (const [id, relationship] of from.relationships) {
+                    if (to.relationships.has(id) || id === to.id) {
                         continue;
-
-                    case isChild(relationship):
-                        to.relationships.set(id, addGreat(relationship, "Child", PEOPLE[id]));
-                        PEOPLE[id].relationships.set(to.id, addGreat(PEOPLE[id].relationships.get(from.id), "Parent", to));
-                        continue;
-                    
-                    // case isSibling(relationship)):
-                    //     continue;
-                    // case isPibling(relationship)):
-                    //     continue;
-                    // case isNibling(relationship)):
-                    //     continue;
-                    // case isParent(relationship)):
-                    //     continue;
-
-                    case isSpouce(relationship):
-                        to.relationships.set(id, addInLaw(to.relationships.get(from.id), "Child", PEOPLE[id]));
-                        PEOPLE[id].relationships.set(to.id, addInLaw(from.relationships.get(to.id), "Parent", to));
-                        continue;
+                    }
+                        
+                    switch (relationship.type) {
+                        case "Child":
+                            to.relationships.set(id, relationship.copy("Child", PEOPLE[id]).addGreat());
+                            PEOPLE[id].relationships.set(to.id, PEOPLE[id].relationships.get(from.id).copy("Parent", to).addGreat());
+                            continue;
+                        case "Spouce":
+                            to.relationships.set(id, to.relationships.get(from.id).copy("Child", PEOPLE[id]).setInLaw());
+                            PEOPLE[id].relationships.set(to.id, from.relationships.get(to.id).copy("Parent", to).setInLaw());
+                            continue;
+                        default:
+                            continue;
+                    }
                 }
                 return;
             case "Spouce":
@@ -161,14 +241,19 @@ export default class Noun {
                     if (to.relationships.has(id) || id === to.id) {
                         continue;
                     }
-                    if (isChild(relationship)) {
+                    if (relationship.type === "Child") {
+                        if (from.children.includes(PEOPLE[id])) {
+                            continue;
+                        }
+                        to.relationships.set(id, relationship.copy());
+                        const otherRelationship = PEOPLE[id].relationships.get(from.id);
+                        PEOPLE[id].relationships.set(to.id, otherRelationship.copy(otherRelationship.type, to));
                         continue;
                     }
                     
-                    const typeA = getType(relationship(), PEOPLE[id].gender);
-                    const typeB = getType(PEOPLE[id].relationships.get(from.id)(), from.gender);
-                    to.relationships.set(id, addInLaw(relationship, typeA, PEOPLE[id]));
-                    PEOPLE[id].relationships.set(to.id, addInLaw(PEOPLE[id].relationships.get(from.id), typeB, to));
+                    to.relationships.set(id, relationship.copy(relationship.type, PEOPLE[id]).setInLaw());
+                    const otherRelationship = PEOPLE[id].relationships.get(from.id);
+                    PEOPLE[id].relationships.set(to.id, otherRelationship.copy(otherRelationship.type, to).setInLaw());
                 }
                 return;
             default:
@@ -176,150 +261,6 @@ export default class Noun {
                 return;
         }
     }
-}
-
-
-function createRelationship(person, type) {
-    const relationship = function() { return `${Noun[type][this.gender]}`; }.bind(person);
-    return relationship;
-}
-
-function isParent(relationship) {
-    return isType(relationship, "Parent");
-}
-function isSpouce(relationship) {
-    return isType(relationship, "Spouce");
-}
-function isChild(relationship) {
-    return isType(relationship, "Child");
-}
-function isSibling(relationship) {
-    return isType(relationship, "Sibling");
-}
-function isPibling(relationship) {
-    return isType(relationship, "Pibling");
-}
-function isNibling(relationship) {
-    return isType(relationship, "Nibling");
-}
-function isCousin(relationship) {
-    return isType(relationship, "Cousin");
-}
-function isType(relationship, type) {
-    return (relationship().includes(Noun[type].male) ||
-            relationship().includes(Noun[type].neutral) ||
-            relationship().includes(Noun[type].female));
-}
-function getType(relationshipText, gender) {
-    switch (true) {
-        case relationshipText.includes(Noun.Child[gender]):
-            return "Child";
-        case relationshipText.includes(Noun.Parent[gender]):
-            return "Parent";
-        case relationshipText.includes(Noun.Sibling[gender]):
-            return "Sibling";
-        case relationshipText.includes(Noun.Nibling[gender]):
-            return "Nibling";
-        case relationshipText.includes(Noun.Pibling[gender]):
-            return "Pibling";
-        case relationshipText.includes(Noun.Spouce[gender]):
-            return "Spouce";
-        case relationshipText.includes(Noun.Cousin[gender]):
-            return "Cousin";
-    }
-}
-function getPrefix(relationship) {
-    if (relationship.includes("Step-")) {
-        return "Step-";
-    }
-    return "";
-}
-function getSuffix(relationshipText) {
-    if (relationshipText.includes("-in-law")) {
-        return "-in-law";
-    }
-    return "";
-}
-function getGreatAmount(relationshipText) {
-    return Array.from(relationshipText.matchAll("Great"), (m) => m[0]).length;
-}
-
-function addGreat(relationship, type, person, addAmount=1) {
-    const relationshipText = relationship();
-    const prefix = getPrefix(relationshipText);
-    const suffix = getSuffix(relationshipText);
-    if  (!relationshipText.includes("Grand")) {
-        if (addAmount === 1) {
-            const newRelationship = function() { return `${prefix}Grand${Noun[type][this.gender]}${suffix}`; }.bind(person);
-            return newRelationship;
-        }
-        const newRelationship = function() { return `${"Great ".repeat(addAmount - 1)}${prefix}Grand${Noun[type][this.gender]}${suffix}` }.bind(person);
-        return newRelationship;
-    }
-    const repetitions = getGreatAmount(relationshipText) + addAmount;
-    const newRelationship = function() { return `${"Great ".repeat(repetitions)}${prefix}Grand${Noun[type][this.gender]}${suffix}` }.bind(person);
-    return newRelationship;
-}
-function addInLaw(relationship, type, person) {
-    const relationshipText = relationship();
-    const prefix = getPrefix(relationshipText);
-    const suffix = "-in-law";
-    if (relationshipText.includes("Grand")) {
-        const repetitions = relationshipText.matchAll("Great").length;
-        const newRelationship = function() { return `${"Great ".repeat(repetitions)}${prefix}Grand${Noun[type][this.gender]}${suffix}` }.bind(person);
-        return newRelationship;
-    }
-    const newRelationship = function() { return `${prefix}${Noun[type][this.gender]}${suffix}`; }.bind(person);
-    return newRelationship;
-}
-function addStep(relationship, type, person) {
-    const relationshipText = relationship();
-    const prefix = "Step-";
-    const suffix = getSuffix(relationshipText);
-    if (relationshipText.includes("Grand")) {
-        const repetitions = relationshipText.matchAll("Great").length;
-        const newRelationship = function() { return `${"Great ".repeat(repetitions)}${prefix}Grand${Noun[type][this.gender]}${suffix}` }.bind(person);
-        return newRelationship;
-    }
-    const newRelationship = function() { return `${prefix}${Noun[type][this.gender]}${suffix}`; }.bind(person);
-    return newRelationship;
-}
-
-const cousinNumberRE = /\d\w+/;
-const numberRE = /\d+/;
-const cousinSeperationRE = /\S+(?=\sremoved)/;
-function addCousinNumber(relationship, person) {
-    const relationshipText = relationship();
-    const number = getCousinNumber(relationshipText);
-    const match = relationshipText.match(cousinSeperationRE);
-    const adverbial = match? match[0] : null;
-
-    const newOrdinal = getOrdinal(number + 1);
-
-    return createCousinRelationship(person, newOrdinal, relationshipText, adverbial);
-}
-function addCousinSeperation(relationship, person, addAmount=1) {
-    const relationshipText = relationship();
-    const ordinal = relationshipText.match(cousinNumberRE)[0];
-    const seperationNumber = getSeperationAmount(relationshipText);
-
-    if (seperationNumber + addAmount !== 0) {
-        const newAdverbial = getAdverbial(seperationNumber + addAmount);
-        return createCousinRelationship(person, ordinal, relationshipText, newAdverbial);
-    }
-    return createCousinRelationship(person, ordinal, relationshipText);
-}
-
-function createCousinRelationship(person, number, relationshipText="", seperation=null) {
-    const prefix = getPrefix(relationshipText);
-    const suffix = getSuffix(relationshipText);
-
-    if (seperation) {
-        const newRelationship = function() { return `${number} ${prefix}${Noun.Cousin[this.gender]}${suffix} ${seperation} removed`}.bind(person);
-        return newRelationship;
-    }
-    const newRelationship = function() { return `${number} ${prefix}${Noun.Cousin[this.gender]}${suffix}`}.bind(person);
-    return newRelationship;
 }
 
 function getOrdinal(number) {
@@ -345,26 +286,4 @@ function getAdverbial(number) {
         default:
             return `${number}-times`;
     }
-}
-function getNumberFromAdverbial(adverbial) {
-    switch (adverbial) {
-        case "Once":
-            return 1;
-        case "Twice":
-            return 2;
-        case "Thrice":
-            return 3;
-        default:
-            return Number(adverbial.match(numberRE)[0]);
-    }
-}
-function getSeperationAmount(relationshipText) {
-    const match = relationshipText.match(cousinSeperationRE);
-    if (!match) {
-        return 0;
-    }
-    return getNumberFromAdverbial(match[0]);
-}
-function getCousinNumber(relationshipText) {
-    return Number(relationshipText.match(cousinNumberRE)[0].match(numberRE)[0]);
 }

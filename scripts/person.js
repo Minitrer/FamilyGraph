@@ -1,6 +1,6 @@
 import Family from "./family.js";
 import Vec2 from "./vec2.js";
-import Noun from "./noun.js";
+import Relationship from "./noun.js";
 
 export let PEOPLE = [];
 const observer = new ResizeObserver(() => {
@@ -164,7 +164,7 @@ export default class Person {
             this.#children = this.#children.concat(children);
 
             children.forEach((child) => {
-                Noun.setRelationships(child, this, "Child");
+                Relationship.setRelationships(child, this, "Child");
             });
 
             if (internal) {
@@ -177,7 +177,7 @@ export default class Person {
         }
         this.#children.push(children);
 
-        Noun.setRelationships(children, this, "Child");
+        Relationship.setRelationships(children, this, "Child");
 
         if (internal) {
             return true;
@@ -194,7 +194,7 @@ export default class Person {
             this.#parents = this.#parents.concat(parents);
 
             parents.forEach(parent => {
-                Noun.setRelationships(parent, this, "Parent");
+                Relationship.setRelationships(parent, this, "Parent");
             });
 
             if (internal) {
@@ -207,7 +207,7 @@ export default class Person {
         }
         this.#parents.push(parents);
 
-        Noun.setRelationships(parents, this, "Parent");
+        Relationship.setRelationships(parents, this, "Parent");
 
         if (internal) {
             return true;
@@ -293,7 +293,7 @@ export default class Person {
             this.#spouses = this.#spouses.concat(spouses);
 
             spouses.forEach((spouse) => {
-                Noun.setRelationships(spouse, this, "Spouce");
+                Relationship.setRelationships(spouse, this, "Spouce");
             })
 
             if (internal) {
@@ -307,7 +307,7 @@ export default class Person {
 
         this.#spouses.push(spouses);
 
-        Noun.setRelationships(spouses, this, "Spouce");
+        Relationship.setRelationships(spouses, this, "Spouce");
 
         if (internal) {
             return true;

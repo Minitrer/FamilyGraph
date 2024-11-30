@@ -121,7 +121,7 @@ function createRelationshipText(person) {
         const text = document.createElement("h2");
 
         text.classList.add("relationship");
-        text.textContent = relationship().at(0).toUpperCase().concat(relationship().slice(1));
+        text.textContent = relationship.text.at(0).toUpperCase().concat(relationship.text.slice(1));
         workspace.appendChild(text);
 
         const x = PEOPLE[id].div.offsetLeft + PEOPLE[id].transformPos.x + PEOPLE[id].div.offsetWidth / 2 - text.offsetWidth / 2;
