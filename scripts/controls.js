@@ -9,6 +9,7 @@ let targetPerson;
 let selected = [];
 export let RELATIONSHIPTEXTS = new Map();
 
+// Menu for changing the target person's gender
 export const GENDERMENU = document.getElementById("gender-menu");
 makeDraggableBasic(GENDERMENU);
 
@@ -43,16 +44,18 @@ bgResetTransforms.addEventListener("click", (e) => {
 const addParentButton = document.createElement("button");
 const addSpouceButton = document.createElement("button");
 const addChildButton = document.createElement("button");
+const editButton = document.createElement("button");
 const resetTransformButton = document.createElement("button");
 const deleteButton = document.createElement("button");
 
 addParentButton.textContent = "Add parent";
 addSpouceButton.textContent = "Add spouce";
 addChildButton.textContent = "Add child";
+editButton.textContent = "Edit";
 resetTransformButton.textContent = "Reset Position";
 deleteButton.textContent = "Delete";
 
-const onPerson = [addParentButton, addSpouceButton, addChildButton, horizontalRule, resetTransformButton, deleteButton];
+const onPerson = [addParentButton, addSpouceButton, addChildButton, editButton, horizontalRule, resetTransformButton, deleteButton];
 
 addParentButton.addEventListener("click", (e) => {
     onMenuClick(e, () => { Actions.addParent(targetPerson) });
@@ -63,12 +66,47 @@ addSpouceButton.addEventListener("click", (e) => {
 addChildButton.addEventListener("click", (e) => {
     onMenuClick(e, () => { Actions.addChild(targetPerson) });
 });
+editButton.addEventListener("click", (e) => {
+    onEditClick(e);
+});
 resetTransformButton.addEventListener("click", (e) => {
     onMenuClick(e, () => { targetPerson.resetTransform() });
 });
 deleteButton.addEventListener("click", (e) => {
     onMenuClick(e, () => { targetPerson.delete() });
 });
+
+// Edit person
+const editRelationshipSelectParent = document.getElementById("select-parent");
+const editRelationshipSelectChild = document.getElementById("select-child");
+let relationshipParentID;
+let relationshipChildID;
+function checkRelationshipType(type) {
+    const id = type === "parent"? relationshipParentID : relationshipChildID;
+    const isStep = targetPerson.relationships.get(id).text.includes("Step-");
+    const currentRelationshipType = isStep? document.getElementById(`step-${type}`) : document.getElementById(`biological-${type}`);
+    currentRelationshipType.checked = true;
+}
+editRelationshipSelectParent.onchange = () => {
+    relationshipParentID = Number(editRelationshipSelectParent.value);
+    checkRelationshipType("parent");
+}
+editRelationshipSelectChild.onchange = () => {
+    relationshipChildID = Number(editRelationshipSelectChild.value);
+    checkRelationshipType("child");
+}
+
+const relationshipTypeOptions = document.getElementsByName("relationship-type");
+for (const option of relationshipTypeOptions) {
+    option.onchange = onRelationshipTypeChange(relationshipParentID, option.value);
+}
+const editRelationship = document.getElementById("edit-relationship");
+const editRelationshipParent = document.getElementById("edit-parent-relationship");
+const editRelationshipChild = document.getElementById("edit-child-relationship");
+
+editRelationship.replaceChildren();
+editRelationship.parentElement.removeChild(editRelationship);
+editRelationship.classList.remove("hidden");
 
 function setContextMenu(target) {
     if (target) {
@@ -82,11 +120,56 @@ function hideContextMenu() {
     contextMenu.replaceChildren();
     contextMenu.className = "hide";
 }
+function resetEditRelationshipMenu() {
+    editRelationshipSelectParent.replaceChildren();
+    editRelationshipSelectChild.replaceChildren();
+    editRelationship.replaceChildren();
+}
 function onMenuClick(e, action) {
     e.preventDefault();
     hideContextMenu();
 
     action();
+}
+function onEditClick(e) {
+    e.preventDefault();
+    editing = true;
+    contextMenu.replaceChildren();
+    
+    if (targetPerson.parents.length === 0 && targetPerson.children.length === 0) {
+        return;
+    }
+    resetEditRelationshipMenu();
+    contextMenu.appendChild(editRelationship);
+    if (targetPerson.parents.length > 0) {
+        editRelationship.appendChild(editRelationshipParent);
+        targetPerson.parents.forEach(parent => {
+            const option = document.createElement("option");
+            option.value = parent.id;
+            option.textContent = (parent.name !== "")? `${parent.name}` : `#${parent.id}`;
+            editRelationshipSelectParent.appendChild(option);
+        });
+        editRelationshipSelectParent.value = editRelationshipSelectParent.options[0].value;
+        relationshipParentID = Number(editRelationshipSelectParent.value);
+        checkRelationshipType("parent");
+        // checkRelationshipType("parent");
+    }
+    if (targetPerson.children.length > 0) {
+        editRelationship.appendChild(editRelationshipChild);
+        targetPerson.children.forEach(child => {
+            const option = document.createElement("option");
+            option.value = child.id;
+            option.textContent = (child.name !== "")? `${child.name}` : `#${child.id}`;
+            editRelationshipSelectChild.appendChild(option);
+        });
+        editRelationshipSelectChild.value = editRelationshipSelectChild.options[0].value;
+        relationshipChildID = Number(editRelationshipSelectChild.value);
+        checkRelationshipType("child");
+        // checkRelationshipType("child");
+    }
+}
+function onRelationshipTypeChange(person, type) {
+
 }
 function selectPeople(selection) {
     selected.forEach((selection) => {
@@ -160,6 +243,18 @@ document.addEventListener("contextmenu", (event) => {
     contextMenu.className = "show";
 
     document.addEventListener("click", (event) => {
+        if (event.target === editButton) {
+            function clickAfterEditing(e) {
+                if (!contextMenu.contains(e.target) && e.target !== editButton) {
+                    e.preventDefault();
+                    hideContextMenu();
+                    editing = false;
+                    document.removeEventListener("click", clickAfterEditing);
+                }
+            }
+            document.addEventListener("click", clickAfterEditing);
+            return;
+        }
         if (event.buttons !== 2) {
             hideContextMenu();
         }
@@ -167,6 +262,10 @@ document.addEventListener("contextmenu", (event) => {
 });
 
 document.addEventListener("dblclick", (event) => {
+    if (editing) {
+        return;
+    }
+    
     event.preventDefault();
 
     let target = undefined;
@@ -184,8 +283,9 @@ document.addEventListener("dblclick", (event) => {
     Person.createPerson();
 });
 
+let editing = false
 document.addEventListener("click", (event) => {
-    if (event.target.tagName === "FORM" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL") {
+    if (event.target.tagName === "FORM" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL" || editing) {
         return;
     }
     event.preventDefault();

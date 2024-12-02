@@ -38,6 +38,42 @@
             </div>
         </div>
         <div id="context-menu" class="hidden">
-        </div>      
+        </div>    
+        <div id="edit-relationship">
+            <div id="edit-parent-relationship">
+                <label for="select-parent">Change relationship of parent:</label>
+                <select id="select-parent" name="select-parent"></select>
+                <div>
+                    <fieldset id="parent-relationship-buttons">
+                        <div>
+                            <input type="radio" id="biological-parent" name="relationship-type" value="biological-parent"></input>
+                            <label for="biological-parent">Biological</label>
+                        </div>
+                        <hr>
+                        <div>
+                            <input type="radio" id="step-parent" name="relationship-type" value="step-parent"></input>
+                            <label for="step-parent">Step-parent</label>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+            <div id="edit-child-relationship">
+                <label for="select-child">Change relationship of child:</label>
+                <select id="select-child" name="select-child"></select>
+                <div>
+                    <fieldset id="child-relationship-buttons">
+                        <div>
+                            <input type="radio" id="biological-child" name="relationship-type" value="biological-child"></input>
+                            <label for="biological-child">Biological</label>
+                        </div>
+                        <hr>
+                        <div>
+                            <input type="radio" id="step-child" name="relationship-type" value="step-child"></input>
+                            <label for="step-child">Step-child</label>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+        </div>  
     </body>
 </html>
