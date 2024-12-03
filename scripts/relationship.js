@@ -69,6 +69,9 @@ export default class Relationship {
     get text() {
         return this.#text();
     }
+    get prefix() {
+        return this.#prefix;
+    }
     get suffix() {
         return this.#suffix;
     }
@@ -130,6 +133,10 @@ export default class Relationship {
     }
     setStep(isStep=true) {
         this.#prefix = isStep? "Step-" : "";
+        return this;
+    }
+    setHalf(isHalf=true) {
+        this.#prefix = isHalf? "Half-" : "";
         return this;
     }
     copy(type=this.#type, person=this.#person, GCount=this.#GCount, prefix=this.#prefix, suffix=this.#suffix, cousinNumber=this.#cousinNumber, cousinSeperation=this.#cousinSeperation) {
@@ -269,6 +276,66 @@ export default class Relationship {
                     
                     to.relationships.set(id, relationship.copy(relationship.type, PEOPLE[id]).setInLaw());
                     PEOPLE[id].relationships.set(to.id, otherRelationship.copy(otherRelationship.type, to).setInLaw());
+                }
+                return;
+            default:
+                console.error(`invalid relationship type: ${type}`);
+                return;
+        }
+    }
+
+    static setStepRelationships(from, to, type, toggle=true) {
+        to.relationships.get(from.id).setStep(toggle);
+        switch (type) {
+            case "Parent":
+                for (const [id, relationship] of from.relationships) {
+                    if (id === to.id) {
+                        continue;
+                    }
+                    switch (relationship.type) {
+                        case "Spouce":
+                            continue;
+                        case "Child":
+                            if (relationship.prefix !== "") {
+                                continue;
+                            }
+                            let hasFoundSharedParent = false;
+                            for (const parent of to.parents) {
+                                if (parent === from) {
+                                    continue;
+                                }
+                                if (PEOPLE[id].relationships.get(parent.id).prefix === "") {
+                                    to.relationships.get(id).setHalf(toggle);
+                                    PEOPLE[id].relationships.get(to.id).setHalf(toggle);
+                                    hasFoundSharedParent = true;
+                                    break;
+                                }
+                            }
+                            if (hasFoundSharedParent) {
+                                continue;
+                            }
+
+                            to.relationships.get(id).setStep(toggle);
+                            PEOPLE[id].relationships.get(to.id).setStep(toggle);
+                            continue;
+                            // TODO: Fix toggling back to biological not accounting for half-siblings
+                        default:
+                            to.relationships.get(id).setStep();
+                            PEOPLE[id].relationships.get(to.id).setStep(toggle);
+                            continue;
+                    }
+                }
+                return;
+            case "Child":
+                for (const [id, relationship] of from.relationships) {
+                    if (id === to.id) {
+                        continue;
+                    }
+                    if (relationship.type === "Spouce" || relationship.type === "Child") {
+                        to.relationships.get(id).setStep(toggle);
+                        PEOPLE[id].relationships.get(to.id).setStep(toggle);
+                        continue;
+                    }
                 }
                 return;
             default:

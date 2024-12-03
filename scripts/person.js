@@ -1,6 +1,6 @@
 import Family from "./family.js";
 import Vec2 from "./vec2.js";
-import Relationship from "./noun.js";
+import Relationship from "./relationship.js";
 
 export let PEOPLE = [];
 const observer = new ResizeObserver(() => {

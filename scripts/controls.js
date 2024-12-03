@@ -4,6 +4,7 @@ import { PEOPLE } from "./person.js";
 import { CLICKEDPOS } from "./pan-zoom-and-drag.js";
 import makeDraggableBasic from "./pan-zoom-and-drag.js";
 import * as Actions from "./actions.js";
+import Relationship from "./relationship.js";
 
 let targetPerson;
 let selected = [];
@@ -98,7 +99,12 @@ editRelationshipSelectChild.onchange = () => {
 
 const relationshipTypeOptions = document.getElementsByName("relationship-type");
 for (const option of relationshipTypeOptions) {
-    option.onchange = onRelationshipTypeChange(relationshipParentID, option.value);
+    if (option.id.includes("parent")) {
+        option.onchange = () => { onRelationshipTypeChange(relationshipParentID, option.value) };
+    }
+    else {
+        option.onchange = () => { onRelationshipTypeChange(relationshipChildID, option.value) };
+    }
 }
 const editRelationship = document.getElementById("edit-relationship");
 const editRelationshipParent = document.getElementById("edit-parent-relationship");
@@ -152,7 +158,6 @@ function onEditClick(e) {
         editRelationshipSelectParent.value = editRelationshipSelectParent.options[0].value;
         relationshipParentID = Number(editRelationshipSelectParent.value);
         checkRelationshipType("parent");
-        // checkRelationshipType("parent");
     }
     if (targetPerson.children.length > 0) {
         editRelationship.appendChild(editRelationshipChild);
@@ -165,11 +170,19 @@ function onEditClick(e) {
         editRelationshipSelectChild.value = editRelationshipSelectChild.options[0].value;
         relationshipChildID = Number(editRelationshipSelectChild.value);
         checkRelationshipType("child");
-        // checkRelationshipType("child");
     }
 }
-function onRelationshipTypeChange(person, type) {
-
+function onRelationshipTypeChange(ID, type) {
+    const isTargetTheParent = type.includes("child");
+    if (isTargetTheParent) {
+        const isStep = type === "step-child";
+        Relationship.setStepRelationships(PEOPLE[ID], targetPerson, "Child", isStep);
+        Relationship.setStepRelationships(targetPerson, PEOPLE[ID], "Parent", isStep);
+        return;
+    }
+    const isStep = type === "step-parent";
+    Relationship.setStepRelationships(targetPerson, PEOPLE[ID], "Child", isStep);
+    Relationship.setStepRelationships(PEOPLE[ID], targetPerson, "Parent", isStep);
 }
 function selectPeople(selection) {
     selected.forEach((selection) => {
