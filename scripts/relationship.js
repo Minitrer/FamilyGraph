@@ -288,6 +288,7 @@ export default class Relationship {
         to.relationships.get(from.id).setStep(toggle);
         switch (type) {
             case "Parent":
+                const toID = to.id;
                 for (const [id, relationship] of from.relationships) {
                     if (id === to.id) {
                         continue;
@@ -296,31 +297,57 @@ export default class Relationship {
                         case "Spouce":
                             continue;
                         case "Child":
-                            if (relationship.prefix !== "") {
-                                continue;
+                            const sibling = PEOPLE[id];
+                            function setBothStep(isStep=true) {
+                                to.relationships.get(id).setStep(isStep);
+                                sibling.relationships.get(to.id).setStep(isStep);
                             }
-                            let hasFoundSharedParent = false;
-                            for (const parent of to.parents) {
-                                if (parent === from) {
-                                    continue;
-                                }
-                                if (PEOPLE[id].relationships.get(parent.id).prefix === "") {
-                                    to.relationships.get(id).setHalf(toggle);
-                                    PEOPLE[id].relationships.get(to.id).setHalf(toggle);
-                                    hasFoundSharedParent = true;
-                                    break;
-                                }
+                            function setBothHalf(isHalf=true) {
+                                to.relationships.get(id).setHalf(isHalf);
+                                sibling.relationships.get(to.id).setHalf(isHalf);
                             }
-                            if (hasFoundSharedParent) {
+
+                            const biologicalParentsA = to.parents.filter((parent) => {
+                                const relationship = parent.relationships.get(toID);
+                                return relationship.type === "Child" && relationship.prefix === "";
+                            });
+                            if (biologicalParentsA.length === 0) {
+                                setBothStep();
                                 continue;
                             }
 
-                            to.relationships.get(id).setStep(toggle);
-                            PEOPLE[id].relationships.get(to.id).setStep(toggle);
+                            const biologicalParentsB = sibling.parents.filter((parent) => {
+                                const relationship = parent.relationships.get(id);
+                                return relationship.type === "Child" && relationship.prefix === "";
+                            });
+                            if (biologicalParentsB === 0) {
+                                setBothStep();
+                                continue;
+                            }
+
+                            let shareCount = 0;
+                            let differs = false;
+                            for (const parentA of biologicalParentsA) {
+                                if (biologicalParentsB.includes(parentA)) {
+                                    shareCount++;
+                                    continue;
+                                }
+                                differs = true;
+                            }
+
+                            if (shareCount === 0) {
+                                setBothStep();
+                                continue;
+                            }
+                            if (differs || biologicalParentsA.length !== biologicalParentsB.length) {
+                                setBothHalf();
+                                continue;
+                            }
+
+                            setBothStep(false);
                             continue;
-                            // TODO: Fix toggling back to biological not accounting for half-siblings
                         default:
-                            to.relationships.get(id).setStep();
+                            to.relationships.get(id).setStep(toggle);
                             PEOPLE[id].relationships.get(to.id).setStep(toggle);
                             continue;
                     }
