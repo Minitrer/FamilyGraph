@@ -97,14 +97,13 @@ editRelationshipSelectChild.onchange = () => {
     checkRelationshipType("child");
 }
 
-const relationshipTypeOptions = document.getElementsByName("relationship-type");
-for (const option of relationshipTypeOptions) {
-    if (option.id.includes("parent")) {
-        option.onchange = () => { onRelationshipTypeChange(relationshipParentID, option.value) };
-    }
-    else {
-        option.onchange = () => { onRelationshipTypeChange(relationshipChildID, option.value) };
-    }
+const parentRelationshipTypeOptions = document.getElementsByName("parent-relationship-type");
+for (const option of parentRelationshipTypeOptions) {
+    option.onchange = () => { onRelationshipTypeChange(relationshipParentID, option.value) };
+}
+const childRelationshipTypeOptions = document.getElementsByName("child-relationship-type");
+for (const option of childRelationshipTypeOptions) {
+    option.onchange = () => { onRelationshipTypeChange(relationshipChildID, option.value) };
 }
 const editRelationship = document.getElementById("edit-relationship");
 const editRelationshipParent = document.getElementById("edit-parent-relationship");
@@ -160,6 +159,9 @@ function onEditClick(e) {
         checkRelationshipType("parent");
     }
     if (targetPerson.children.length > 0) {
+        if (targetPerson.parents.length > 0) {
+            editRelationship.appendChild(horizontalRule);
+        }
         editRelationship.appendChild(editRelationshipChild);
         targetPerson.children.forEach(child => {
             const option = document.createElement("option");
@@ -198,11 +200,6 @@ function selectPeople(selection) {
     targetPerson = selected[0].person;
     createRelationshipText(targetPerson);
 
-    GENDERMENU.className = "show";
-    const x = selected[0].offsetLeft + selected[0].person.transformPos.x + selected[0].offsetWidth / 2 - GENDERMENU.offsetWidth / 2;
-    const y = selected[0].offsetTop + selected[0].person.transformPos.y - GENDERMENU.offsetHeight;
-    GENDERMENU.style.left = `${x}px`;
-    GENDERMENU.style.top = `${y}px`;
 }
 function resetGenderMenuPosition() {
     GENDERMENU.style.setProperty("--pos-x", 0);
@@ -291,6 +288,13 @@ document.addEventListener("dblclick", (event) => {
 
     if (target) {
         target.focus();
+        
+        const selected = target.parentElement;
+        GENDERMENU.className = "show";
+        const x = selected.offsetLeft + selected.person.transformPos.x + selected.offsetWidth / 2 - GENDERMENU.offsetWidth / 2;
+        const y = selected.offsetTop + selected.person.transformPos.y - GENDERMENU.offsetHeight;
+        GENDERMENU.style.left = `${x}px`;
+        GENDERMENU.style.top = `${y}px`;
         return;
     }
     Person.createPerson();

@@ -297,13 +297,18 @@ export default class Relationship {
                         case "Spouce":
                             continue;
                         case "Child":
+                            const toRelationship = to.relationships.get(id);
+                            if (toRelationship.type === "Spouce" || toRelationship.type === "Child") {
+                                continue;
+                            } 
+                            
                             const sibling = PEOPLE[id];
                             function setBothStep(isStep=true) {
-                                to.relationships.get(id).setStep(isStep);
+                                toRelationship.setStep(isStep);
                                 sibling.relationships.get(to.id).setStep(isStep);
                             }
                             function setBothHalf(isHalf=true) {
-                                to.relationships.get(id).setHalf(isHalf);
+                                toRelationship.setHalf(isHalf);
                                 sibling.relationships.get(to.id).setHalf(isHalf);
                             }
 

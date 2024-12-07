@@ -375,14 +375,19 @@ export default class Person {
     }
 
     delete() {
-         // Correct relationships
-         for (const id of this.relationships.keys()) {
-            const higherIds = Array.from(PEOPLE[id].relationships.keys().filter(_id => _id > id), (x) => x - 1).sort();
+        // Correct relationships
+        for (const id of this.relationships.keys()) {
+            const higherIds = Array.from(PEOPLE[id].relationships.keys().filter(_id => _id > this.id), (x) => x - 1).sort();
 
             higherIds.forEach(i => {
                 PEOPLE[id].relationships.set(i, PEOPLE[id].relationships.get(i + 1));
             });
-            PEOPLE[id].relationships.delete(higherIds[higherIds.length - 1] + 1);
+            if (higherIds.length !== 0) {
+                PEOPLE[id].relationships.delete(higherIds[higherIds.length - 1] + 1);
+            }
+            if (id > this.id) {
+                PEOPLE[id].relationships.delete(id - 1);
+            }
         }
         this.#relationships.clear();
         this.#relationships = null;

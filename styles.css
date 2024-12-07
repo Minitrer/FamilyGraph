@@ -62,10 +62,12 @@ html, body, .workspace {
     margin: 2px auto 2px auto;
     border-color: var(--gray);
 }
-#gender-menu.show hr {
-    margin: 0;
-    border-color: var(--white);
+#gender-menu.show hr, #edit-relationship fieldset>hr {
+    width: 0 !important;
+    margin: 0 !important;
+    border-color: var(--white) !important;
 }
+
 #gender-menu.show {
     left: 0px;
     top: 0px;
@@ -87,7 +89,7 @@ html, body, .workspace {
         calc(var(--pos-y) * 1px)
         );
 }
-#gender-menu-buttons {
+#gender-menu-buttons, #parent-relationship-buttons, #child-relationship-buttons {
     border: none;
     border-radius: 0.6em;
     overflow: hidden;
@@ -101,10 +103,10 @@ html, body, .workspace {
 
     background-color: var(--black-1);
 }
-#gender-menu-buttons input {
+#gender-menu-buttons input, #parent-relationship-buttons input, #child-relationship-buttons input  {
     display: none;
 }
-#gender-menu-buttons label {
+#gender-menu-buttons label, #parent-relationship-buttons label, #child-relationship-buttons label  {
     display: block;
     padding: 0.2em;
 
@@ -112,15 +114,23 @@ html, body, .workspace {
     font-size: 2em;
     font-family: Arial, Helvetica, sans-serif;
 }
-#neutral+label {
+#parent-relationship-buttons label, #child-relationship-buttons label  {
+    font-size: 1em;
+    padding: 0.4em 0.8em 0.4em 0.6em;
+}
+#parent-relationship-buttons, #child-relationship-buttons {
+    width: max-content;
+}
+#neutral+label, #edit-relationship input+label {
     background-color: var(--black-1);
     color: var(--white);
 }
-#neutral:hover+label {
+#neutral:hover+label, #edit-relationship input:hover+label {
     background-color: rgb(60, 60, 60);
     color: rgb(240, 240, 240);
+    cursor: pointer;
 }
-#neutral:checked+label {
+#neutral:checked+label, #edit-relationship input:checked+label {
     background-color: rgb(12, 12, 12);
     color: rgb(180, 180, 180);
 }
@@ -131,6 +141,7 @@ html, body, .workspace {
 #male:hover+label {
     background-color: rgb(120, 170, 255);
     color: rgb(0, 0, 90);
+    cursor: pointer;
 }
 #male:checked+label {
     background-color: rgb(10, 60, 120);
@@ -143,10 +154,38 @@ html, body, .workspace {
 #female:hover+label {
     background-color: rgb(255, 188, 253);
     color: rgb(28, 28, 127);
+    cursor: pointer;
 }
 #female:checked+label {
     background-color: rgb(255, 50, 250);
     color: black;
+}
+#gender-menu-buttons input:checked:hover+label, #edit-relationship input:checked:hover+label {
+    cursor: default;
+}
+
+#edit-relationship, #edit-relationship>div {
+    display: flex;
+    flex-flow: column wrap;
+    align-items: center;
+    row-gap: 0.5em;
+}
+#edit-relationship>div , #edit-relationship select{
+    background-color: var(--black-1);
+    color: var(--white);
+    border: none;
+    font-weight: 300;
+    font-size: 1em;
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 0.6em;
+    text-align: center;
+}
+#edit-relationship select {
+    background-color: var(--black-2);
+    border-radius: 0.5em;
+    width: 100%;
+    cursor: pointer;
+    text-align: left;
 }
 
 #graph, .family, .parents, .children {
