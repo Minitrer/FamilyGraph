@@ -353,6 +353,33 @@ export default class Person {
     onDrag(dragAmount) {
         this.#div.style.setProperty("--pos-x", dragAmount.x);
         this.#div.style.setProperty("--pos-y", dragAmount.y);
+        
+        const nextSibling = this.#div.nextElementSibling;
+        const previousSibling = this.#div.previousElementSibling;
+        if (dragAmount.x > 0 && nextSibling) {
+            if (this.#div.offsetLeft + dragAmount.x > nextSibling.person.workspacePos.x) {
+                if (trySwapping(this.#div, nextSibling)) {
+                    nextSibling.person.workspacePos = new Vec2(
+                        nextSibling.offsetLeft + nextSibling.person.transformPos.x,
+                        nextSibling.offsetTop + nextSibling.person.transformPos.y
+                    );
+                    // TODO: Fix the transform position being changed after swapping
+                    const newTransformX = dragAmount.x + nextSibling.offsetLeft - this.#div.offsetLeft;
+                    this.#div.style.setProperty("--pos-x", newTransformX);
+                    this.#transformPos.x = newTransformX;
+                }
+            }
+        }
+        else if (previousSibling) {
+            if (this.#div.offsetLeft + dragAmount.x < previousSibling.person.workspacePos.x) {
+                if (trySwapping(previousSibling, this.#div)) {
+                    previousSibling.person.workspacePos = new Vec2(
+                        previousSibling.offsetLeft + previousSibling.person.transformPos.x,
+                        previousSibling.offsetTop + previousSibling.person.transformPos.y
+                    );
+                }
+            }
+        }
 
         this.workspacePos = new Vec2(
             this.#div.offsetLeft + dragAmount.x,
@@ -454,4 +481,12 @@ export default class Person {
         lastPerson.groups[0].addChild(newPerson);
         newPerson.div.firstElementChild.focus();
     }
+}
+
+function trySwapping(divLeft, divRight) {
+    if (!divLeft || !divRight) {
+        return false;
+    }   
+    divRight.after(divLeft);
+    return true;
 }

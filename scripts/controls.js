@@ -1,4 +1,3 @@
-import Vec2 from "./vec2.js";
 import Person from "./person.js";
 import { PEOPLE } from "./person.js";
 import { CLICKEDPOS } from "./pan-zoom-and-drag.js";
@@ -41,6 +40,7 @@ bgAddPersonButton.addEventListener("click", (e) => {
 bgResetTransforms.addEventListener("click", (e) => {
     onMenuClick(e, Person.resetAllTransforms);
 });
+
 // Context menu option on person
 const addParentButton = document.createElement("button");
 const addSpouceButton = document.createElement("button");

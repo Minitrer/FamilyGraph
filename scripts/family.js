@@ -215,23 +215,29 @@ export default class Family {
 
     static createFamily(parents, children=undefined, source=undefined, subFamilyMap=undefined) {
         const graph = document.getElementById("graph");
-        let _parentElement;
         let family;
         if (!source) {
-            _parentElement = graph;
+            const container = graph;
             family = new Family(parents, children, subFamilyMap);
+            container.appendChild(family.div);
         }
         else {
-            _parentElement = source.div.parentElement;
+            const sibling = source.div.previousSibling;
+            const container = source.div.parentElement;
             family = new Family(parents, children, subFamilyMap);
             source.groups.forEach((group) => {
                 if (group.children.includes(source)) {
                     group.convertChildToFamily(source, family);
                 }
             });
+            if (sibling) {
+                sibling.after(family.div);
+            }
+            else {
+                container.prepend(family.div);
+            }
         }
         
-        _parentElement.appendChild(family.div);
         Family.updateAll();
         return family;
     }
