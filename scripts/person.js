@@ -1,4 +1,5 @@
 import Family from "./family.js";
+import { FAMILIES } from "./family.js";
 import Vec2 from "./vec2.js";
 import Relationship from "./relationship.js";
 
@@ -351,36 +352,74 @@ export default class Person {
     }
 
     onDrag(dragAmount) {
-        this.#div.style.setProperty("--pos-x", dragAmount.x);
         this.#div.style.setProperty("--pos-y", dragAmount.y);
         
-        const nextSibling = this.#div.nextElementSibling;
-        const previousSibling = this.#div.previousElementSibling;
-        if (dragAmount.x > 0 && nextSibling) {
+        if (this.#div.nextElementSibling) {
+            const divToSwap = this.#div.nextElementSibling;
+            const isFamily = divToSwap.person? false : true;
+            const nextSibling = isFamily? divToSwap.firstElementChild.lastElementChild : divToSwap;
+
             if (this.#div.offsetLeft + dragAmount.x > nextSibling.person.workspacePos.x) {
-                if (trySwapping(this.#div, nextSibling)) {
+                this.#transformPos.x -= dragAmount.x - nextSibling.person.transformPos.x;
+                const oldOffset = this.#div.offsetLeft;
+
+                divToSwap.after(this.#div);
+
+                if (!isFamily) {
                     nextSibling.person.workspacePos = new Vec2(
                         nextSibling.offsetLeft + nextSibling.person.transformPos.x,
                         nextSibling.offsetTop + nextSibling.person.transformPos.y
                     );
-                    // TODO: Fix the transform position being changed after swapping
-                    const newTransformX = dragAmount.x + nextSibling.offsetLeft - this.#div.offsetLeft;
-                    this.#div.style.setProperty("--pos-x", newTransformX);
-                    this.#transformPos.x = newTransformX;
                 }
+                else {
+                    const id = Family.getIDFromDiv(divToSwap);
+                    FAMILIES[id].updateWorkspacePositions();
+                    FAMILIES[id].updateConnectionPoints();
+                }
+
+                const newDragX = dragAmount.x + oldOffset - this.#div.offsetLeft;
+                this.#div.style.setProperty("--pos-x", newDragX);
+                this.workspacePos = new Vec2(
+                    this.#div.offsetLeft + newDragX,
+                    this.#div.offsetTop + dragAmount.y
+                );
+                return;
             }
         }
-        else if (previousSibling) {
+        if (this.#div.previousElementSibling) {
+            const divToSwap = this.#div.previousElementSibling;
+            const isFamily = divToSwap.person? false : true;
+            const previousSibling = isFamily? divToSwap.firstElementChild.firstElementChild : divToSwap;
+
             if (this.#div.offsetLeft + dragAmount.x < previousSibling.person.workspacePos.x) {
-                if (trySwapping(previousSibling, this.#div)) {
+                this.#transformPos.x -= dragAmount.x - previousSibling.person.transformPos.x;
+                const oldOffset = this.#div.offsetLeft;
+
+                this.#div.after(divToSwap);
+
+                if (!isFamily) {
                     previousSibling.person.workspacePos = new Vec2(
                         previousSibling.offsetLeft + previousSibling.person.transformPos.x,
                         previousSibling.offsetTop + previousSibling.person.transformPos.y
                     );
                 }
+                else {
+                    const id = Family.getIDFromDiv(divToSwap);
+                    FAMILIES[id].updateWorkspacePositions();
+                    FAMILIES[id].updateConnectionPoints();
+                }
+                
+                const newTransformX = dragAmount.x + oldOffset - this.#div.offsetLeft;
+                this.#div.style.setProperty("--pos-x", newTransformX);
+                this.workspacePos = new Vec2(
+                    this.#div.offsetLeft + newTransformX,
+                    this.#div.offsetTop + dragAmount.y
+                );
+                return;            
             }
         }
 
+        this.#div.style.setProperty("--pos-x", dragAmount.x);
         this.workspacePos = new Vec2(
             this.#div.offsetLeft + dragAmount.x,
             this.#div.offsetTop + dragAmount.y
@@ -483,10 +522,7 @@ export default class Person {
     }
 }
 
-function trySwapping(divLeft, divRight) {
-    if (!divLeft || !divRight) {
-        return false;
-    }   
+function Swap(divLeft, divRight) {
     divRight.after(divLeft);
     return true;
 }
