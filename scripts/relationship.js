@@ -33,7 +33,6 @@ class Noun  {
         neutral: "nibling",
         female: "niece",
     });
-    // TODO: Add a way to calculate counsin numbers and degrees of seperation 
     static Cousin = Object.freeze({
         male: "cousin",
         neutral: "cousin",

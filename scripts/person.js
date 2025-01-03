@@ -25,6 +25,11 @@ export default class Person {
         "left" : new Vec2(),
         "right" : new Vec2()
     }
+    #isHidden = false;
+    #DOMPositionAfterHiding = {
+        index,
+        parent,
+    };
     connections = {};
 
     constructor(name="Name", family=undefined, spouse=undefined, parents=undefined, children=undefined) {
@@ -112,6 +117,9 @@ export default class Person {
     }
     get div() {
         return this.#div;
+    }
+    get isHidden() {
+        return this.#isHidden;
     }
     get transformPos() {
         return this.#transformPos;
@@ -438,6 +446,71 @@ export default class Person {
         this.#div.style.setProperty("--pos-y", 0);
 
         this.transformPos = new Vec2();
+    }
+
+    hide() {
+        if (this.#isHidden) {
+            return;
+        }
+
+        const children = this.#div.parentElement.children;
+        let i = 0;
+        for (let length = children.length; i < length; i++) {
+            if (children.item(index) !== this.#div) {
+                continue;
+            }
+            this.#DOMPositionAfterHiding.index = i;
+            this.#DOMPositionAfterHiding.parent = this.#div.parentElement;
+            break;
+        }
+
+        const found = i !== children.length;
+        if (!found) {
+            console.error(`Unable to find DOM position of ${this}`);
+            return;
+        }
+
+        this.#div.remove();
+        this.#groups.forEach(group => {
+            group.hide(this);
+        });
+        if (!this.#family.isHidden) {
+            this.#family.updateWorkspacePositions();
+            this.#family.updateConnectionPoints();
+        }
+    }
+
+    show() {
+        if (!this.#isHidden) {
+            return;
+        }
+
+        if (this.#family.isHidden) {
+            this.#family.show();
+        }
+
+        this.#groups.forEach(group => {
+            if (group.isHidden) {
+                group.show();
+            }
+            group.show(this);
+        });
+
+        if (this.#DOMPositionAfterHiding.index === 0) {
+            this.#DOMPositionAfterHiding.parent.prepend(this.#div);
+        }
+        else if (this.#DOMPositionAfterHiding.index > this.#DOMPositionAfterHiding.parent.childElementCount) {
+            this.#DOMPositionAfterHiding.parent.append(this.#div);
+        }
+        else {
+            const children = this.#DOMPositionAfterHiding.parent.children;
+            children.item(this.#DOMPositionAfterHiding.index - 1).after(this.#div);
+        }
+
+        if (!this.#family.isHidden) {
+            this.#family.updateWorkspacePositions();
+            this.#family.updateConnectionPoints();
+        }
     }
 
     delete() {

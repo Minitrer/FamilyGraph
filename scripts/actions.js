@@ -2,6 +2,13 @@ import Person from "./person.js";
 import Family from "./family.js";
 import { FAMILIES } from "./family.js";
 
+class Command {
+    constructor(undo, redo) {
+        this.undo = undo;
+        this.redo = redo;
+    }
+}
+
 export function addParent(person) {
     const newPerson = new Person();
     // person has parents and is single
@@ -109,4 +116,7 @@ export function addChild(person) {
     }
     Family.createFamily([person], [newPerson], person);
     newPerson.div.firstElementChild.focus();
+}
+export function deletePerson(person) {
+    
 }

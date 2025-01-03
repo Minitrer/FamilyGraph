@@ -10,11 +10,16 @@ export default class Family {
     #parentsDiv;
     #childrenDiv;
 
+    // subFamilyMap is a dictionary with subfamilies's ids as keys and one of their parents as values
     constructor(parents, children=undefined, subFamilyMap=undefined) {
-        // subFamilyMap is a dictionary with subfamilies's ids as keys and one of their parents as values
 
         FAMILIES.push(this);
         
+        // Setup groups for hiding
+        this.#groups.hiddenCount = 0;
+        this.#groups.getVisibleLength = () => {
+            return this.#groups.length - this.#groups.hiddenCount;
+        }
         // Create divs
         this.#div = document.createElement("div");
         this.#div.setAttribute("class", "family");
@@ -205,6 +210,11 @@ export default class Family {
         Family.updateAll();
     }
 
+    static hiddenCount = 0;
+    static getVisibleLength() {
+        return FAMILIES.length - Family.hiddenCount;
+    }
+
     static updateAll() {
         const largestFamilyIndex = Family.getIDFromDiv(graph.firstElementChild);
         FAMILIES[largestFamilyIndex].updateWorkspacePositions();
@@ -259,10 +269,16 @@ class ParentChildGroup {
     childrenConnectionPoint;
     #inBetweenPoint;
     #subFamilyMap = {};
+    #isHidden = false;
     
     constructor(parents, children, family, subFamilyMap=undefined) {
-        this.parents = parents;
         this.#family = family;
+        this.parents = parents;
+
+        this.parents.hiddenCount = 0;
+        this.parents.getVisibleLength = () => {
+            return this.parents.length - this.parents.hiddenCount;
+        }
 
         // Set family, add parents to parent div, marry parents together and adopt children
         for (let i = 0, length = this.parents.length; i < length; i++) {
@@ -295,6 +311,11 @@ class ParentChildGroup {
                 }
                 console.error(`Warning: Sub-family ${child} added without specified subFamilyChild.`);
             });
+        }
+
+        this.children.hiddenCount = 0;
+        this.children.getVisibleLength = () => {
+            return this.children.length - this.children.hiddenCount;
         }
     }
 
@@ -619,6 +640,112 @@ class ParentChildGroup {
         console.error(`Warning: Sub-family ${child} added without specified subFamilyChild.`);
     }
 
+    // TODO:
+    hide(person=null) {
+        // Hide the group
+        if (!person) {
+            this.#isHidden = true;
+
+            const family = this.children.find((child) => !child.isHidden && child instanceof Family);
+            if (family) {
+                const subChild = this.#subFamilyMap[`${family.id}`];
+                const index = subChild.groups.indexOf(this);
+                if (subChild.connections[`children ${index}`]) {
+                    subChild.connections[`children ${index}`].remove();
+                    delete subChild.connections[`children ${index}`];
+                }
+                subChild.groups.splice(index, 1);
+            }
+    
+            if (this.parentsConnectionPoint) {
+                this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);
+            }
+    
+            if (this.childrenConnectionPoint) {
+                this.childrenConnectionPoint = deleteConnectionPoint(this.childrenConnectionPoint);
+            }
+    
+            this.#family.groups.hiddenCount++;
+    
+            const replaceCondition = this.#family.parentsDiv.childElementCount === 0 &&
+                                     this.#family.childrenDiv.childElementCount === 1 &&
+                                     this.#family.childrenDiv.firstElementChild.className === "family";
+            if (replaceCondition || this.#family.groups.getVisibleLength() === 0) {
+                this.#family.hide();
+                return;
+            }
+    
+            if (Family.getVisibleLength() === 0) {
+                return;
+            }
+            Family.updateAll();
+            return;
+        }
+
+        // Hide the person in the group
+        const parentIndex = this.parents.indexOf(person);
+        if (parentIndex > -1) {
+            this.parents.hiddenCount++;
+            const hideCondition = this.parents.getVisibleLength() === 0 &&
+                                 (this.children.getVisibleLength() === 0 ||
+                                 (this.children.getVisibleLength() === 1 &&
+                                  this.children.find((child) => !child.isHidden && child instanceof Family)));
+            if (hideCondition) {
+                this.hide();
+                return;
+            }
+            if (this.parents.getVisibleLength() < 3) {
+                this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);
+
+                this.parents.forEach((parent) => {
+                    const index = parent.groups.indexOf(this)
+                    parent.connections[`parents ${index}`].remove();
+                    delete parent.connections[`parents ${index}`];
+                });
+
+                if (this.parents.getVisibleLength() > 0) {
+                    this.createParentConnectionPoint();
+                }
+                else {
+                    this.childrenConnectionPoint = deleteConnectionPoint(this.childrenConnectionPoint);
+                }
+            }
+            return;
+        }
+        this.children.hiddenCount++;
+
+        if (this.parents.getVisibleLength() === 0 && this.children.getVisibleLength() === 0) {
+            this.hide();
+            return;
+        }
+        if (this.children.getVisibleLength() < 2) {
+            this.childrenConnectionPoint = deleteConnectionPoint(this.childrenConnectionPoint);
+
+            if (this.children.getVisibleLength() > 0) {
+                const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[`${this.children[0].id}`];
+                const index = singleChild.groups.indexOf(this);
+                singleChild.connections[`children ${index}`].remove();
+                delete singleChild.connections[`children ${index}`];
+
+                this.createChildConnectionPoint();
+            }
+            else {
+                this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);
+            }
+        }
+    }
+
+    show(person=null) {
+        if (!person) {
+            if (this.#family.isHidden) {
+                this.#family.show();
+            }
+
+            return;
+        }
+
+    }
+
     remove(person) {
         const parentIndex = this.parents.indexOf(person);
         if (parentIndex > -1) {
@@ -671,25 +798,15 @@ class ParentChildGroup {
     }
 
     delete() {
-        this.children.forEach((child) => {
-            if (child instanceof Family) {
-                const subChild = this.#subFamilyMap[`${child.id}`];
-                const index = subChild.groups.indexOf(this);
-                if (subChild.connections[`children ${index}`]) {
-                    subChild.connections[`children ${index}`].remove();
-                    delete subChild.connections[`children ${index}`];
-                }
-                subChild.groups.splice(index, 1);
-                return;
+        if (this.children[0]) {
+            const subChild = this.#subFamilyMap[`${this.children[0].id}`];
+            const index = subChild.groups.indexOf(this);
+            if (subChild.connections[`children ${index}`]) {
+                subChild.connections[`children ${index}`].remove();
+                delete subChild.connections[`children ${index}`];
             }
-
-            const index = child.groups.indexOf(this);
-            if (child.connections[`children ${index}`]) {
-                child.connections[`children ${index}`].remove();
-                delete child.connections[`children ${index}`];
-            }
-            child.groups.splice(index, 1);
-        });
+            subChild.groups.splice(index, 1);
+        }
 
         if (this.parentsConnectionPoint) {
             this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);

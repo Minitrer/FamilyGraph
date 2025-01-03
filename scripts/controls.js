@@ -9,7 +9,9 @@ let targetPerson;
 let selected = [];
 export let RELATIONSHIPTEXTS = new Map();
 
+// 
 // Menu for changing the target person's gender
+// 
 export const GENDERMENU = document.getElementById("gender-menu");
 makeDraggableBasic(GENDERMENU);
 
@@ -21,7 +23,9 @@ for (const option of genderOptions) {
         }
     }
 }
+// 
 // Context menu options on background
+// 
 const contextMenu = document.getElementById("context-menu");
 const horizontalRule = document.createElement("hr");
 
@@ -41,7 +45,9 @@ bgResetTransforms.addEventListener("click", (e) => {
     onMenuClick(e, Person.resetAllTransforms);
 });
 
+// 
 // Context menu option on person
+// 
 const addParentButton = document.createElement("button");
 const addSpouceButton = document.createElement("button");
 const addChildButton = document.createElement("button");
@@ -77,7 +83,9 @@ deleteButton.addEventListener("click", (e) => {
     onMenuClick(e, () => { targetPerson.delete() });
 });
 
+// 
 // Edit person
+// 
 const editRelationshipSelectParent = document.getElementById("select-parent");
 const editRelationshipSelectChild = document.getElementById("select-child");
 let relationshipParentID;
@@ -86,6 +94,7 @@ function checkRelationshipType(type) {
     const id = type === "parent"? relationshipParentID : relationshipChildID;
     const isStep = targetPerson.relationships.get(id).text.includes("Step-");
     const currentRelationshipType = isStep? document.getElementById(`step-${type}`) : document.getElementById(`biological-${type}`);
+    
     currentRelationshipType.checked = true;
 }
 editRelationshipSelectParent.onchange = () => {
@@ -113,6 +122,9 @@ editRelationship.replaceChildren();
 editRelationship.parentElement.removeChild(editRelationship);
 editRelationship.classList.remove("hidden");
 
+// 
+// Functions
+// 
 function setContextMenu(target) {
     if (target) {
         targetPerson = target;
@@ -138,7 +150,7 @@ function onMenuClick(e, action) {
 }
 function onEditClick(e) {
     e.preventDefault();
-    editing = true;
+    isEditing = true;
     contextMenu.replaceChildren();
     
     if (targetPerson.parents.length === 0 && targetPerson.children.length === 0) {
@@ -187,8 +199,8 @@ function onRelationshipTypeChange(ID, type) {
     Relationship.setStepRelationships(PEOPLE[ID], targetPerson, "Parent", isStep);
 }
 function selectPeople(selection) {
-    selected.forEach((selection) => {
-        selection.classList.remove("selected");
+    selected.forEach((previouslySelected) => {
+        previouslySelected.classList.remove("selected");
     });
     selection.forEach((person) => {
         person.classList.add("selected");
@@ -231,6 +243,9 @@ function createRelationshipText(person) {
     }
 }
 
+// 
+// Controls
+// 
 document.addEventListener("contextmenu", (event) => {
     event.preventDefault();
     if (event.pageX - CLICKEDPOS.x !== 0 && event.pageY - CLICKEDPOS.y !== 0) {
@@ -258,7 +273,7 @@ document.addEventListener("contextmenu", (event) => {
                 if (!contextMenu.contains(e.target) && e.target !== editButton) {
                     e.preventDefault();
                     hideContextMenu();
-                    editing = false;
+                    isEditing = false;
                     document.removeEventListener("click", clickAfterEditing);
                 }
             }
@@ -272,7 +287,7 @@ document.addEventListener("contextmenu", (event) => {
 });
 
 document.addEventListener("dblclick", (event) => {
-    if (editing) {
+    if (isEditing) {
         return;
     }
     
@@ -300,9 +315,9 @@ document.addEventListener("dblclick", (event) => {
     Person.createPerson();
 });
 
-let editing = false
+let isEditing = false
 document.addEventListener("click", (event) => {
-    if (event.target.tagName === "FORM" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL" || editing) {
+    if (event.target.tagName === "FORM" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL" || isEditing) {
         return;
     }
     event.preventDefault();
@@ -334,7 +349,7 @@ document.addEventListener("click", (event) => {
     for (const text of RELATIONSHIPTEXTS.values()) {
         text.remove();
     }
-    RELATIONSHIPTEXTS.clear;
+    RELATIONSHIPTEXTS.clear();
 
     GENDERMENU.className = "hidden";
     resetGenderMenuPosition();
