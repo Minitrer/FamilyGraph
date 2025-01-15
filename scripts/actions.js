@@ -15,12 +15,21 @@ const redoStack = [];
 export function undo() {
     const command = undoStack.pop();
     command.undo();
-    redoStack.push(command);
+    pushStack(command, redoStack);
 }
 export function redo() {
     const command = redoStack.pop();
     command.redo();
-    undoStack.push(command);
+    pushStack(command, undoStack);
+}
+function pushStack(command, stack) {
+    if (stack.push(command) <= stackSize) {
+        return;
+    };
+    const removed = stack.shift()
+    if (removed.hasOwn(onRemoved)) {
+        removed.onRemoved();
+    }
 }
 
 export function addParent(person) {
@@ -134,7 +143,12 @@ export function addChild(person) {
 
 export function hidePerson(person) {
     const command = new Command(() => { person.show() }, () => { person.hide() });
-    undoStack.push(command);
+    command.onRemoved = () => {
+        if (person.isHidden) {
+            person.delete();
+        }
+    }
+    pushStack(command, undoStack);
 
     person.hide();
 }
