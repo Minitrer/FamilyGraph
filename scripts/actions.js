@@ -2,11 +2,25 @@ import Person from "./person.js";
 import Family from "./family.js";
 import { FAMILIES } from "./family.js";
 
+const stackSize = 20;
 class Command {
     constructor(undo, redo) {
         this.undo = undo;
         this.redo = redo;
     }
+}
+const undoStack = [];
+const redoStack = [];
+
+export function undo() {
+    const command = undoStack.pop();
+    command.undo();
+    redoStack.push(command);
+}
+export function redo() {
+    const command = redoStack.pop();
+    command.redo();
+    undoStack.push(command);
 }
 
 export function addParent(person) {
@@ -117,6 +131,10 @@ export function addChild(person) {
     Family.createFamily([person], [newPerson], person);
     newPerson.div.firstElementChild.focus();
 }
-export function deletePerson(person) {
-    
+
+export function hidePerson(person) {
+    const command = new Command(() => { person.show() }, () => { person.hide() });
+    undoStack.push(command);
+
+    person.hide();
 }

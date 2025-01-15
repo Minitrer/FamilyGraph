@@ -193,7 +193,7 @@ html, body, .workspace {
     justify-content: center;
     align-items: center;
     align-content: center;
-    /* border: 1px solid cyan; */
+    border: 1px solid cyan;
 }
 
 #graph {

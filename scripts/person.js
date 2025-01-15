@@ -26,10 +26,11 @@ export default class Person {
         "right" : new Vec2()
     }
     #isHidden = false;
-    #DOMPositionAfterHiding = {
-        index,
-        parent,
+    #DOMPositionBeforeHiding = {
+        index: 0,
+        parent: undefined,
     };
+    #NameBeforeHiding = "";
     connections = {};
 
     constructor(name="Name", family=undefined, spouse=undefined, parents=undefined, children=undefined) {
@@ -90,6 +91,9 @@ export default class Person {
     }
     get name() {
         return this.#div.firstElementChild.textContent;
+    }
+    set name(value) {
+        this.#div.firstElementChild.textContent = value;
     }
     get family() {
         return this.#family;
@@ -452,15 +456,17 @@ export default class Person {
         if (this.#isHidden) {
             return;
         }
+        this.#isHidden = true;
 
+        this.#NameBeforeHiding = this.name;
         const children = this.#div.parentElement.children;
         let i = 0;
         for (let length = children.length; i < length; i++) {
-            if (children.item(index) !== this.#div) {
+            if (children.item(i) !== this.#div) {
                 continue;
             }
-            this.#DOMPositionAfterHiding.index = i;
-            this.#DOMPositionAfterHiding.parent = this.#div.parentElement;
+            this.#DOMPositionBeforeHiding.index = i;
+            this.#DOMPositionBeforeHiding.parent = this.#div.parentElement;
             break;
         }
 
@@ -470,10 +476,13 @@ export default class Person {
             return;
         }
 
+        observer.unobserve(this.#div);
+
         this.#div.remove();
         this.#groups.forEach(group => {
             group.hide(this);
         });
+
         if (!this.#family.isHidden) {
             this.#family.updateWorkspacePositions();
             this.#family.updateConnectionPoints();
@@ -484,6 +493,7 @@ export default class Person {
         if (!this.#isHidden) {
             return;
         }
+        this.#isHidden = false;
 
         if (this.#family.isHidden) {
             this.#family.show();
@@ -496,21 +506,21 @@ export default class Person {
             group.show(this);
         });
 
-        if (this.#DOMPositionAfterHiding.index === 0) {
-            this.#DOMPositionAfterHiding.parent.prepend(this.#div);
+        if (this.#DOMPositionBeforeHiding.index === 0) {
+            this.#DOMPositionBeforeHiding.parent.prepend(this.#div);
         }
-        else if (this.#DOMPositionAfterHiding.index > this.#DOMPositionAfterHiding.parent.childElementCount) {
-            this.#DOMPositionAfterHiding.parent.append(this.#div);
+        else if (this.#DOMPositionBeforeHiding.index > this.#DOMPositionBeforeHiding.parent.childElementCount) {
+            this.#DOMPositionBeforeHiding.parent.append(this.#div);
         }
         else {
-            const children = this.#DOMPositionAfterHiding.parent.children;
-            children.item(this.#DOMPositionAfterHiding.index - 1).after(this.#div);
+            const children = this.#DOMPositionBeforeHiding.parent.children;
+            children.item(this.#DOMPositionBeforeHiding.index - 1).after(this.#div);
         }
+        this.name = this.#NameBeforeHiding;
+        
+        observer.observe(this.#div);
 
-        if (!this.#family.isHidden) {
-            this.#family.updateWorkspacePositions();
-            this.#family.updateConnectionPoints();
-        }
+        Family.updateAll();
     }
 
     delete() {
@@ -593,9 +603,4 @@ export default class Person {
         lastPerson.groups[0].addChild(newPerson);
         newPerson.div.firstElementChild.focus();
     }
-}
-
-function Swap(divLeft, divRight) {
-    divRight.after(divLeft);
-    return true;
 }

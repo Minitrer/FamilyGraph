@@ -141,6 +141,7 @@ export default class Relationship {
     copy(type=this.#type, person=this.#person, GCount=this.#GCount, prefix=this.#prefix, suffix=this.#suffix, cousinNumber=this.#cousinNumber, cousinSeperation=this.#cousinSeperation) {
         return new Relationship(type, person, GCount, prefix, suffix, cousinNumber, cousinSeperation);
     }
+    
     static setRelationships(from, to, type) {
         to.relationships.set(from.id, new Relationship(type, from));
         switch (type) {

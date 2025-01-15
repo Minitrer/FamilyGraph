@@ -80,7 +80,7 @@ resetTransformButton.addEventListener("click", (e) => {
     onMenuClick(e, () => { targetPerson.resetTransform() });
 });
 deleteButton.addEventListener("click", (e) => {
-    onMenuClick(e, () => { targetPerson.delete() });
+    onMenuClick(e, () => { Actions.hidePerson(targetPerson) });
 });
 
 // 
@@ -353,4 +353,28 @@ document.addEventListener("click", (event) => {
 
     GENDERMENU.className = "hidden";
     resetGenderMenuPosition();
+});
+
+// 
+// Undo-Redo
+// 
+document.addEventListener("keyup", (e) => {
+    switch (e.key) {
+        case "z":
+        case "Z":
+            if (!e.ctrlKey) {
+                return;
+            }
+            Actions.undo();
+            return;
+        case "y":
+        case "Y":
+            if (!e.ctrlKey) {
+                return;
+            }
+            Actions.redo();
+            return;
+        default:
+            return;
+    }
 });
