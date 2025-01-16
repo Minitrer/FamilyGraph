@@ -80,7 +80,7 @@ resetTransformButton.addEventListener("click", (e) => {
     onMenuClick(e, () => { targetPerson.resetTransform() });
 });
 deleteButton.addEventListener("click", (e) => {
-    onMenuClick(e, () => { Actions.hidePerson(targetPerson) });
+    onMenuClick(e, () => { Actions.hidePerson(targetPerson) }); //targetPerson.delete() });
 });
 
 // 

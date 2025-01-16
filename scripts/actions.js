@@ -13,11 +13,19 @@ const undoStack = [];
 const redoStack = [];
 
 export function undo() {
+    if (undoStack.length === 0) {
+        return;
+    }
+
     const command = undoStack.pop();
     command.undo();
     pushStack(command, redoStack);
 }
 export function redo() {
+    if (redoStack.length === 0) {
+        return;
+    }
+
     const command = redoStack.pop();
     command.redo();
     pushStack(command, undoStack);

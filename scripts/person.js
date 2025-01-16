@@ -476,6 +476,10 @@ export default class Person {
             return;
         }
 
+        Object.values(this.connections).forEach((connection) => {
+            connection.remove();
+        });
+
         observer.unobserve(this.#div);
 
         this.#div.remove();
@@ -483,10 +487,7 @@ export default class Person {
             group.hide(this);
         });
 
-        if (!this.#family.isHidden) {
-            this.#family.updateWorkspacePositions();
-            this.#family.updateConnectionPoints();
-        }
+        Family.updateAll();
     }
 
     show() {
@@ -516,6 +517,10 @@ export default class Person {
             const children = this.#DOMPositionBeforeHiding.parent.children;
             children.item(this.#DOMPositionBeforeHiding.index - 1).after(this.#div);
         }
+        const workspace = document.getElementById("workspace");
+        Object.values(this.connections).forEach((connection) => {
+            workspace.append(connection);
+        });
         this.name = this.#NameBeforeHiding;
         
         observer.observe(this.#div);
