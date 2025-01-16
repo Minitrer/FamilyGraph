@@ -1,5 +1,6 @@
 import Person from "./person.js";
 import Family from "./family.js";
+import Vec2 from "./vec2.js";
 import { FAMILIES } from "./family.js";
 
 const stackSize = 20;
@@ -40,8 +41,29 @@ function pushStack(command, stack) {
     }
 }
 
+export function addPerson() {
+    const newPerson = Person.createPerson();
+
+    const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
+    command.onRemoved = () => {
+        if (newPerson.isHidden) {
+            newPerson.delete();
+        }
+    }
+    pushStack(command, undoStack);
+}
+
 export function addParent(person) {
     const newPerson = new Person();
+
+    const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
+        command.onRemoved = () => {
+        if (newPerson.isHidden) {
+            newPerson.delete();
+        }
+    }
+    pushStack(command, undoStack);
+
     // person has parents and is single
     if (person.div.parentElement.className === "children") {
         for (let i = 0, length = person.groups.length; i < length; i++) {
@@ -131,9 +153,26 @@ export function addSpouce(person) {
     }
     Family.createFamily([person, newPerson], undefined, person);
     newPerson.div.firstElementChild.focus();
+
+    const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
+        command.onRemoved = () => {
+        if (newPerson.isHidden) {
+            newPerson.delete();
+        }
+    }
+    pushStack(command, undoStack);
 }
 export function addChild(person) {
     const newPerson = new Person();
+
+    const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
+    command.onRemoved = () => {
+        if (newPerson.isHidden) {
+            newPerson.delete();
+        }
+    }
+    pushStack(command, undoStack);
+
     if (person.div.parentElement.className === "parents") {
         for (let i = 0, length = person.groups.length; i < length; i++) {
             if (person.groups[i].parents.includes(person)) {
@@ -159,4 +198,20 @@ export function hidePerson(person) {
     pushStack(command, undoStack);
 
     person.hide();
+}
+
+export function resetTransform(person) {
+    const cssPosX = Number(person.div.style.getPropertyValue("--pos-x"));
+    const cssPosY = Number(person.div.style.getPropertyValue("--pos-y"));
+    const transformPos = new Vec2(person.transformPos.x, person.transformPos.y);
+
+    const command = new Command(() => { 
+        person.div.style.setProperty("--pos-x", cssPosX);
+        person.div.style.setProperty("--pos-y", cssPosY);
+
+        person.transformPos = transformPos;
+    }, () => { person.resetTransform() });
+    pushStack(command, undoStack);
+
+    person.resetTransform();
 }

@@ -265,6 +265,10 @@ export default class Family {
     }
 
     static updateAll() {
+        if (!graph.firstElementChild) {
+            return;
+        }
+        
         const largestFamilyIndex = Family.getIDFromDiv(graph.firstElementChild);
         FAMILIES[largestFamilyIndex].updateWorkspacePositions();
         FAMILIES.forEach((family) => {

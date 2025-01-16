@@ -107,6 +107,9 @@ export default class Person {
     get relationships() {
         return this.#relationships;
     }
+    get div() {
+        return this.#div;
+    }
     get groups() {
         return this.#groups;
     }
@@ -585,14 +588,14 @@ export default class Person {
         if (graph.childElementCount === 0) {
             Family.createFamily([newPerson]);
             newPerson.div.firstElementChild.focus();
-            return;
+            return newPerson;
         }
         const lastPerson = PEOPLE[PEOPLE.length - 2];
         // lastPerson has parents and is single
         if (lastPerson.div.parentElement.className === "children") {
             lastPerson.groups[lastPerson.groups.length - 1].addChild(newPerson);
             newPerson.div.firstElementChild.focus();
-            return;
+            return newPerson;
         }
         if (lastPerson.spouses.length === 0) {
             // lastPerson is single and an orphan
@@ -601,11 +604,12 @@ export default class Person {
                     group.addParent(newPerson);
                     newPerson.div.firstElementChild.focus();
                 });
-                return;
+                return newPerson;
             }
         }
         // lastPerson is a married orphan
         lastPerson.groups[0].addChild(newPerson);
         newPerson.div.firstElementChild.focus();
+        return newPerson;
     }
 }

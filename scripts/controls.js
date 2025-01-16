@@ -38,7 +38,7 @@ bgResetTransforms.textContent = "Reset all positions";
 const onBackground = [bgAddPersonButton, horizontalRule, bgResetTransforms];
 
 bgAddPersonButton.addEventListener("click", (e) => {
-    onMenuClick(e, Person.createPerson);
+    onMenuClick(e, Actions.addPerson());
 });
 
 bgResetTransforms.addEventListener("click", (e) => {
@@ -65,22 +65,22 @@ deleteButton.textContent = "Delete";
 const onPerson = [addParentButton, addSpouceButton, addChildButton, editButton, horizontalRule, resetTransformButton, deleteButton];
 
 addParentButton.addEventListener("click", (e) => {
-    onMenuClick(e, () => { Actions.addParent(targetPerson) });
+    onMenuClick(e, () => { Actions.addParent(targetPerson); });
 });
 addSpouceButton.addEventListener("click", (e) => {
-    onMenuClick(e, () => { Actions.addSpouce(targetPerson) });
+    onMenuClick(e, () => { Actions.addSpouce(targetPerson); });
 });
 addChildButton.addEventListener("click", (e) => {
-    onMenuClick(e, () => { Actions.addChild(targetPerson) });
+    onMenuClick(e, () => { Actions.addChild(targetPerson); });
 });
 editButton.addEventListener("click", (e) => {
     onEditClick(e);
 });
 resetTransformButton.addEventListener("click", (e) => {
-    onMenuClick(e, () => { targetPerson.resetTransform() });
+    onMenuClick(e, () => { Actions.resetTransform(targetPerson); });
 });
 deleteButton.addEventListener("click", (e) => {
-    onMenuClick(e, () => { Actions.hidePerson(targetPerson) }); //targetPerson.delete() });
+    onMenuClick(e, () => { Actions.hidePerson(targetPerson); }); //targetPerson.delete() });
 });
 
 // 
@@ -312,7 +312,7 @@ document.addEventListener("dblclick", (event) => {
         GENDERMENU.style.top = `${y}px`;
         return;
     }
-    Person.createPerson();
+    Actions.addPerson();
 });
 
 let isEditing = false
