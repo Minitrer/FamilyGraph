@@ -2,6 +2,7 @@ import Family from "./family.js";
 import { FAMILIES } from "./family.js";
 import Vec2 from "./vec2.js";
 import Relationship from "./relationship.js";
+import { RELATIONSHIPTEXTS } from "./controls.js";
 
 export let PEOPLE = [];
 const observer = new ResizeObserver(() => {
@@ -486,6 +487,11 @@ export default class Person {
         observer.unobserve(this.#div);
 
         this.#div.remove();
+        const text = RELATIONSHIPTEXTS.get(this.id)
+        if (text) {
+            text.remove();
+            RELATIONSHIPTEXTS.delete(this.id);
+        }
         this.#groups.forEach(group => {
             group.hide(this);
         });
@@ -590,14 +596,21 @@ export default class Person {
             newPerson.div.firstElementChild.focus();
             return newPerson;
         }
-        const lastPerson = PEOPLE[PEOPLE.length - 2];
+        function getLastPerson() {
+            for (let i = PEOPLE.length - 2; i >= 0; i --) {
+                if (!PEOPLE[i].isHidden) {
+                    return PEOPLE[i];
+                }
+            }
+        }
+        const lastPerson = getLastPerson();
         // lastPerson has parents and is single
         if (lastPerson.div.parentElement.className === "children") {
             lastPerson.groups[lastPerson.groups.length - 1].addChild(newPerson);
             newPerson.div.firstElementChild.focus();
             return newPerson;
         }
-        if (lastPerson.spouses.length === 0) {
+        if (lastPerson.spouses.length === 0 || lastPerson.spouses.every((spouse) => spouse.isHidden)) {
             // lastPerson is single and an orphan
             if (lastPerson.div.parentElement.className === "parents") {
                 lastPerson.groups.forEach((group) => {

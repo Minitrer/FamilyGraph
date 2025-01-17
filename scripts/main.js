@@ -32,4 +32,8 @@ document.addEventListener("DOMContentLoaded", () => {
     createConnection(fromStraight, toDown, "down");
     createConnection(fromStraight, toLeft, "left");
     createConnection(fromStraight, toRight, "right");
+
+    for (let i = 6; i >= 0; i --) {
+        console.debug(i);
+    }
 });

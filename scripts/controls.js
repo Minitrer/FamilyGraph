@@ -42,11 +42,11 @@ bgAddPersonButton.addEventListener("click", (e) => {
 });
 
 bgResetTransforms.addEventListener("click", (e) => {
-    onMenuClick(e, Person.resetAllTransforms);
+    onMenuClick(e, Actions.resetAllTransforms());
 });
 
 // 
-// Context menu option on person
+// Context menu options on person
 // 
 const addParentButton = document.createElement("button");
 const addSpouceButton = document.createElement("button");
@@ -80,7 +80,7 @@ resetTransformButton.addEventListener("click", (e) => {
     onMenuClick(e, () => { Actions.resetTransform(targetPerson); });
 });
 deleteButton.addEventListener("click", (e) => {
-    onMenuClick(e, () => { Actions.hidePerson(targetPerson); }); //targetPerson.delete() });
+    onMenuClick(e, () => { Actions.hidePerson(targetPerson); });
 });
 
 // 
@@ -190,13 +190,15 @@ function onRelationshipTypeChange(ID, type) {
     const isTargetTheParent = type.includes("child");
     if (isTargetTheParent) {
         const isStep = type === "step-child";
-        Relationship.setStepRelationships(PEOPLE[ID], targetPerson, "Child", isStep);
-        Relationship.setStepRelationships(targetPerson, PEOPLE[ID], "Parent", isStep);
+        Actions.changeRelationshipType(PEOPLE[ID], targetPerson, isStep);
+        // Relationship.setStepRelationships(PEOPLE[ID], targetPerson, "Child", isStep);
+        // Relationship.setStepRelationships(targetPerson, PEOPLE[ID], "Parent", isStep);
         return;
     }
     const isStep = type === "step-parent";
-    Relationship.setStepRelationships(targetPerson, PEOPLE[ID], "Child", isStep);
-    Relationship.setStepRelationships(PEOPLE[ID], targetPerson, "Parent", isStep);
+    Actions.changeRelationshipType(targetPerson, PEOPLE[ID], isStep);
+    // Relationship.setStepRelationships(targetPerson, PEOPLE[ID], "Child", isStep);
+    // Relationship.setStepRelationships(PEOPLE[ID], targetPerson, "Parent", isStep);
 }
 function selectPeople(selection) {
     selected.forEach((previouslySelected) => {
@@ -211,7 +213,6 @@ function selectPeople(selection) {
     }
     targetPerson = selected[0].person;
     createRelationshipText(targetPerson);
-
 }
 function resetGenderMenuPosition() {
     GENDERMENU.style.setProperty("--pos-x", 0);
@@ -223,6 +224,10 @@ function resetGenderMenuPosition() {
 const workspace = document.getElementById("workspace");
 function createRelationshipText(person) {
     for (const [id, relationship] of person.relationships) {
+        if (PEOPLE[id].isHidden) {
+            return;
+        }
+
         const text = document.createElement("h2");
 
         text.classList.add("relationship");
@@ -303,6 +308,7 @@ document.addEventListener("dblclick", (event) => {
 
     if (target) {
         target.focus();
+        console.log(document.activeElement);
         
         const selected = target.parentElement;
         GENDERMENU.className = "show";
@@ -344,6 +350,7 @@ document.addEventListener("click", (event) => {
 
     selected.forEach((selection) => {
         selection.classList.remove("selected");
+        // console.debug(document.activeElement, selection.firstElementChild);
     });
     selected = [];
     for (const text of RELATIONSHIPTEXTS.values()) {
@@ -362,14 +369,14 @@ document.addEventListener("keyup", (e) => {
     switch (e.key) {
         case "z":
         case "Z":
-            if (!e.ctrlKey) {
+            if (!e.ctrlKey || document.activeElement.className === "name") {
                 return;
             }
             Actions.undo();
             return;
         case "y":
         case "Y":
-            if (!e.ctrlKey) {
+            if (!e.ctrlKey || document.activeElement.className === "name") {
                 return;
             }
             Actions.redo();

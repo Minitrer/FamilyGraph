@@ -683,8 +683,14 @@ class ParentChildGroup {
         });
         this.parents.push(parent);
 
-        if (this.parents.length !== 1) {
-            this.parents[this.parents.length - 2].div.after(parent.div);
+        if (this.parents.getVisibleLength() !== 1) {
+            if (this.parents.hiddenCount === 0) {
+                this.parents[this.parents.length - 2].div.after(parent.div);
+            }
+            else {
+                const visibleParents = this.getVisiblePeople(this.parents);
+                visibleParents[visibleParents.length - 2].div.after(parent.div);
+            }
         }
         else {
             this.#family.parentsDiv.appendChild(parent.div);

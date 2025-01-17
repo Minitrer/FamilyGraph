@@ -1,7 +1,8 @@
-import Person from "./person.js";
+import Person, { PEOPLE } from "./person.js";
 import Family from "./family.js";
 import Vec2 from "./vec2.js";
 import { FAMILIES } from "./family.js";
+import Relationship from "./relationship.js";
 
 const stackSize = 20;
 class Command {
@@ -214,4 +215,40 @@ export function resetTransform(person) {
     pushStack(command, undoStack);
 
     person.resetTransform();
+}
+
+export function resetAllTransforms() {
+    const transforms = Array.from(PEOPLE, (person) => {
+        return {
+            cssPosX: Number(person.div.style.getPropertyValue("--pos-x")),
+            cssPosY: Number(person.div.style.getPropertyValue("--pos-y")),
+            transformPos: new Vec2(person.transformPos.x, person.transformPos.y),
+        }
+    });
+
+    const command = new Command(() => {
+        for (let i = 0, length = PEOPLE.length; i < length; i++) {
+            const person = PEOPLE[i];
+            person.div.style.setProperty("--pos-x", transforms[i].cssPosX);
+            person.div.style.setProperty("--pos-y", transforms[i].cssPosY);
+
+            person.transformPos = transforms[i].transformPos;
+        }
+    }, Person.resetAllTransforms);
+    pushStack(command, undoStack);
+
+    Person.resetAllTransforms();
+}
+
+export function changeRelationshipType(child, parent, isStep) {
+    const command = new Command(() => {
+        Relationship.setStepRelationships(child, parent, "Child", !isStep);
+        Relationship.setStepRelationships(parent, child, "Parent", !isStep);
+    }, () => {
+        Relationship.setStepRelationships(child, parent, "Child", isStep);
+        Relationship.setStepRelationships(parent, child, "Parent", isStep);
+    });
+    pushStack(command, undoStack);
+
+    command.redo();
 }
