@@ -66,8 +66,8 @@ export default function createConnection(from, to, direction, color="white", has
     }
     let arrowPositions = [];
     if (hasArrow) {
-        arrowPositions[0] = origin.add(dirTo);
-        arrowPositions[1] = origin.add(dirTo);
+        arrowPositions[0] = new Vec2(origin.x, origin.y);
+        arrowPositions[1] = new Vec2(origin.x, origin.y);
     }
 
     // Connection is a straight line
@@ -75,37 +75,38 @@ export default function createConnection(from, to, direction, color="white", has
         if (hasArrow) {
             switch(direction) {
                 case "left":
-                    arrowPositions[0].x += arrowWidth;
-                    arrowPositions[0].y += arrowWidth;
-                    arrowPositions[1].x += arrowWidth;
-                    arrowPositions[1].y -= arrowWidth;
-                    break;
-                case "right":
                     arrowPositions[0].x -= arrowWidth;
                     arrowPositions[0].y += arrowWidth;
                     arrowPositions[1].x -= arrowWidth;
                     arrowPositions[1].y -= arrowWidth;
                     break;
-                case "up":
+                case "right":
                     arrowPositions[0].x += arrowWidth;
                     arrowPositions[0].y += arrowWidth;
-                    arrowPositions[1].x -= arrowWidth;
-                    arrowPositions[1].y += arrowWidth;
+                    arrowPositions[1].x += arrowWidth;
+                    arrowPositions[1].y -= arrowWidth;
                     break;
-                case "down":
+                case "up":
                     arrowPositions[0].x += arrowWidth;
                     arrowPositions[0].y -= arrowWidth;
                     arrowPositions[1].x -= arrowWidth;
                     arrowPositions[1].y -= arrowWidth;
                     break;
+                case "down":
+                    arrowPositions[0].x += arrowWidth;
+                    arrowPositions[0].y += arrowWidth;
+                    arrowPositions[1].x -= arrowWidth;
+                    arrowPositions[1].y += arrowWidth;
+                    break;
             }
     
             path.setAttribute("d",
                 `M ${origin.x} ${origin.y}
-                 L ${origin.x + dirTo.x} ${origin.y + dirTo.y}
                  L ${arrowPositions[0].x} ${arrowPositions[0].y}
-                 M ${origin.x + dirTo.x} ${origin.y + dirTo.y}
-                 L ${arrowPositions[1].x} ${arrowPositions[1].y}`);
+                 M ${origin.x} ${origin.y}
+                 L ${arrowPositions[1].x} ${arrowPositions[1].y}
+                 M ${origin.x} ${origin.y}
+                 L ${origin.x + dirTo.x} ${origin.y + dirTo.y}`);
         }
         else {
             path.setAttribute("d",
@@ -118,44 +119,89 @@ export default function createConnection(from, to, direction, color="white", has
         
         switch(direction) {
             case "left":
+                cornerPos = new Vec2(origin.x + dirTo.x, origin.y);
+                if (!hasArrow) {
+                    break;
+                }
+    
+                arrowPositions[0].x -= arrowWidth;
+                arrowPositions[0].y += arrowWidth;
+                arrowPositions[1].x -= arrowWidth;
+                arrowPositions[1].y -= arrowWidth;
+                break;
             case "right":
                 cornerPos = new Vec2(origin.x + dirTo.x, origin.y);
-
                 if (!hasArrow) {
                     break;
                 }
     
                 arrowPositions[0].x += arrowWidth;
-                arrowPositions[1].x -= arrowWidth;
-    
-                if (dirTo.y > 0) {
-                    arrowPositions[0].y -= arrowWidth;
-                    arrowPositions[1].y -= arrowWidth;
-                    break;
-                }
                 arrowPositions[0].y += arrowWidth;
-                arrowPositions[1].y += arrowWidth;
+                arrowPositions[1].x += arrowWidth;
+                arrowPositions[1].y -= arrowWidth;
                 break;
             case "up":
-            case "down":
                 cornerPos = new Vec2(origin.x, origin.y + dirTo.y);
-
                 if (!hasArrow) {
                     break;
                 }
-    
-                arrowPositions[0].y += arrowWidth;
+
+                arrowPositions[0].x += arrowWidth;
+                arrowPositions[0].y -= arrowWidth;
+                arrowPositions[1].x -= arrowWidth;
                 arrowPositions[1].y -= arrowWidth;
-    
-                if (dirTo.x > 0) {
-                    arrowPositions[0].x -= arrowWidth;
-                    arrowPositions[1].x -= arrowWidth;
+                break;
+            case "down":
+                cornerPos = new Vec2(origin.x, origin.y + dirTo.y);
+                if (!hasArrow) {
                     break;
                 }
+
                 arrowPositions[0].x += arrowWidth;
-                arrowPositions[1].x += arrowWidth;
+                arrowPositions[0].y += arrowWidth;
+                arrowPositions[1].x -= arrowWidth;
+                arrowPositions[1].y += arrowWidth;
                 break;
-        }   
+            }
+        //     case "left":
+        //     case "right":
+        //         cornerPos = new Vec2(origin.x + dirTo.x, origin.y);
+
+        //         if (!hasArrow) {
+        //             break;
+        //         }
+    
+        //         arrowPositions[0].x += arrowWidth;
+        //         arrowPositions[1].x -= arrowWidth;
+    
+        //         if (dirTo.y > 0) {
+        //             arrowPositions[0].y -= arrowWidth;
+        //             arrowPositions[1].y -= arrowWidth;
+        //             break;
+        //         }
+        //         arrowPositions[0].y += arrowWidth;
+        //         arrowPositions[1].y += arrowWidth;
+        //         break;
+        //     case "up":
+        //     case "down":
+        //         cornerPos = new Vec2(origin.x, origin.y + dirTo.y);
+
+        //         if (!hasArrow) {
+        //             break;
+        //         }
+    
+        //         arrowPositions[0].y += arrowWidth;
+        //         arrowPositions[1].y -= arrowWidth;
+    
+        //         if (dirTo.x > 0) {
+        //             arrowPositions[0].x -= arrowWidth;
+        //             arrowPositions[1].x -= arrowWidth;
+        //             break;
+        //         }
+        //         arrowPositions[0].x += arrowWidth;
+        //         arrowPositions[1].x += arrowWidth;
+        //         break;
+        // }   
     
         const originToCornerLength = cornerPos.subtract(origin).magnitude();
         const cornerToTargetLength = origin.add(dirTo).subtract(cornerPos).magnitude();
@@ -166,17 +212,18 @@ export default function createConnection(from, to, direction, color="white", has
         const curveEnd = cornerPos.add(
             origin.add(dirTo).subtract(cornerPos).normalized().multiply(Math.min(curveLength, cornerToTargetLength))
         );
-        let pathString = 
-           `M ${origin.x} ${origin.y}
-            L ${curveStart.x} ${curveStart.y}
+        let pathString = `M ${origin.x} ${origin.y}`;
+        if (hasArrow) {
+            pathString += `
+                L ${arrowPositions[0].x} ${arrowPositions[0].y}
+                M ${origin.x} ${origin.y}
+                L ${arrowPositions[1].x} ${arrowPositions[1].y}
+                M ${origin.x} ${origin.y}`;
+        }
+        pathString +=
+           `L ${curveStart.x} ${curveStart.y}
             Q ${cornerPos.x} ${cornerPos.y} ${curveEnd.x} ${curveEnd.y}
             L ${origin.x + dirTo.x} ${origin.y + dirTo.y}`;
-        if (hasArrow) {
-            pathString += 
-               `L ${arrowPositions[0].x} ${arrowPositions[0].y}
-                M ${origin.x + dirTo.x} ${origin.y + dirTo.y}
-                L ${arrowPositions[1].x} ${arrowPositions[1].y}`;
-        }
         path.setAttribute("d", pathString);
     }
 

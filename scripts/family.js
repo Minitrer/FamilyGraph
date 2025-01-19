@@ -94,11 +94,12 @@ export default class Family {
                 const direction = getPersonToPointDirection(person, familyConnectionPoint);
                 const directionPoint = person.connectionPoints[direction];
 
+                const hasArrow = type.includes("children");
                 if (person.connections[type]) {
-                    createConnection(directionPoint, familyConnectionPoint, direction, connectionColor, false, person.connections[type]);
+                    createConnection(directionPoint, familyConnectionPoint, direction, connectionColor, hasArrow, person.connections[type]);
                     return;
                 }
-                person.connections[type] = createConnection(directionPoint, familyConnectionPoint, direction, connectionColor, false);
+                person.connections[type] = createConnection(directionPoint, familyConnectionPoint, direction, connectionColor, hasArrow);
             }
             if (group.parents.includes(person)) {                
                 type = `parents ${i}`;
@@ -581,10 +582,10 @@ class ParentChildGroup {
                 this.getInbetweenPoint();
 
                 if (!this.childrenConnectionPoint.inbetweenConnection) {
-                    this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, connectionColor, false);
+                    this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, connectionColor, true);
                     return;
                 }
-                this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, connectionColor, false, this.childrenConnectionPoint.inbetweenConnection);
+                this.childrenConnectionPoint.inbetweenConnection = createConnection(this.childrenConnectionPoint, this.#inBetweenPoint, direction, connectionColor, true, this.childrenConnectionPoint.inbetweenConnection);
             }
         }
         else {

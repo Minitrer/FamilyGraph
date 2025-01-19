@@ -38,11 +38,11 @@ bgResetTransforms.textContent = "Reset all positions";
 const onBackground = [bgAddPersonButton, horizontalRule, bgResetTransforms];
 
 bgAddPersonButton.addEventListener("click", (e) => {
-    onMenuClick(e, Actions.addPerson());
+    onMenuClick(e, Actions.addPerson);
 });
 
 bgResetTransforms.addEventListener("click", (e) => {
-    onMenuClick(e, Actions.resetAllTransforms());
+    onMenuClick(e, Actions.resetAllTransforms);
 });
 
 // 
