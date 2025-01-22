@@ -5,7 +5,7 @@ import makeDraggableBasic from "./pan-zoom-and-drag.js";
 import * as Actions from "./actions.js";
 import Relationship from "./relationship.js";
 
-let targetPerson;
+let menuTarget;
 let selected = [];
 export let RELATIONSHIPTEXTS = new Map();
 
@@ -18,8 +18,8 @@ makeDraggableBasic(GENDERMENU);
 const genderOptions = document.getElementsByName("gender");
 for (const option of genderOptions) {
     option.onchange = () => {
-        if (targetPerson) {
-            targetPerson.gender = option.value;
+        if (menuTarget) {
+            menuTarget.gender = option.value;
         }
     }
 }
@@ -65,23 +65,36 @@ deleteButton.textContent = "Delete";
 const onPerson = [addParentButton, addSpouceButton, addChildButton, editButton, horizontalRule, resetTransformButton, deleteButton];
 
 addParentButton.addEventListener("click", (e) => {
-    onMenuClick(e, () => { Actions.addParent(targetPerson); });
+    onMenuClick(e, () => { Actions.addParent(menuTarget); });
 });
 addSpouceButton.addEventListener("click", (e) => {
-    onMenuClick(e, () => { Actions.addSpouce(targetPerson); });
+    onMenuClick(e, () => { Actions.addSpouce(menuTarget); });
 });
 addChildButton.addEventListener("click", (e) => {
-    onMenuClick(e, () => { Actions.addChild(targetPerson); });
+    onMenuClick(e, () => { Actions.addChild(menuTarget); });
 });
 editButton.addEventListener("click", (e) => {
     onEditClick(e);
 });
 resetTransformButton.addEventListener("click", (e) => {
-    onMenuClick(e, () => { Actions.resetTransform(targetPerson); });
+    onMenuClick(e, () => { Actions.resetPersonTransform(menuTarget); });
 });
 deleteButton.addEventListener("click", (e) => {
-    onMenuClick(e, () => { Actions.hidePerson(targetPerson); });
+    onMenuClick(e, () => { Actions.hidePerson(menuTarget); });
 });
+
+// 
+// Contextmenu on point
+// 
+const resetPointTransformButton = document.createElement("button");
+
+resetPointTransformButton.textContent = "Reset Position of Point";
+
+const onPoint = [bgAddPersonButton, horizontalRule, resetPointTransformButton, bgResetTransforms];
+
+resetPointTransformButton.addEventListener("click", (e) => {
+    onMenuClick(e, () => { Actions.resetPointTransform(menuTarget); })
+})
 
 // 
 // Edit person
@@ -92,7 +105,7 @@ let relationshipParentID;
 let relationshipChildID;
 function checkRelationshipType(type) {
     const id = type === "parent"? relationshipParentID : relationshipChildID;
-    const isStep = targetPerson.relationships.get(id).text.includes("Step-");
+    const isStep = menuTarget.relationships.get(id).text.includes("Step-");
     const currentRelationshipType = isStep? document.getElementById(`step-${type}`) : document.getElementById(`biological-${type}`);
     
     currentRelationshipType.checked = true;
@@ -126,9 +139,14 @@ editRelationship.classList.remove("hidden");
 // Functions
 // 
 function setContextMenu(target) {
-    if (target) {
-        targetPerson = target;
+    if (target instanceof Person) {
+        menuTarget = target;
         contextMenu.replaceChildren(...onPerson);
+        return;
+    }
+    else if (target) {
+        menuTarget = target;
+        contextMenu.replaceChildren(...onPoint);
         return;
     }
     contextMenu.replaceChildren(...onBackground);
@@ -153,14 +171,14 @@ function onEditClick(e) {
     isEditing = true;
     contextMenu.replaceChildren();
     
-    if (targetPerson.parents.length === 0 && targetPerson.children.length === 0) {
+    if (menuTarget.parents.length === 0 && menuTarget.children.length === 0) {
         return;
     }
     resetEditRelationshipMenu();
     contextMenu.appendChild(editRelationship);
-    if (targetPerson.parents.length > 0) {
+    if (menuTarget.parents.length > 0) {
         editRelationship.appendChild(editRelationshipParent);
-        targetPerson.parents.forEach(parent => {
+        menuTarget.parents.forEach(parent => {
             const option = document.createElement("option");
             option.value = parent.id;
             option.textContent = (parent.name !== "")? `${parent.name}` : `#${parent.id}`;
@@ -170,12 +188,12 @@ function onEditClick(e) {
         relationshipParentID = Number(editRelationshipSelectParent.value);
         checkRelationshipType("parent");
     }
-    if (targetPerson.children.length > 0) {
-        if (targetPerson.parents.length > 0) {
+    if (menuTarget.children.length > 0) {
+        if (menuTarget.parents.length > 0) {
             editRelationship.appendChild(horizontalRule);
         }
         editRelationship.appendChild(editRelationshipChild);
-        targetPerson.children.forEach(child => {
+        menuTarget.children.forEach(child => {
             const option = document.createElement("option");
             option.value = child.id;
             option.textContent = (child.name !== "")? `${child.name}` : `#${child.id}`;
@@ -190,13 +208,13 @@ function onRelationshipTypeChange(ID, type) {
     const isTargetTheParent = type.includes("child");
     if (isTargetTheParent) {
         const isStep = type === "step-child";
-        Actions.changeRelationshipType(PEOPLE[ID], targetPerson, isStep);
+        Actions.changeRelationshipType(PEOPLE[ID], menuTarget, isStep);
         // Relationship.setStepRelationships(PEOPLE[ID], targetPerson, "Child", isStep);
         // Relationship.setStepRelationships(targetPerson, PEOPLE[ID], "Parent", isStep);
         return;
     }
     const isStep = type === "step-parent";
-    Actions.changeRelationshipType(targetPerson, PEOPLE[ID], isStep);
+    Actions.changeRelationshipType(menuTarget, PEOPLE[ID], isStep);
     // Relationship.setStepRelationships(targetPerson, PEOPLE[ID], "Child", isStep);
     // Relationship.setStepRelationships(PEOPLE[ID], targetPerson, "Parent", isStep);
 }
@@ -211,8 +229,8 @@ function selectPeople(selection) {
     for (const text of RELATIONSHIPTEXTS.values()) {
         text.remove();
     }
-    targetPerson = selected[0].person;
-    createRelationshipText(targetPerson);
+    menuTarget = selected[0].person;
+    createRelationshipText(menuTarget);
 }
 function resetGenderMenuPosition() {
     GENDERMENU.style.setProperty("--pos-x", 0);
@@ -258,7 +276,10 @@ document.addEventListener("contextmenu", (event) => {
     }
 
     let contextTarget = undefined;
-    if (event.target.classList.contains("person")) {
+    if (event.target.classList.contains("point")) {
+        contextTarget = event.target;
+    }
+    else if (event.target.classList.contains("person")) {
         contextTarget = event.target.person;
     }
     else if (event.target.parentElement.classList.contains("person")) {
@@ -329,7 +350,7 @@ document.addEventListener("click", (event) => {
     event.preventDefault();
 
     let target = undefined;
-    targetPerson = undefined;
+    menuTarget = undefined;
     if (event.target.classList.contains("person")) {
         target = event.target;
     }

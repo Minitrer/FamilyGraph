@@ -1,6 +1,8 @@
 import Vec2 from "./vec2.js";
 import { GENDERMENU } from "./controls.js";
 import { RELATIONSHIPTEXTS } from "./controls.js";
+import Person from "./person.js";
+import { draggedPerson, draggedPoint } from "./actions.js";
 
 const scaleSensitivity = 0.1;
 const minScale = 0.1;
@@ -43,18 +45,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 draggingElements.push(RELATIONSHIPTEXTS.get(person.id));
             }
         }
+        function getPersonTransforms(person) {
+            const transforms = {
+                cssPosX: Number(person.div.style.getPropertyValue("--pos-x")),
+                cssPosY: Number(person.div.style.getPropertyValue("--pos-y")),
+                transformPos: new Vec2(person.transformPos.x, person.transformPos.y),
+            }
+            return transforms;
+        }
+        function getPointTransforms(point) {
+            const transforms = {
+                cssPosX: Number(point.style.getPropertyValue("--pos-x")),
+                cssPosY: Number(point.style.getPropertyValue("--pos-y")),
+                transformPos: new Vec2(point.transformPos.x, point.transformPos.y),
+            }
+            return transforms;
+        }
+
+        let positionBeforeDragging = undefined;
+
         if (event.buttons === 2 || event.buttons === 4) {
             draggingElements = [workspace];
         }
         else if (event.target.classList.contains("point")) {
             draggingElements = [event.target];
+            positionBeforeDragging = getPointTransforms(event.target);
         }
         else if (event.target.classList.contains("person")) {
             draggingElements = [event.target.person];
+            positionBeforeDragging = getPersonTransforms(event.target.person);
             addUIElements(event.target.person);
         }
         else if (event.target.parentElement.classList.contains("person")) {
             draggingElements = [event.target.parentElement.person];
+            positionBeforeDragging = getPersonTransforms(event.target.parentElement.person);
             addUIElements(event.target.parentElement.person);
         }
         else {
@@ -67,9 +91,21 @@ document.addEventListener("DOMContentLoaded", () => {
         document.addEventListener("mousemove", drag);
         
         document.addEventListener("mouseup", (event) => {
+            let positionAfterDragging = undefined;
             draggingElements.forEach((element) => {
                 element.transformPos.x += (event.pageX - CLICKEDPOS.x) * (1 / TRANSFORMSCALE);
                 element.transformPos.y += (event.pageY - CLICKEDPOS.y) * (1 / TRANSFORMSCALE); 
+
+                if (element instanceof Person) {
+                    positionAfterDragging = getPersonTransforms(element);
+                    draggedPerson(element, positionBeforeDragging, positionAfterDragging);
+                    return;
+                }
+                if (element.classList.contains("point")) {
+                    positionAfterDragging = getPointTransforms(element);
+                    draggedPoint(element, positionBeforeDragging, positionAfterDragging);
+                    return;
+                }
             });
             
             document.removeEventListener("mousemove", drag);

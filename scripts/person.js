@@ -582,9 +582,21 @@ export default class Person {
         Family.updateAll();
     }
 
-    static resetAllTransforms() {
+    static resetAllTransforms(points=undefined) {
         PEOPLE.forEach((person) => {
             person.resetTransform();
+        });
+        if (points) {
+            points.forEach((point) => {
+                point.onDrag({x: 0, y:0});
+                point.transformPos = new Vec2();
+            });
+            return;
+        }
+        const workspace = document.getElementById("workspace");
+        points = workspace.getElementsByClassName("point");
+        points.forEach((point) => {
+            point.onDrag({x: 0, y:0});
         });
     }
 

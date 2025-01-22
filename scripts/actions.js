@@ -201,43 +201,96 @@ export function hidePerson(person) {
     person.hide();
 }
 
-export function resetTransform(person) {
-    const cssPosX = Number(person.div.style.getPropertyValue("--pos-x"));
-    const cssPosY = Number(person.div.style.getPropertyValue("--pos-y"));
-    const transformPos = new Vec2(person.transformPos.x, person.transformPos.y);
+function setPersonTransform(person, transforms) {
+    person.div.style.setProperty("--pos-x", transforms.cssPosX);
+    person.div.style.setProperty("--pos-y", transforms.cssPosY);
+
+    person.transformPos = transforms.transformPos;
+}
+
+function setPointTransform(point, transforms) {
+    const cssPos = { 
+        x: transforms.cssPosX,
+        y: transforms.cssPosY,
+    }
+    point.onDrag(cssPos);
+    point.transformPos = transforms.transformPos;
+}
+
+export function resetPersonTransform(person) {
+    const transforms = {
+        cssPosX: Number(person.div.style.getPropertyValue("--pos-x")),
+        cssPosY: Number(person.div.style.getPropertyValue("--pos-y")),
+        transformPos: new Vec2(person.transformPos.x, person.transformPos.y),
+    }
 
     const command = new Command(() => { 
-        person.div.style.setProperty("--pos-x", cssPosX);
-        person.div.style.setProperty("--pos-y", cssPosY);
-
-        person.transformPos = transformPos;
+        setPersonTransform(person, transforms);
     }, () => { person.resetTransform() });
     pushStack(command, undoStack);
 
     person.resetTransform();
 }
 
+export function resetPointTransform(point) {
+    const transforms = {
+        cssPosX: Number(point.style.getPropertyValue("--pos-x")),
+        cssPosY: Number(point.style.getPropertyValue("--pos-y")),
+        transformPos: new Vec2(point.transformPos.x, point.transformPos.y),
+    }
+    const emptyTransforms = {
+        cssPosX: 0,
+        cssPosY: 0,
+        transformPos: new Vec2(),
+    }
+
+    const command = new Command(() => { 
+        setPointTransform(point, transforms);
+    }, () => { setPointTransform(point, emptyTransforms); });
+    pushStack(command, undoStack);
+
+    setPointTransform(point, emptyTransforms);
+}
+
 export function resetAllTransforms() {
-    const transforms = Array.from(PEOPLE, (person) => {
+    const personTransforms = Array.from(PEOPLE, (person) => {
         return {
             cssPosX: Number(person.div.style.getPropertyValue("--pos-x")),
             cssPosY: Number(person.div.style.getPropertyValue("--pos-y")),
             transformPos: new Vec2(person.transformPos.x, person.transformPos.y),
         }
     });
+    const workspace = document.getElementById("workspace");
+    const points = Array.from(workspace.getElementsByClassName("point"));
+    const pointTransforms = Array.from(points, (point) => {
+        return {
+            cssPosX: Number(point.style.getPropertyValue("--pos-x")),
+            cssPosY: Number(point.style.getPropertyValue("--pos-y")),
+            transformPos: new Vec2(point.transformPos.x, point.transformPos.y),
+        }
+    });
 
     const command = new Command(() => {
         for (let i = 0, length = PEOPLE.length; i < length; i++) {
-            const person = PEOPLE[i];
-            person.div.style.setProperty("--pos-x", transforms[i].cssPosX);
-            person.div.style.setProperty("--pos-y", transforms[i].cssPosY);
-
-            person.transformPos = transforms[i].transformPos;
+            setPersonTransform(PEOPLE[i], personTransforms[i]);
         }
-    }, Person.resetAllTransforms);
+        for (let i = 0, length = points.length; i < length; i++) {
+            setPointTransform(points[i], pointTransforms[i]);
+        }
+    }, () => { Person.resetAllTransforms(points); });
     pushStack(command, undoStack);
 
-    Person.resetAllTransforms();
+    Person.resetAllTransforms(points);
+}
+
+export function draggedPerson(person, positionBeforeDragging, positionAfterDragging) {
+    const command = new Command(() => { setPersonTransform(person, positionBeforeDragging); }, () => { setPersonTransform(person, positionAfterDragging); });
+    pushStack(command, undoStack);
+}
+
+export function draggedPoint(point, positionBeforeDragging, positionAfterDragging) {
+    const command = new Command(() => { setPointTransform(point, positionBeforeDragging); }, () => { setPointTransform(point, positionAfterDragging); });
+    pushStack(command, undoStack);
 }
 
 export function changeRelationshipType(child, parent, isStep) {
