@@ -35,7 +35,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    let isDragging = false;
     document.addEventListener("mousedown", (event) => {
+        if (isDragging) {
+            return;
+        }
+
+        isDragging = true;
         function addUIElements(person) {
             if (person.div.classList.contains("selected")) {
                 draggingElements.push(GENDERMENU);
@@ -82,6 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
             addUIElements(event.target.parentElement.person);
         }
         else {
+            isDragging = false;
             return;
         }
 
@@ -91,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.addEventListener("mousemove", drag);
         
         document.addEventListener("mouseup", (event) => {
+            isDragging = false;
             let positionAfterDragging = undefined;
             draggingElements.forEach((element) => {
                 element.transformPos.x += (event.pageX - CLICKEDPOS.x) * (1 / TRANSFORMSCALE);

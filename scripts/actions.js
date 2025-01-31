@@ -37,7 +37,7 @@ function pushStack(command, stack) {
         return;
     };
     const removed = stack.shift()
-    if (removed.hasOwn(onRemoved)) {
+    if (Object.hasOwn(removed, "onRemoved")) {
         removed.onRemoved();
     }
 }
@@ -106,7 +106,7 @@ export function addParent(person) {
         }
     }
     // person is an orphan single parent
-    // Check if person is oldest generation
+    // Check if person is of the oldest generation
     if (person.family.div.parentElement.id === "graph")
     {
         Family.createFamily([newPerson], [person.family], person.family, subFamilyMap);

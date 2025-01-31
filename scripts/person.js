@@ -376,7 +376,7 @@ export default class Person {
             const nextSibling = isFamily? divToSwap.firstElementChild.lastElementChild : divToSwap;
 
             if (this.#div.offsetLeft + dragAmount.x > nextSibling.person.workspacePos.x) {
-                this.#transformPos.x -= dragAmount.x - nextSibling.person.transformPos.x;
+                this.#transformPos.x -= nextSibling.offsetLeft - this.#div.offsetLeft;
                 const oldOffset = this.#div.offsetLeft;
 
                 divToSwap.after(this.#div);
@@ -408,7 +408,7 @@ export default class Person {
             const previousSibling = isFamily? divToSwap.firstElementChild.firstElementChild : divToSwap;
 
             if (this.#div.offsetLeft + dragAmount.x < previousSibling.person.workspacePos.x) {
-                this.#transformPos.x -= dragAmount.x - previousSibling.person.transformPos.x;
+                this.#transformPos.x -= previousSibling.offsetLeft - this.#div.offsetLeft;
                 const oldOffset = this.#div.offsetLeft;
 
                 this.#div.after(divToSwap);
