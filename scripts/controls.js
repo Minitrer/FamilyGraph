@@ -3,7 +3,6 @@ import { PEOPLE } from "./person.js";
 import { CLICKEDPOS } from "./pan-zoom-and-drag.js";
 import makeDraggableBasic from "./pan-zoom-and-drag.js";
 import * as Actions from "./actions.js";
-import Relationship from "./relationship.js";
 
 let menuTarget;
 let selected = [];
@@ -232,6 +231,17 @@ function selectPeople(selection) {
     menuTarget = selected[0].person;
     createRelationshipText(menuTarget);
 }
+function setGenderOption(target) {
+    const currentGenderOption = document.getElementById(target.person.gender);
+    currentGenderOption.checked = true;
+}
+function showGenderMenu(selected) {
+    GENDERMENU.className = "show";
+    const x = selected.offsetLeft + selected.person.transformPos.x + selected.offsetWidth / 2 - GENDERMENU.offsetWidth / 2;
+    const y = selected.offsetTop + selected.person.transformPos.y - GENDERMENU.offsetHeight;
+    GENDERMENU.style.left = `${x}px`;
+    GENDERMENU.style.top = `${y}px`;
+}
 function resetGenderMenuPosition() {
     GENDERMENU.style.setProperty("--pos-x", 0);
     GENDERMENU.style.setProperty("--pos-y", 0);
@@ -265,6 +275,39 @@ function createRelationshipText(person) {
         RELATIONSHIPTEXTS.set(id, text);
     }
 }
+function clearSelections() {
+    selected.forEach((selection) => {
+        selection.classList.remove("selected");
+        // console.debug(document.activeElement, selection.firstElementChild);
+    });
+    selected = [];
+    for (const text of RELATIONSHIPTEXTS.values()) {
+        text.remove();
+    }
+    RELATIONSHIPTEXTS.clear();
+
+    GENDERMENU.className = "hidden";
+    resetGenderMenuPosition();
+
+    document.activeElement.blur();
+}
+// 
+// Select people who are in focus
+// 
+document.addEventListener("focusin", (event) => {
+    if (!event.target.classList.contains("name")) {
+        return;
+    }
+    const target = event.target.parentElement;
+    setGenderOption(target);
+    selectPeople([target]);
+});
+document.addEventListener("focusout", (event) => {
+    if (!event.target.classList.contains("name")) {
+        return;
+    }
+    clearSelections();
+});
 
 // 
 // Controls
@@ -312,6 +355,7 @@ document.addEventListener("contextmenu", (event) => {
     }, {once:true});
 });
 
+let isEditing = false;
 document.addEventListener("dblclick", (event) => {
     if (isEditing) {
         return;
@@ -329,20 +373,13 @@ document.addEventListener("dblclick", (event) => {
 
     if (target) {
         target.focus();
-        console.log(document.activeElement);
         
-        const selected = target.parentElement;
-        GENDERMENU.className = "show";
-        const x = selected.offsetLeft + selected.person.transformPos.x + selected.offsetWidth / 2 - GENDERMENU.offsetWidth / 2;
-        const y = selected.offsetTop + selected.person.transformPos.y - GENDERMENU.offsetHeight;
-        GENDERMENU.style.left = `${x}px`;
-        GENDERMENU.style.top = `${y}px`;
+        showGenderMenu(target.parentElement);
         return;
     }
     Actions.addPerson();
 });
 
-let isEditing = false
 document.addEventListener("click", (event) => {
     if (event.target.tagName === "FORM" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL" || isEditing) {
         return;
@@ -363,31 +400,111 @@ document.addEventListener("click", (event) => {
             return;
         }
         resetGenderMenuPosition();
-        const currentGenderOption = document.getElementById(target.person.gender);
-        currentGenderOption.checked = true;
         selectPeople([target]);
         return;
     }
 
-    selected.forEach((selection) => {
-        selection.classList.remove("selected");
-        // console.debug(document.activeElement, selection.firstElementChild);
-    });
-    selected = [];
-    for (const text of RELATIONSHIPTEXTS.values()) {
-        text.remove();
-    }
-    RELATIONSHIPTEXTS.clear();
+    clearSelections();
+});
 
-    GENDERMENU.className = "hidden";
-    resetGenderMenuPosition();
+// This is to prevent the person's name from losing focus when clicking on a gender option;
+document.addEventListener("mousedown", (e) => {
+    if (e.target.nodeName !== "LABEL") {
+        return;
+    }
+    switch (e.target.htmlFor) {
+        case "male":
+        case "neutral":
+        case "female":
+            e.preventDefault();
+            return;
+        default:
+            return;
+    }
 });
 
 // 
-// Undo-Redo
+// Keybinds
 // 
 document.addEventListener("keyup", (e) => {
     switch (e.key) {
+        // Add person
+        case "n":
+        case "N":
+            if (document.activeElement.className === "name") {
+                if (GENDERMENU.className === "hidden" || !e.altKey) {
+                    return;
+                }
+                const element = document.getElementById("neutral");
+                if (element.checked) {
+                    return;
+                }
+                element.click();
+                GENDERMENU.className = "hidden";
+                resetGenderMenuPosition();
+                return;
+            }
+            if (selected.length === 0) {
+                Actions.addPerson();
+                return;
+            }
+            selected.forEach((selection) => {
+                Actions.addPerson(selection.person);
+            });
+            return;
+        // Open gender menu
+        case "g":
+        case "G":
+            if (!e.ctrlKey || document.activeElement.className !== "name") {
+                return;
+            }
+            if (GENDERMENU.className === "hidden") {
+                showGenderMenu(document.activeElement.parentElement);
+                return;
+            }
+            else {
+                GENDERMENU.className = "hidden";
+                resetGenderMenuPosition();
+                return;
+            }
+        // Select gender
+        case "m":
+        case "M": {
+            if (GENDERMENU.className === "hidden" || !e.altKey) {
+                return;
+            }
+            const element = document.getElementById("male");
+            if (element.checked) {
+                return;
+            }
+            element.click();
+            GENDERMENU.className = "hidden";
+            resetGenderMenuPosition();
+            return;
+        }
+        case "f":
+        case "F": {
+            if (GENDERMENU.className === "hidden" || !e.altKey) {
+                return;
+            }
+            const element = document.getElementById("female");
+            if (element.checked) {
+                return;
+            }
+            element.click();
+            GENDERMENU.className = "hidden";
+            resetGenderMenuPosition();
+            return;
+        }
+        // Confirm name
+        case "Enter":
+            if (e.shiftKey || document.activeElement.className !== "name") {
+                return;
+            }
+            clearSelections();
+            e.preventDefault();
+            return;
+        // Undo-redo
         case "z":
         case "Z":
             if (!e.ctrlKey || document.activeElement.className === "name") {
@@ -401,6 +518,42 @@ document.addEventListener("keyup", (e) => {
                 return;
             }
             Actions.redo();
+            return;
+        default:
+            return;
+    }
+});
+// 
+// Remove default behaviour
+// 
+document.addEventListener("keydown", (e) => {
+    switch(e.key) {
+        // Don't add a new line on enter when inputting the name
+        case "Enter":
+            if (e.shiftKey || document.activeElement.className !== "name") {
+                return;
+            }
+            e.preventDefault();
+            return;
+        // Don't find in page when name is in focus
+        case "g":
+        case "G":
+            if (!e.ctrlKey || document.activeElement.className !== "name") {
+                return;
+            }
+            e.preventDefault();
+            return;
+        // Stop behaviour when changing gender
+        case "m":
+        case "M":
+        case "n":
+        case "N":
+        case "f":
+        case "F":
+            if (!e.altKey || document.activeElement.className !== "name" || GENDERMENU.className === "hidden") {
+                return;
+            }
+            e.preventDefault();
             return;
         default:
             return;

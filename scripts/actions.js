@@ -42,8 +42,8 @@ function pushStack(command, stack) {
     }
 }
 
-export function addPerson() {
-    const newPerson = Person.createPerson();
+export function addPerson(addTo=undefined) {
+    const newPerson = Person.createPerson(addTo);
 
     const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
     command.onRemoved = () => {

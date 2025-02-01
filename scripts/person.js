@@ -64,8 +64,8 @@ export default class Person {
             if (this.name === "Name") {
                 nameElement.textContent = "";
             }
-            let selection = document.getSelection();
-            let range = document.createRange();
+            const selection = document.getSelection();
+            const range = document.createRange();
             range.selectNodeContents(nameElement);
             selection.removeAllRanges();
             selection.addRange(range);
@@ -600,7 +600,7 @@ export default class Person {
         });
     }
 
-    static createPerson() {
+    static createPerson(addTo=undefined) {
         const graph = document.getElementById("graph");
         const newPerson = new Person();
         if (graph.childElementCount === 0) {
@@ -615,7 +615,7 @@ export default class Person {
                 }
             }
         }
-        const lastPerson = getLastPerson();
+        const lastPerson = addTo? addTo : getLastPerson();
         // lastPerson has parents and is single
         if (lastPerson.div.parentElement.className === "children") {
             lastPerson.groups[lastPerson.groups.length - 1].addChild(newPerson);
