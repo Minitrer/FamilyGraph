@@ -51,7 +51,7 @@ export default class Person {
         }
 
         this.#div = document.createElement("div");
-        this.#div.setAttribute("class", "person");
+        this.#div.setAttribute("class", "person neutral");
 
         const nameElement = document.createElement("h1");
         nameElement.textContent = name;
@@ -103,6 +103,7 @@ export default class Person {
         return this.#gender;
     }
     set gender(value) {
+        this.#div.classList.replace(`${this.#gender}`, value);
         this.#gender = value;
     }
     get relationships() {
@@ -210,14 +211,14 @@ export default class Person {
         if (Array.isArray(parents)) {
             this.#parents = this.#parents.concat(parents);
 
-            parents.forEach(parent => {
+            parents.forEach((parent) => {
                 Relationship.setRelationships(parent, this, "Parent");
             });
 
             if (internal) {
                 return true;
             }
-            this.#parents.forEach(parent => {
+            this.#parents.forEach((parent) => {
                 parent.adopt(this, true);
             });
             return true;

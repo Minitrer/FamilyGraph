@@ -10,12 +10,24 @@ html, body, .workspace {
     --black-2: rgb(60, 60, 60);
     --gray: rgba(70, 70, 70);
     --white: rgb(204, 204, 204);
+
+    /* Gender colors */
+    /* --neutral-1 is --black-1 */
+    /* --neutral-2 is --black-2 */
+    --neutral-3: rgb(12, 12, 12);
+    --male-1: rgb(0, 80, 170);
+    --male-2: rgb(120, 170, 255);
+    --male-3: rgb(10, 60, 120);
+    --female-1: rgb(255, 120, 250);
+    --female-2: rgb(255, 188, 253);
+    --female-3: rgb(255, 50, 250);
 }
 #workspace {
     width: 100%;
     height: 100%;
     overflow: visible;
-    border: 1px solid red;
+    /* DEBUG */
+    /* border: 1px solid red; */
 
     --pos-x: 0;
     --pos-y: 0;
@@ -126,38 +138,38 @@ html, body, .workspace {
     color: var(--white);
 }
 #neutral:hover+label, #edit-relationship input:hover+label {
-    background-color: rgb(60, 60, 60);
+    background-color: var(--black-2);
     color: rgb(240, 240, 240);
     cursor: pointer;
 }
 #neutral:checked+label, #edit-relationship input:checked+label {
-    background-color: rgb(12, 12, 12);
+    background-color: var(--neutral-3);
     color: rgb(180, 180, 180);
 }
 #male+label {
-    background-color: rgb(0, 80, 170);
+    background-color: var(--male-1);
     color: white;
 }
 #male:hover+label {
-    background-color: rgb(120, 170, 255);
+    background-color: var(--male-2);
     color: rgb(0, 0, 90);
     cursor: pointer;
 }
 #male:checked+label {
-    background-color: rgb(10, 60, 120);
+    background-color: var(--male-3);
     color: rgb(204, 240, 240);
 }
 #female+label {
-    background-color: rgb(255, 120, 250);
+    background-color: var(--female-1);
     color: rgb(0, 0, 75);
 }
 #female:hover+label {
-    background-color: rgb(255, 188, 253);
+    background-color: var(--female-2);
     color: rgb(28, 28, 127);
     cursor: pointer;
 }
 #female:checked+label {
-    background-color: rgb(255, 50, 250);
+    background-color: var(--female-3);
     color: black;
 }
 #gender-menu-buttons input:checked:hover+label, #edit-relationship input:checked:hover+label {
@@ -193,6 +205,7 @@ html, body, .workspace {
     justify-content: center;
     align-items: center;
     align-content: center;
+    /* DEBUG */
     border: 1px solid cyan;
 }
 
@@ -230,6 +243,15 @@ html, body, .workspace {
     background-color: var(--black-1);
     cursor: pointer;
 }
+.person.neutral {
+    background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 30%, var(--gray));
+}
+.person.male {
+    background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 30%, var(--male-2));
+}
+.person.female {
+    background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 30%, var(--female-2));
+}
 .person:focus-within {
     box-shadow: 0px 0px 0.4em var(--white) inset;
 }
@@ -246,6 +268,7 @@ html, body, .workspace {
     margin: 0%;
     padding: 0%;
     color: var(--white);
+    text-shadow: 0px 0px 10px var(--black-1), 0px 0px 10px var(--black-1), 0px 0px 10px var(--black-1);
     font-size: 2em;
     -webkit-user-select: none; /* Safari */
     user-select: none; /* Standard syntax */

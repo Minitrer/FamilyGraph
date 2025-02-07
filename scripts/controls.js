@@ -267,7 +267,7 @@ const workspace = document.getElementById("workspace");
 function createRelationshipText(person) {
     for (const [id, relationship] of person.relationships) {
         if (PEOPLE[id].isHidden) {
-            return;
+            continue;
         }
 
         const text = document.createElement("h2");
@@ -486,6 +486,18 @@ document.addEventListener("keyup", (e) => {
                 Actions.addChild(selection.person);
             });
             return;
+        // Delete person
+        case "Backspace":
+        case "Delete":
+            if ((document.activeElement.className === "name" && !e.altKey) || selected.length === 0) {
+                return;
+            }
+            selected.forEach((selection) => {
+                Actions.hidePerson(selection.person);
+            });
+            hideContextMenu();
+            clearSelections();
+            return;
         // Edit
         case "e":
         case "E":
@@ -546,9 +558,15 @@ document.addEventListener("keyup", (e) => {
         }
         // Confirm name
         case "Enter":
+            console.debug(document.activeElement);
             if (e.shiftKey || document.activeElement.className !== "name") {
                 // Toggle relationship
-                if (!document.activeElement.tagName === "DIV") {
+                if (document.activeElement.tagName !== "DIV") {
+                    // Focus person
+                    if (selected.length === 0) {
+                        return;
+                    }
+                    selected[0].firstElementChild.focus();
                     return;
                 }
                 const selectedButtons = document.activeElement.firstElementChild;
@@ -578,7 +596,86 @@ document.addEventListener("keyup", (e) => {
                 return;
             }
             return;
-
+        // Navigation
+        function NavigatePeople(method) {
+            if (selected.length === 0) {
+                selectPeople([PEOPLE.find((person) => !person.isHidden).div]);
+                return;
+            }
+            if (selected.length > 1) {
+                return;
+            }
+            const person = method(selected[0]);
+            if (person) {
+                selectPeople([person]);
+            }
+        }
+        case "ArrowUp":
+            function findFirstVisibleParent(selected) {
+                const firstParent = selected.person.parents.find((parent) => !parent.isHidden);
+                if (firstParent) {
+                    return firstParent.div;
+                }
+                // search first outer family or second outer family
+                let elementToSearch = selected.parentElement.classList.contains("children")? selected.parentElement.parentElement : selected.parentElement.parentElement.parentElement.parentElement;
+                while (elementToSearch.id !== "workspace") {
+                    const firstParent = elementToSearch.firstElementChild.firstElementChild;
+                    if (firstParent) {
+                        return firstParent;
+                    }
+                    elementToSearch = elementToSearch.parentElement.parentElement;
+                }
+                const allPeople = document.querySelectorAll("#graph .person");
+                return allPeople[allPeople.length - 1];
+            }
+            return NavigatePeople(findFirstVisibleParent);
+        case "ArrowDown":
+            function findFirstVisibleChild(selected) {
+                const firstChild = selected.person.children.find((child) => !child.isHidden);
+                if (firstChild) {
+                    return firstChild.div;
+                }
+                const nestedCount = (() => {
+                    let i = -1;
+                    let currentFamily = selected.parentElement.parentElement;
+                    while (currentFamily.id.includes("family") ) {
+                        i++;
+                        currentFamily = currentFamily.parentElement.parentElement;
+                    }
+                    return i;
+                }) ();
+                const graph = document.getElementById("graph");
+                let person;
+                // If a parent, look for first child in a family nested same level or first person nested 1 more than current family
+                if (selected.parentElement.classList.contains("parents")) {
+                    person = graph.querySelector(`${"div>.children>".repeat(nestedCount)}.children>.person, ${"div>.children>".repeat(nestedCount + 1)}>div>.person`);
+                }
+                else {
+                    person = graph.querySelector(`${"div>.children>".repeat(nestedCount + 1)}div>.person`);
+                }
+                if (person) {
+                    return person;
+                }
+                return graph.querySelector(".person");
+            }
+            return NavigatePeople(findFirstVisibleChild);
+        case "ArrowLeft": 
+            function findPreviousPerson(selected) {
+                if (selected.previousElementSibling) {
+                    return selected.previousElementSibling;
+                }
+                // TODO
+            }
+            return NavigatePeople((selected) => { return selected.previousElementSibling? selected.previousElementSibling : selected.parentElement.lastElementChild });
+        case "ArrowRight": {
+            function findNextPerson(selected) {
+                if (selected.nextElementSibling) {
+                    return selected.nextElementSibling;
+                }
+                // TODO
+            }
+            return NavigatePeople((selected) => { return selected.nextElementSibling? selected.nextElementSibling : selected.parentElement.firstElementChild });
+        }
         // Undo-redo
         case "z":
         case "Z":
