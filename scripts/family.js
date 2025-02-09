@@ -25,7 +25,7 @@ export default class Family {
         // Create divs
         this.#div = document.createElement("div");
         this.#div.setAttribute("class", "family");
-        this.#div.id = `family ${this.id}`;
+        this.#div.id = `family-${this.id}`;
         this.#parentsDiv = document.createElement("div");
         this.#parentsDiv.setAttribute("class", "parents");
         this.#childrenDiv = document.createElement("div");

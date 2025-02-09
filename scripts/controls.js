@@ -292,7 +292,6 @@ function createRelationshipText(person) {
 function clearSelections() {
     selected.forEach((selection) => {
         selection.classList.remove("selected");
-        // console.debug(document.activeElement, selection.firstElementChild);
     });
     selected = [];
     for (const text of RELATIONSHIPTEXTS.values()) {
@@ -558,7 +557,6 @@ document.addEventListener("keyup", (e) => {
         }
         // Confirm name
         case "Enter":
-            console.debug(document.activeElement);
             if (e.shiftKey || document.activeElement.className !== "name") {
                 // Toggle relationship
                 if (document.activeElement.tagName !== "DIV") {
@@ -617,13 +615,13 @@ document.addEventListener("keyup", (e) => {
                     return firstParent.div;
                 }
                 // search first outer family or second outer family
-                let elementToSearch = selected.parentElement.classList.contains("children")? selected.parentElement.parentElement : selected.parentElement.parentElement.parentElement.parentElement;
-                while (elementToSearch.id !== "workspace") {
-                    const firstParent = elementToSearch.firstElementChild.firstElementChild;
+                let divToSearch = selected.parentElement.classList.contains("children")? selected.parentElement.parentElement : selected.parentElement.parentElement.parentElement.parentElement;
+                while (divToSearch.id !== "workspace") {
+                    const firstParent = divToSearch.firstElementChild.firstElementChild;
                     if (firstParent) {
                         return firstParent;
                     }
-                    elementToSearch = elementToSearch.parentElement.parentElement;
+                    divToSearch = divToSearch.parentElement.parentElement;
                 }
                 const allPeople = document.querySelectorAll("#graph .person");
                 return allPeople[allPeople.length - 1];
@@ -646,11 +644,12 @@ document.addEventListener("keyup", (e) => {
                 }) ();
                 const graph = document.getElementById("graph");
                 let person;
-                // If a parent, look for first child in a family nested same level or first person nested 1 more than current family
+                // If a parent, look for first child in a family nested same amount or first person nested 1 more than current family
                 if (selected.parentElement.classList.contains("parents")) {
                     person = graph.querySelector(`${"div>.children>".repeat(nestedCount)}.children>.person, ${"div>.children>".repeat(nestedCount + 1)}>div>.person`);
                 }
                 else {
+                    // Look for first child in a family nested same amount
                     person = graph.querySelector(`${"div>.children>".repeat(nestedCount + 1)}div>.person`);
                 }
                 if (person) {
@@ -659,22 +658,98 @@ document.addEventListener("keyup", (e) => {
                 return graph.querySelector(".person");
             }
             return NavigatePeople(findFirstVisibleChild);
+
+        
+        function getDivWithNestCount(from, nestedCount) {
+            return from.querySelector(`#${from.id}>${".children>.family>".repeat(nestedCount - 1)}.children>div`);
+        }
         case "ArrowLeft": 
             function findPreviousPerson(selected) {
-                if (selected.previousElementSibling) {
-                    return selected.previousElementSibling;
+                function getPersonDiv(div) {
+                    if (div.person) {
+                        return div;
+                    }
+                    return div.firstElementChild.lastElementChild;
                 }
-                // TODO
+
+                if (selected.previousElementSibling) {
+                    return getPersonDiv(selected.previousElementSibling);
+                }
+                let divToCheck = selected.parentElement.parentElement;
+                let nestedCount = selected.parentElement.classList.contains("parents")? -1 : 0;
+                while (divToCheck.classList.contains("family")) {
+                    nestedCount++;
+
+                    let nextSibling = divToCheck.previousElementSibling;
+                    while (nextSibling) {
+                        if (nestedCount === 0) {
+                            return getPersonDiv(nextSibling);
+                        }
+                        const div = getDivWithNestCount(divToCheck.previousElementSibling, nestedCount);
+                        if (div) {
+                            return getPersonDiv(div);
+                        }    
+                        nextSibling = nextSibling.previousElementSibling;
+                    }
+
+                    divToCheck = divToCheck.parentElement.parentElement;
+                }
+                if (nestedCount < 1) {
+                    return null;
+                }
+                // Person of same generation not found, loop to the right-most person of same generation
+                const firstFamily = document.getElementById("graph").firstElementChild;
+                const generation = firstFamily.querySelectorAll(`#${firstFamily.id}>${".children>.family>".repeat(nestedCount - 1)}.children>div`);
+                const div = generation[generation.length - 1];
+                if (div) {
+                    return getPersonDiv(div);
+                }
+                return null;
             }
-            return NavigatePeople((selected) => { return selected.previousElementSibling? selected.previousElementSibling : selected.parentElement.lastElementChild });
+            return NavigatePeople(findPreviousPerson);
         case "ArrowRight": {
             function findNextPerson(selected) {
-                if (selected.nextElementSibling) {
-                    return selected.nextElementSibling;
+                function getPersonDiv(div) {
+                    if (div.person) {
+                        return div;
+                    }
+                    return div.firstElementChild.firstElementChild;
                 }
-                // TODO
+
+                if (selected.nextElementSibling) {
+                    return getPersonDiv(selected.nextElementSibling);
+                }
+                let divToCheck = selected.parentElement.parentElement;
+                let nestedCount = selected.parentElement.classList.contains("parents")? -1 : 0;
+                while (divToCheck.classList.contains("family")) {
+                    nestedCount++;
+
+                    let nextSibling = divToCheck.nextElementSibling;
+                    while (nextSibling) {
+                        if (nestedCount === 0) {
+                            return getPersonDiv(nextSibling);
+                        }
+                        const div = getDivWithNestCount(divToCheck.nextElementSibling, nestedCount);
+                        if (div) {
+                            return getPersonDiv(div);
+                        }    
+                        nextSibling = nextSibling.nextElementSibling;
+                    }
+
+                    divToCheck = divToCheck.parentElement.parentElement;
+                }
+                if (nestedCount < 1) {
+                    return null;
+                }
+                // Person of same generation not found, loop to the left-most person of same generation
+                const firstFamily = document.getElementById("graph").firstElementChild;
+                const div = getDivWithNestCount(firstFamily, nestedCount);
+                if (div) {
+                    return getPersonDiv(div);
+                }
+                return null;
             }
-            return NavigatePeople((selected) => { return selected.nextElementSibling? selected.nextElementSibling : selected.parentElement.firstElementChild });
+            return NavigatePeople(findNextPerson);
         }
         // Undo-redo
         case "z":

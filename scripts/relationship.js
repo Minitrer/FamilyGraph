@@ -232,7 +232,7 @@ export default class Relationship {
                     for (const parent of from.spouses) {
                         if (parent.relationships.get(id).suffix === "") {
                             toRelationship.setInLaw(false);
-                            PEOPLE[id].get(to.id).setInLaw(false);
+                            PEOPLE[id].relationships.get(to.id).setInLaw(false);
                             break;
                         }
                     }

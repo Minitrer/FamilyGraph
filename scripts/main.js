@@ -32,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // createConnection(fromStraight, toDown, "down");
     // createConnection(fromStraight, toLeft, "left");
     // createConnection(fromStraight, toRight, "right");
-    const thing = { bar: true };
-    const emptyArray = [thing];
-    console.log(emptyArray.find((foo) => foo.bar));
+    const emptyArray = [];
+    // console.log(emptyArray[0]);
 });
