@@ -27,7 +27,7 @@ html, body, .workspace {
     height: 100%;
     overflow: visible;
     /* DEBUG */
-    /* border: 1px solid red; */
+    border: 1px solid red;
 
     --pos-x: 0;
     --pos-y: 0;

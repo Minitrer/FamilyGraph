@@ -30,11 +30,13 @@ const horizontalRule = document.createElement("hr");
 
 const bgAddPersonButton = document.createElement("button");
 const bgResetTransforms = document.createElement("button");
+const bgRecenter = document.createElement("button");
 
 bgAddPersonButton.textContent = "Add person";
 bgResetTransforms.textContent = "Reset all positions";
+bgRecenter.textContent = "Recenter";
 
-const onBackground = [bgAddPersonButton, horizontalRule, bgResetTransforms];
+const onBackground = [bgAddPersonButton, horizontalRule, bgResetTransforms, bgRecenter];
 
 bgAddPersonButton.addEventListener("click", (e) => {
     onMenuClick(e, Actions.addPerson);
@@ -43,6 +45,9 @@ bgAddPersonButton.addEventListener("click", (e) => {
 bgResetTransforms.addEventListener("click", (e) => {
     onMenuClick(e, Actions.resetAllTransforms);
 });
+bgRecenter.addEventListener("click", (e) => {
+    onMenuClick(e, Actions.Recenter);
+})
 
 // 
 // Context menu options on person

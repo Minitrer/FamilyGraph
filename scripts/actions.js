@@ -3,6 +3,7 @@ import Family from "./family.js";
 import Vec2 from "./vec2.js";
 import { FAMILIES } from "./family.js";
 import Relationship from "./relationship.js";
+import { TRANSFORMSCALE, setWorkspaceScale, centerWorkspace } from "./pan-zoom-and-drag.js";
 
 const stackSize = 20;
 class Command {
@@ -281,6 +282,26 @@ export function resetAllTransforms() {
     pushStack(command, undoStack);
 
     Person.resetAllTransforms(points);
+}
+
+export function Recenter() {
+    const workspace = document.getElementById("workspace");
+    const currentScale = TRANSFORMSCALE;
+    const transforms = {
+        cssPosX: Number(workspace.style.getPropertyValue("--pos-x")),
+        cssPosY: Number(workspace.style.getPropertyValue("--pos-y")),
+        transformPos: new Vec2(workspace.transformPos.x, workspace.transformPos.y),
+    }
+
+    const command = new Command(() => { 
+        workspace.transformPos = transforms.transformPos;
+        workspace.style.setProperty("--pos-x", transforms.cssPosX);
+        workspace.style.setProperty("--pos-y", transforms.cssPosY);
+        setWorkspaceScale(currentScale); 
+    }, centerWorkspace );
+    pushStack(command, undoStack);
+
+    centerWorkspace();
 }
 
 export function draggedPerson(person, positionBeforeDragging, positionAfterDragging) {

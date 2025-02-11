@@ -18,6 +18,47 @@ export default function makeDraggableBasic(element) {
     }
 }
 
+export function centerWorkspace() {
+    const workspace = document.getElementById("workspace");
+    workspace.transformPos = new Vec2();
+    workspace.onDrag(new Vec2());
+
+    const firstFamily = document.getElementById("graph").firstElementChild;
+    if (!firstFamily) {
+        setWorkspaceScale(1);
+        return;
+    }
+
+    const firstFamilyRect = firstFamily.getBoundingClientRect();
+    const workspaceRect = workspace.getBoundingClientRect();
+
+    if (firstFamilyRect.width <= workspaceRect.width && firstFamilyRect.height <= workspaceRect.height) {
+        setWorkspaceScale(1);
+        return;
+    }
+    const scaleByWidth = (firstFamilyRect.width > workspaceRect.width && firstFamilyRect.height <= workspaceRect.height) ||
+                         (firstFamilyRect.width - workspaceRect.width > firstFamilyRect.height - workspaceRect.height);
+    if (scaleByWidth) {
+        const difference = firstFamilyRect.width - workspaceRect.width;
+        const scale = 1 - difference / firstFamilyRect.width;
+        const rounded = Math.floor(scale / scaleSensitivity) * scaleSensitivity;
+        setWorkspaceScale(rounded);
+        return;
+    }
+
+    const difference = firstFamilyRect.height - workspaceRect.height;
+    const scale = 1 - difference / firstFamilyRect.height;
+    const rounded = Math.floor(scale / scaleSensitivity) * scaleSensitivity;
+    setWorkspaceScale(rounded);
+}
+
+ export function setWorkspaceScale(scale) {
+    console.debug(`Diff: ${scale - TRANSFORMSCALE}`);
+    console.debug(`Set: ${scale}`);
+    TRANSFORMSCALE = scale;
+    workspace.style.setProperty("--scale", TRANSFORMSCALE);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
     const workspace = document.getElementById("workspace");
@@ -126,8 +167,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (TRANSFORMSCALE + direction * scaleSensitivity < minScale) {
             return;
         }
-        TRANSFORMSCALE += direction * scaleSensitivity;
-
-        workspace.style.setProperty("--scale", TRANSFORMSCALE);
+        setWorkspaceScale(TRANSFORMSCALE + direction * scaleSensitivity);
     });
 });
