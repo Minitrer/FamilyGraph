@@ -3,39 +3,39 @@ import { PEOPLE } from "./person.js";
 class Noun  {
     static Spouce = Object.freeze({
         male: "husband",
-        neutral: "spouce",
+        agender: "spouce",
         female: "wife",
     });
     static Child = Object.freeze({
         male: "son",
-        neutral: "child",
+        agender: "child",
         female: "daughter",
     });
     static Parent = Object.freeze({
         male: "father",
-        neutral: "parent",
+        agender: "parent",
         female: "mother",
     });
     static Sibling = Object.freeze({
         male: "brother",
-        neutral: "sibling",
+        agender: "sibling",
         female: "sister",
     });
     // Pibling = Parent's siblings e.g. Aunts and Uncles
     static Pibling = Object.freeze({
         male: "uncle",
-        neutral: "pibling",
+        agender: "pibling",
         female: "aunt",
     });
     // Nibling = Sibling's children e.g. Nieces and Nephews
     static Nibling = Object.freeze({
         male: "nephew",
-        neutral: "nibling",
+        agender: "nibling",
         female: "niece",
     });
     static Cousin = Object.freeze({
         male: "cousin",
-        neutral: "cousin",
+        agender: "cousin",
         female: "cousin",
     });
 }

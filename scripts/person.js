@@ -15,7 +15,7 @@ export default class Person {
     #spouses = [];
     #parents = [];
     #children = [];
-    #gender = "neutral";
+    #gender = "agender";
     #relationships = new Map();
     #div;
     #transformPos = new Vec2();
@@ -51,7 +51,7 @@ export default class Person {
         }
 
         this.#div = document.createElement("div");
-        this.#div.setAttribute("class", "person neutral");
+        this.#div.setAttribute("class", "person agender");
 
         const nameElement = document.createElement("h1");
         nameElement.textContent = name;

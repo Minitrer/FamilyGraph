@@ -9,6 +9,28 @@ let selected = [];
 export let RELATIONSHIPTEXTS = new Map();
 
 // 
+// Icons
+// 
+const trashIcon = document.createElement("i");
+trashIcon.className = "material-symbols-rounded";
+trashIcon.textContent = "delete";
+const addIcon = document.createElement("i");
+addIcon.className = "material-symbols-rounded";
+addIcon.textContent = "add";
+const editIcon = document.createElement("i");
+editIcon.className = "material-symbols-rounded";
+editIcon.textContent = "edit";
+const transformIcon = document.createElement("i");
+transformIcon.className = "material-symbols-rounded";
+transformIcon.textContent = "transform";
+const focusIcon = document.createElement("i");
+focusIcon.className = "material-symbols-rounded";
+focusIcon.textContent = "crop_free";
+const centerPointIcon = document.createElement("i");
+centerPointIcon.className = "material-symbols-rounded";
+centerPointIcon.textContent = "point_scan";
+
+// 
 // Menu for changing the target person's gender
 // 
 export const GENDERMENU = document.getElementById("gender-menu");
@@ -36,6 +58,10 @@ bgAddPersonButton.textContent = "Add person";
 bgResetTransforms.textContent = "Reset all positions";
 bgRecenter.textContent = "Recenter";
 
+bgAddPersonButton.prepend(addIcon);
+bgResetTransforms.prepend(transformIcon);
+bgRecenter.prepend(focusIcon);
+
 const onBackground = [bgAddPersonButton, horizontalRule, bgResetTransforms, bgRecenter];
 
 bgAddPersonButton.addEventListener("click", (e) => {
@@ -47,7 +73,7 @@ bgResetTransforms.addEventListener("click", (e) => {
 });
 bgRecenter.addEventListener("click", (e) => {
     onMenuClick(e, Actions.Recenter);
-})
+});
 
 // 
 // Context menu options on person
@@ -65,6 +91,13 @@ addChildButton.textContent = "Add child";
 editButton.textContent = "Edit";
 resetTransformButton.textContent = "Reset Position";
 deleteButton.textContent = "Delete";
+
+addParentButton.prepend(addIcon.cloneNode(true));
+addSpouceButton.prepend(addIcon.cloneNode(true));
+addChildButton.prepend(addIcon.cloneNode(true));
+editButton.prepend(editIcon);
+resetTransformButton.prepend(transformIcon.cloneNode(true));
+deleteButton.prepend(trashIcon);
 
 const onPerson = [addParentButton, addSpouceButton, addChildButton, editButton, horizontalRule, resetTransformButton, deleteButton];
 
@@ -94,6 +127,8 @@ deleteButton.addEventListener("click", (e) => {
 const resetPointTransformButton = document.createElement("button");
 
 resetPointTransformButton.textContent = "Reset Position of Point";
+
+resetPointTransformButton.prepend(centerPointIcon);
 
 const onPoint = [bgAddPersonButton, horizontalRule, resetPointTransformButton, bgResetTransforms];
 
@@ -388,7 +423,8 @@ document.addEventListener("dblclick", (event) => {
 });
 
 document.addEventListener("click", (event) => {
-    if (event.target.tagName === "FORM" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL" || event.target.tagName === "BUTTON" || isEditing) {
+    if (event.target.tagName === "FORM" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL" || event.target.tagName === "BUTTON" ||
+        (event.target.tagName === "I" && event.target.parentElement.tagName === "LABEL") || isEditing) {
         return;
     }
     event.preventDefault();
@@ -416,12 +452,14 @@ document.addEventListener("click", (event) => {
 
 // This is to prevent the person's name from losing focus when clicking on a gender option;
 document.addEventListener("mousedown", (e) => {
-    if (e.target.nodeName !== "LABEL") {
+    if (e.target.tagName !== "LABEL"  && e.target.tagName !== "I") {
         return;
     }
-    switch (e.target.htmlFor) {
+    const label = e.target.tagName === "I"? e.target.parentElement : e.target
+    console.debug(label);
+    switch (label.htmlFor) {
         case "male":
-        case "neutral":
+        case "agender":
         case "female":
             e.preventDefault();
             return;
@@ -439,11 +477,11 @@ document.addEventListener("keyup", (e) => {
         case "n":
         case "N":
             if (document.activeElement.className === "name") {
-                // Choose neutral gender
+                // Choose agender
                 if (GENDERMENU.className === "hidden" || !e.altKey) {
                     return;
                 }
-                const element = document.getElementById("neutral");
+                const element = document.getElementById("agender");
                 if (element.checked) {
                     return;
                 }

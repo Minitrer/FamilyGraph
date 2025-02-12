@@ -5,6 +5,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="initial-scale=1, width=device-width">
 
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,-25&icon_names=add,agender,crop_free,delete,edit,female,male,point_scan,transform"/>
         <link href="styles.css" rel="stylesheet">
         <script src="scripts/main.js" type="module"></script>
         <script src="scripts/pan-zoom-and-drag.js" type="module"></script>
@@ -21,17 +22,23 @@
                     <fieldset id="gender-menu-buttons">
                         <div>
                             <input type="radio" id="male" name="gender" value="male"></input>
-                            <label for="male">M</label>
+                            <label for="male">
+                                <i class="material-symbols-rounded">male</i>
+                            </label>
                         </div>
                         <hr>
                         <div>
-                            <input type="radio" id="neutral" name="gender" value="neutral" checked></input>
-                            <label for="neutral">N</label>
+                            <input type="radio" id="agender" name="gender" value="agender" checked></input>
+                            <label for="agender">
+                                <i class="material-symbols-rounded">agender</i>
+                            </label>
                         </div>
                         <hr>
                         <div>
                             <input type="radio" id="female" name="gender" value="female"></input>
-                            <label for="female">F</label>
+                            <label for="female">
+                                <i class="material-symbols-rounded">female</i>
+                            </label>
                         </div>
                     </fieldset>
                 </div>

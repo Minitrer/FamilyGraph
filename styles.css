@@ -12,9 +12,9 @@ html, body, .workspace {
     --white: rgb(204, 204, 204);
 
     /* Gender colors */
-    /* --neutral-1 is --black-1 */
-    /* --neutral-2 is --black-2 */
-    --neutral-3: rgb(12, 12, 12);
+    /* --agender-1 is --black-1 */
+    /* --agender-2 is --black-2 */
+    --agender-3: rgb(12, 12, 12);
     --male-1: rgb(0, 80, 170);
     --male-2: rgb(120, 170, 255);
     --male-3: rgb(10, 60, 120);
@@ -60,7 +60,10 @@ html, body, .workspace {
     font-weight: 300;
     font-size: 1em;
     font-family: Arial, Helvetica, sans-serif;
-    display: inline-block;
+    /* align-content: center; */
+    align-items: center;
+    gap: 0.4em;
+    display: flex;
     padding: 0.6em;
     text-align: left;
     cursor: pointer;
@@ -133,17 +136,17 @@ html, body, .workspace {
 #parent-relationship-buttons, #child-relationship-buttons {
     width: max-content;
 }
-#neutral+label, #edit-relationship input+label {
+#agender+label, #edit-relationship input+label {
     background-color: var(--black-1);
     color: var(--white);
 }
-#neutral:hover+label, #edit-relationship input:hover+label {
+#agender:hover+label, #edit-relationship input:hover+label {
     background-color: var(--black-2);
     color: rgb(240, 240, 240);
     cursor: pointer;
 }
-#neutral:checked+label, #edit-relationship input:checked+label {
-    background-color: var(--neutral-3);
+#agender:checked+label, #edit-relationship input:checked+label {
+    background-color: var(--agender-3);
     color: rgb(180, 180, 180);
 }
 #male+label {
@@ -243,7 +246,7 @@ html, body, .workspace {
     background-color: var(--black-1);
     cursor: pointer;
 }
-.person.neutral {
+.person.agender {
     background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 30%, var(--gray));
 }
 .person.male {
