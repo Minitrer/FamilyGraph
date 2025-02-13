@@ -1,6 +1,6 @@
 import Person from "./person.js";
 import { PEOPLE } from "./person.js";
-import { CLICKEDPOS } from "./pan-zoom-and-drag.js";
+import { CLICKED_POS, DRAGGING_ELEMENTS } from "./pan-zoom-and-drag.js";
 import makeDraggableBasic from "./pan-zoom-and-drag.js";
 import * as Actions from "./actions.js";
 
@@ -368,7 +368,7 @@ document.addEventListener("focusout", (event) => {
 // 
 document.addEventListener("contextmenu", (event) => {
     event.preventDefault();
-    if (event.pageX - CLICKEDPOS.x !== 0 && event.pageY - CLICKEDPOS.y !== 0) {
+    if (event.pageX - CLICKED_POS.x !== 0 && event.pageY - CLICKED_POS.y !== 0) {
         return;
     }
 
@@ -439,7 +439,7 @@ document.addEventListener("click", (event) => {
     }
 
     if (target) {
-        if (CLICKEDPOS.x !== event.pageX || CLICKEDPOS.y !== event.pageY) {
+        if (CLICKED_POS.x !== event.pageX || CLICKED_POS.y !== event.pageY) {
             return;
         }
         resetGenderMenuPosition();
@@ -467,6 +467,38 @@ document.addEventListener("mousedown", (e) => {
             return;
     }
 });
+// 
+// Trash can
+// 
+{
+    const trashCan = document.getElementById("trash-can");
+    trashCan.addEventListener("mouseenter", (e) => {
+        e.preventDefault();
+
+        const people = DRAGGING_ELEMENTS.filter((element) => element instanceof Person);
+        if (people.length === 0) {
+            return;
+        }
+        trashCan.style.color = "rgba(255, 0 ,0, 0.8)";
+    
+        function deletePeople() {
+            people.forEach((element) => {
+                Actions.hidePerson(element);
+            });
+            
+            trashCan.style.color = "rgba(255, 255 ,255, 0.8)";
+            document.removeEventListener("mouseleave", onLeave);
+        }
+        function onLeave() {
+            trashCan.style.color = "rgba(255, 255 ,255, 0.8)";
+            document.removeEventListener("mouseup", deletePeople);
+        }
+    
+        document.addEventListener("mouseup", deletePeople, {once: true});
+    
+        trashCan.addEventListener("mouseleave", onLeave, {once: true});
+    });
+}
 
 // 
 // Keybinds

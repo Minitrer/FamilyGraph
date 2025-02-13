@@ -3,7 +3,7 @@ import Family from "./family.js";
 import Vec2 from "./vec2.js";
 import { FAMILIES } from "./family.js";
 import Relationship from "./relationship.js";
-import { TRANSFORMSCALE, setWorkspaceScale, centerWorkspace } from "./pan-zoom-and-drag.js";
+import { TRANSFORM_SCALE, setWorkspaceScale, centerWorkspace } from "./pan-zoom-and-drag.js";
 
 const stackSize = 20;
 class Command {
@@ -286,7 +286,7 @@ export function resetAllTransforms() {
 
 export function Recenter() {
     const workspace = document.getElementById("workspace");
-    const currentScale = TRANSFORMSCALE;
+    const currentScale = TRANSFORM_SCALE;
     const transforms = {
         cssPosX: Number(workspace.style.getPropertyValue("--pos-x")),
         cssPosY: Number(workspace.style.getPropertyValue("--pos-y")),

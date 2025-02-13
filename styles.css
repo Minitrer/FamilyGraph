@@ -203,6 +203,23 @@ html, body, .workspace {
     text-align: left;
 }
 
+#trash-can {
+    position: fixed;
+    pointer-events: none;
+    top: 0;
+    right: 0;
+    padding: 1em;
+    color: rgba(255, 255, 255, 0.8);
+    transition: color 0.2s;
+    transition-timing-function: ease-in;
+}
+#trash-can i {
+    display: block;
+    font-size: 4em;
+    -webkit-user-select: none; /* Safari */
+    user-select: none; /* Standard syntax */
+}
+
 #graph, .family, .parents, .children {
     display: flex;
     justify-content: center;
@@ -286,7 +303,7 @@ html, body, .workspace {
 .name[placeholder]:empty:focus:before {
     content: "";
 }
-.name::selection {
+.name::selection, #trash-can i::selection {
     background-color: transparent;
 }
 .name:focus::selection {

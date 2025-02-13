@@ -7,8 +7,9 @@ import { draggedPerson, draggedPoint } from "./actions.js";
 const scaleSensitivity = 0.1;
 const minScale = 0.1;
 
-export let CLICKEDPOS = new Vec2(0, 0);
-export let TRANSFORMSCALE = 1;
+export let CLICKED_POS = new Vec2(0, 0);
+export let TRANSFORM_SCALE = 1;
+export let DRAGGING_ELEMENTS = [];
 
 export default function makeDraggableBasic(element) {
     element.transformPos = new Vec2();
@@ -53,10 +54,10 @@ export function centerWorkspace() {
 }
 
  export function setWorkspaceScale(scale) {
-    console.debug(`Diff: ${scale - TRANSFORMSCALE}`);
+    console.debug(`Diff: ${scale - TRANSFORM_SCALE}`);
     console.debug(`Set: ${scale}`);
-    TRANSFORMSCALE = scale;
-    workspace.style.setProperty("--scale", TRANSFORMSCALE);
+    TRANSFORM_SCALE = scale;
+    workspace.style.setProperty("--scale", TRANSFORM_SCALE);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -64,12 +65,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const workspace = document.getElementById("workspace");
     makeDraggableBasic(workspace);
 
-    let draggingElements = [];
     function drag(event) {
-        draggingElements.forEach((element) => {
+        DRAGGING_ELEMENTS.forEach((element) => {
             const newPos = new Vec2(
-                element.transformPos.x + (event.pageX - CLICKEDPOS.x) * (1 / TRANSFORMSCALE),
-                element.transformPos.y + (event.pageY - CLICKEDPOS.y) * (1 / TRANSFORMSCALE)
+                element.transformPos.x + (event.pageX - CLICKED_POS.x) * (1 / TRANSFORM_SCALE),
+                element.transformPos.y + (event.pageY - CLICKED_POS.y) * (1 / TRANSFORM_SCALE)
             );
     
             element.onDrag(newPos);
@@ -85,11 +85,11 @@ document.addEventListener("DOMContentLoaded", () => {
         isDragging = true;
         function addUIElements(person) {
             if (person.div.classList.contains("selected")) {
-                draggingElements.push(GENDERMENU);
+                DRAGGING_ELEMENTS.push(GENDERMENU);
                 return;
             }
             if (RELATIONSHIPTEXTS.has(person.id)) {
-                draggingElements.push(RELATIONSHIPTEXTS.get(person.id));
+                DRAGGING_ELEMENTS.push(RELATIONSHIPTEXTS.get(person.id));
             }
         }
         function getPersonTransforms(person) {
@@ -112,38 +112,44 @@ document.addEventListener("DOMContentLoaded", () => {
         let positionBeforeDragging = undefined;
 
         if (event.buttons === 2 || event.buttons === 4) {
-            draggingElements = [workspace];
+            DRAGGING_ELEMENTS = [workspace];
         }
         else if (event.target.classList.contains("point")) {
-            draggingElements = [event.target];
+            DRAGGING_ELEMENTS = [event.target];
             positionBeforeDragging = getPointTransforms(event.target);
         }
         else if (event.target.classList.contains("person")) {
-            draggingElements = [event.target.person];
+            DRAGGING_ELEMENTS = [event.target.person];
             positionBeforeDragging = getPersonTransforms(event.target.person);
             addUIElements(event.target.person);
+
+            const trashCan = document.getElementById("trash-can");
+            trashCan.style.pointerEvents = "auto";
         }
         else if (event.target.parentElement.classList.contains("person")) {
-            draggingElements = [event.target.parentElement.person];
+            DRAGGING_ELEMENTS = [event.target.parentElement.person];
             positionBeforeDragging = getPersonTransforms(event.target.parentElement.person);
             addUIElements(event.target.parentElement.person);
+
+            const trashCan = document.getElementById("trash-can");
+            trashCan.style.pointerEvents = "auto";
         }
         else {
             isDragging = false;
             return;
         }
 
-        CLICKEDPOS.x = event.pageX;
-        CLICKEDPOS.y = event.pageY;
+        CLICKED_POS.x = event.pageX;
+        CLICKED_POS.y = event.pageY;
 
         document.addEventListener("mousemove", drag);
         
         document.addEventListener("mouseup", (event) => {
             isDragging = false;
             let positionAfterDragging = undefined;
-            draggingElements.forEach((element) => {
-                element.transformPos.x += (event.pageX - CLICKEDPOS.x) * (1 / TRANSFORMSCALE);
-                element.transformPos.y += (event.pageY - CLICKEDPOS.y) * (1 / TRANSFORMSCALE); 
+            DRAGGING_ELEMENTS.forEach((element) => {
+                element.transformPos.x += (event.pageX - CLICKED_POS.x) * (1 / TRANSFORM_SCALE);
+                element.transformPos.y += (event.pageY - CLICKED_POS.y) * (1 / TRANSFORM_SCALE); 
 
                 if (element instanceof Person) {
                     positionAfterDragging = getPersonTransforms(element);
@@ -158,15 +164,19 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             
             document.removeEventListener("mousemove", drag);
+            DRAGGING_ELEMENTS = [];
+            
+            const trashCan = document.getElementById("trash-can");
+            trashCan.style.pointerEvents = "none";
             event.preventDefault();
         }, {once: true});
     });
 
     document.addEventListener("wheel", (event) => {
         const direction = Math.sign(event.deltaY);
-        if (TRANSFORMSCALE + direction * scaleSensitivity < minScale) {
+        if (TRANSFORM_SCALE + direction * scaleSensitivity < minScale) {
             return;
         }
-        setWorkspaceScale(TRANSFORMSCALE + direction * scaleSensitivity);
+        setWorkspaceScale(TRANSFORM_SCALE + direction * scaleSensitivity);
     });
 });
