@@ -72,7 +72,7 @@ export default class Person {
         });
         this.#div.appendChild(nameElement);
 
-        this.#div.addEventListener("mousedown", (e) => {
+        this.#div.addEventListener("pointerdown", (e) => {
             e.preventDefault();
             return;
         });

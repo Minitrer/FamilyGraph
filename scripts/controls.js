@@ -368,7 +368,7 @@ document.addEventListener("focusout", (event) => {
 // 
 document.addEventListener("contextmenu", (event) => {
     event.preventDefault();
-    if (event.pageX - CLICKED_POS.x !== 0 && event.pageY - CLICKED_POS.y !== 0) {
+    if (Math.abs(event.pageX - CLICKED_POS.x) > 1 || Math.abs(event.pageY - CLICKED_POS.y) > 1) {
         return;
     }
 
@@ -451,7 +451,7 @@ document.addEventListener("click", (event) => {
 });
 
 // This is to prevent the person's name from losing focus when clicking on a gender option;
-document.addEventListener("mousedown", (e) => {
+document.addEventListener("pointerdown", (e) => {
     if (e.target.tagName !== "LABEL"  && e.target.tagName !== "I") {
         return;
     }
@@ -472,7 +472,7 @@ document.addEventListener("mousedown", (e) => {
 // 
 {
     const trashCan = document.getElementById("trash-can");
-    trashCan.addEventListener("mouseenter", (e) => {
+    trashCan.addEventListener("pointerenter", (e) => {
         e.preventDefault();
 
         const people = DRAGGING_ELEMENTS.filter((element) => element instanceof Person);
@@ -487,16 +487,16 @@ document.addEventListener("mousedown", (e) => {
             });
             
             trashCan.style.color = "rgba(255, 255 ,255, 0.8)";
-            document.removeEventListener("mouseleave", onLeave);
+            document.removeEventListener("pointerleave", onLeave);
         }
         function onLeave() {
             trashCan.style.color = "rgba(255, 255 ,255, 0.8)";
-            document.removeEventListener("mouseup", deletePeople);
+            document.removeEventListener("pointerup", deletePeople);
         }
     
-        document.addEventListener("mouseup", deletePeople, {once: true});
+        document.addEventListener("pointerup", deletePeople, {once: true});
     
-        trashCan.addEventListener("mouseleave", onLeave, {once: true});
+        trashCan.addEventListener("pointerleave", onLeave, {once: true});
     });
 }
 

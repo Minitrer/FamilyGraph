@@ -6,6 +6,7 @@ import { draggedPerson, draggedPoint } from "./actions.js";
 
 const scaleSensitivity = 0.1;
 const minScale = 0.1;
+const workspace = document.getElementById("workspace");
 
 export let CLICKED_POS = new Vec2(0, 0);
 export let TRANSFORM_SCALE = 1;
@@ -20,7 +21,6 @@ export default function makeDraggableBasic(element) {
 }
 
 export function centerWorkspace() {
-    const workspace = document.getElementById("workspace");
     workspace.transformPos = new Vec2();
     workspace.onDrag(new Vec2());
 
@@ -54,15 +54,11 @@ export function centerWorkspace() {
 }
 
  export function setWorkspaceScale(scale) {
-    console.debug(`Diff: ${scale - TRANSFORM_SCALE}`);
-    console.debug(`Set: ${scale}`);
     TRANSFORM_SCALE = scale;
     workspace.style.setProperty("--scale", TRANSFORM_SCALE);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-
-    const workspace = document.getElementById("workspace");
     makeDraggableBasic(workspace);
 
     function drag(event) {
@@ -77,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     let isDragging = false;
-    document.addEventListener("mousedown", (event) => {
+    document.addEventListener("pointerdown", (event) => {
         if (isDragging) {
             return;
         }
@@ -135,16 +131,15 @@ document.addEventListener("DOMContentLoaded", () => {
             trashCan.style.pointerEvents = "auto";
         }
         else {
-            isDragging = false;
-            return;
+            DRAGGING_ELEMENTS = [workspace];
         }
 
         CLICKED_POS.x = event.pageX;
         CLICKED_POS.y = event.pageY;
 
-        document.addEventListener("mousemove", drag);
+        document.addEventListener("pointermove", drag);
         
-        document.addEventListener("mouseup", (event) => {
+        document.addEventListener("pointerup", (event) => {
             isDragging = false;
             let positionAfterDragging = undefined;
             DRAGGING_ELEMENTS.forEach((element) => {
@@ -163,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
             
-            document.removeEventListener("mousemove", drag);
+            document.removeEventListener("pointermove", drag);
             DRAGGING_ELEMENTS = [];
             
             const trashCan = document.getElementById("trash-can");
