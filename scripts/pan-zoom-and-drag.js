@@ -168,6 +168,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.addEventListener("wheel", (event) => {
+        if (event.target.id === "help-text" || event.target.parentElement.id === "help-text") {
+            return;
+        }
         const direction = Math.sign(event.deltaY);
         if (TRANSFORM_SCALE + direction * scaleSensitivity < minScale) {
             return;

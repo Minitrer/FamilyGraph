@@ -284,7 +284,7 @@ export function resetAllTransforms() {
     Person.resetAllTransforms(points);
 }
 
-export function Recenter() {
+export function recenter() {
     const workspace = document.getElementById("workspace");
     const currentScale = TRANSFORM_SCALE;
     const transforms = {

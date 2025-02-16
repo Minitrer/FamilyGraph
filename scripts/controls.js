@@ -29,6 +29,12 @@ focusIcon.textContent = "crop_free";
 const centerPointIcon = document.createElement("i");
 centerPointIcon.className = "material-symbols-rounded";
 centerPointIcon.textContent = "point_scan";
+const undoIcon = document.createElement("i");
+undoIcon.className = "material-symbols-rounded";
+undoIcon.textContent = "undo";
+const redoIcon = document.createElement("i");
+redoIcon.className = "material-symbols-rounded";
+redoIcon.textContent = "redo";
 
 // 
 // Menu for changing the target person's gender
@@ -53,26 +59,37 @@ const horizontalRule = document.createElement("hr");
 const bgAddPersonButton = document.createElement("button");
 const bgResetTransforms = document.createElement("button");
 const bgRecenter = document.createElement("button");
+const undoButton = document.createElement("button");
+const redoButton = document.createElement("button");
 
 bgAddPersonButton.textContent = "Add person";
 bgResetTransforms.textContent = "Reset all positions";
 bgRecenter.textContent = "Recenter";
+undoButton.textContent = "Undo";
+redoButton.textContent = "Redo";
 
 bgAddPersonButton.prepend(addIcon);
 bgResetTransforms.prepend(transformIcon);
 bgRecenter.prepend(focusIcon);
+undoButton.prepend(undoIcon);
+redoButton.prepend(redoIcon);
 
-const onBackground = [bgAddPersonButton, horizontalRule, bgResetTransforms, bgRecenter];
+const onBackground = [bgAddPersonButton, horizontalRule, bgResetTransforms, bgRecenter, horizontalRule.cloneNode(true), undoButton, redoButton];
 
 bgAddPersonButton.addEventListener("click", (e) => {
     onMenuClick(e, Actions.addPerson);
 });
-
 bgResetTransforms.addEventListener("click", (e) => {
     onMenuClick(e, Actions.resetAllTransforms);
 });
 bgRecenter.addEventListener("click", (e) => {
-    onMenuClick(e, Actions.Recenter);
+    onMenuClick(e, Actions.recenter);
+});
+undoButton.addEventListener("click", (e) => {
+    onMenuClick(e, Actions.undo);
+});
+redoButton.addEventListener("click", (e) => {
+    onMenuClick(e, Actions.redo);
 });
 
 // 
@@ -89,7 +106,7 @@ addParentButton.textContent = "Add parent";
 addSpouceButton.textContent = "Add spouce";
 addChildButton.textContent = "Add child";
 editButton.textContent = "Edit";
-resetTransformButton.textContent = "Reset Position";
+resetTransformButton.textContent = "Reset position";
 deleteButton.textContent = "Delete";
 
 addParentButton.prepend(addIcon.cloneNode(true));
@@ -126,11 +143,11 @@ deleteButton.addEventListener("click", (e) => {
 // 
 const resetPointTransformButton = document.createElement("button");
 
-resetPointTransformButton.textContent = "Reset Position of Point";
+resetPointTransformButton.textContent = "Reset position of Point";
 
 resetPointTransformButton.prepend(centerPointIcon);
 
-const onPoint = [bgAddPersonButton, horizontalRule, resetPointTransformButton, bgResetTransforms];
+const onPoint = [resetPointTransformButton, bgResetTransforms];
 
 resetPointTransformButton.addEventListener("click", (e) => {
     onMenuClick(e, () => { Actions.resetPointTransform(menuTarget); })
@@ -439,7 +456,7 @@ document.addEventListener("click", (event) => {
     }
 
     if (target) {
-        if (CLICKED_POS.x !== event.pageX || CLICKED_POS.y !== event.pageY) {
+        if (Math.abs(event.pageX - CLICKED_POS.x) > 1 || Math.abs(event.pageY - CLICKED_POS.y) > 1) {
             return;
         }
         resetGenderMenuPosition();
@@ -456,7 +473,6 @@ document.addEventListener("pointerdown", (e) => {
         return;
     }
     const label = e.target.tagName === "I"? e.target.parentElement : e.target
-    console.debug(label);
     switch (label.htmlFor) {
         case "male":
         case "agender":

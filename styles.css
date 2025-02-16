@@ -5,6 +5,7 @@ html, body, .workspace {
     margin: 0%;
     background-color: black;
     overflow: hidden;
+    touch-action: none;
 
     --black-1: rgb(35, 35, 35);
     --black-2: rgb(60, 60, 60);
@@ -203,21 +204,63 @@ html, body, .workspace {
     text-align: left;
 }
 
-#trash-can {
+#trash-can, #help {
     position: fixed;
-    pointer-events: none;
     top: 0;
-    right: 0;
+}
+#trash-can, #help-icon {
     padding: 1em;
+    aspect-ratio: 1/1;
+    width: min-content;
     color: rgba(255, 255, 255, 0.8);
     transition: color 0.2s;
     transition-timing-function: ease-in;
 }
-#trash-can i {
+#trash-can {
+    right: 0;
+    pointer-events: none;
+}
+
+#help {
+    pointer-events: none;
+}
+#help-icon{
+    pointer-events: auto;
+}
+#trash-can i, #help-icon i {
     display: block;
     font-size: 4em;
     -webkit-user-select: none; /* Safari */
     user-select: none; /* Standard syntax */
+}
+#help-icon:hover {
+    color: rgba(255, 255, 255, 0.4);
+}
+#help-icon:hover~#help-text, #help-text:hover #help-icon:active~#help-text, #help-text:active {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+#help-text {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: visibility 0.2s, opacity 0.2s;
+    padding: 1em;
+    width: 32em;
+    max-width: 90vw;
+    height: auto;
+    max-height: 60vh;
+    overflow-y: scroll;
+    border-radius: 1em;
+    border: none;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1em;
+    background-color: var(--black-1);
+    color: var(--white);
+}
+#help-text h2, #help-text h3, #help-text p {
+    margin: 0.2em 0;
 }
 
 #graph, .family, .parents, .children {
@@ -249,7 +292,7 @@ html, body, .workspace {
 }
 
 .person {
-    padding: 0.2em 0.4em 0.2em 0.4em;
+    padding: 0.2em 0.4em;
     display: flex;
     flex-direction: column;
     justify-content: center;
