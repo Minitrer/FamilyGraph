@@ -60,7 +60,7 @@ export default class Person {
         nameElement.contentEditable = true;
         nameElement.spellcheck = false;
         nameElement.autofocus = true;
-        nameElement.addEventListener("focus", (e) => {
+        nameElement.addEventListener("focus", () => {
             if (this.name === "Name") {
                 nameElement.textContent = "";
             }

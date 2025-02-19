@@ -230,7 +230,7 @@ export default class Family {
             FAMILIES[i].div.id = `family ${i - 1}`;
 
             // Correct SubFamilyMaps
-            if (FAMILIES[i].div.parentElement.className === "children") {
+            if (FAMILIES[i].div.parentElement && FAMILIES[i].div.parentElement.className === "children") {
                 const largerFamilyID = Family.getIDFromDiv(FAMILIES[i].div.parentElement.parentElement);
                 if (largerFamilyID === this.id) {
                     continue;
@@ -266,7 +266,7 @@ export default class Family {
     }
 
     static updateAll() {
-        if (!graph.firstElementChild) {
+        if (!(graph.firstElementChild)) {
             return;
         }
         
@@ -962,6 +962,7 @@ function deleteConnectionPoint(point) {
 function createConnectionDiv(p) {
     const workspace = document.getElementById("workspace");
     const div = document.createElement("div");
+    div.point = p;
     div.setAttribute("class", "point");
     div.style.width = `${connectionPointLength}px`;
     div.style.height = `${connectionPointLength}px`;
@@ -1003,4 +1004,50 @@ function getPersonToPersonDirection(personA, personB) {
         return (personA.connectionPoints.left.x > personB.connectionPoints.left.x)? "left" : "right";
     }
     return (personA.connectionPoints.up.y > personB.connectionPoints.up.y)? "up" : "down";
+}
+// 
+// Update points and paths when screen changes
+// 
+{
+    let oldOffset = undefined;
+    window.addEventListener("resize", (e) => {
+        const personDiv = document.getElementsByClassName("person").item(0);
+        if (!personDiv) {
+            return;
+        }
+        if (!oldOffset) {
+            oldOffset = {
+                x: personDiv.person.workspacePos.x - personDiv.person.transformPos.x,
+                y: personDiv.person.workspacePos.y - personDiv.person.transformPos.y
+            }
+        }
+        const diffX = personDiv.offsetLeft - oldOffset.x;
+        const diffY = personDiv.offsetTop - oldOffset.y;
+        oldOffset.x = personDiv.offsetLeft;
+        oldOffset.y = personDiv.offsetTop;
+
+        console.debug(`offset: ${personDiv.offsetTop}, old: ${oldOffset.y}, diff: ${diffY}`);
+        const points = document.getElementsByClassName("point");
+        const paths = document.getElementsByClassName("path");
+
+        function updateList(list) {
+            for (let i = 0, length = list.length; i < length; i++) {
+                const element = list.item(i);
+    
+                const x = Number(element.style.left.slice(0, element.style.left.length - 2));
+                const y = Number(element.style.top.slice(0, element.style.top.length - 2));
+    
+                element.style.left = `${x + diffX}px`;
+                element.style.top = `${y + diffY}px`;
+                
+                if (element.point) {
+                    element.point.x += diffX;
+                    element.point.y += diffY;
+                }
+            }
+        }
+
+        updateList(points);
+        updateList(paths);
+    });
 }

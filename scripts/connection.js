@@ -20,6 +20,7 @@ export default function createConnection(from, to, direction, color="white", has
     let svg = replace;
     if (!replace) {
         svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("class", "path");
     }
     
     svg.setAttribute("height", Math.abs(dirTo.y) + padding * 2);

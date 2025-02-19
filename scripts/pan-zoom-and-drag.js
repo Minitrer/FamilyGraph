@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let isDragging = false;
     document.addEventListener("pointerdown", (event) => {
-        if (isDragging) {
+        if (isDragging || (event.target.parentElement && event.target.parentElement.id === "help-text") || event.target.id === "help-text") {
             return;
         }
 
@@ -120,7 +120,8 @@ document.addEventListener("DOMContentLoaded", () => {
             addUIElements(event.target.person);
 
             const trashCan = document.getElementById("trash-can");
-            trashCan.style.pointerEvents = "auto";
+            trashCan.style.pointerEvents = "all";
+            event.target.releasePointerCapture(event.pointerId);
         }
         else if (event.target.parentElement.classList.contains("person")) {
             DRAGGING_ELEMENTS = [event.target.parentElement.person];
@@ -128,7 +129,8 @@ document.addEventListener("DOMContentLoaded", () => {
             addUIElements(event.target.parentElement.person);
 
             const trashCan = document.getElementById("trash-can");
-            trashCan.style.pointerEvents = "auto";
+            trashCan.style.pointerEvents = "all";
+            event.target.releasePointerCapture(event.pointerId);
         }
         else {
             DRAGGING_ELEMENTS = [workspace];
