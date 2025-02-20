@@ -469,6 +469,8 @@ document.addEventListener("click", (event) => {
 
 // This is to prevent the person's name from losing focus when clicking on a gender option;
 document.addEventListener("pointerdown", (e) => {
+    console.debug(e.target);
+    // e.preventDefault();
     if (e.target.tagName !== "LABEL"  && e.target.tagName !== "I") {
         return;
     }

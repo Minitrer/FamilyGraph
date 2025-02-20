@@ -1010,7 +1010,7 @@ function getPersonToPersonDirection(personA, personB) {
 // 
 {
     let oldOffset = undefined;
-    window.addEventListener("resize", (e) => {
+    window.addEventListener("resize", () => {
         const personDiv = document.getElementsByClassName("person").item(0);
         if (!personDiv) {
             return;
@@ -1026,7 +1026,7 @@ function getPersonToPersonDirection(personA, personB) {
         oldOffset.x = personDiv.offsetLeft;
         oldOffset.y = personDiv.offsetTop;
 
-        console.debug(`offset: ${personDiv.offsetTop}, old: ${oldOffset.y}, diff: ${diffY}`);
+        // console.debug(`offset: ${personDiv.offsetTop}, old: ${oldOffset.y}, diff: ${diffY}`);
         const points = document.getElementsByClassName("point");
         const paths = document.getElementsByClassName("path");
 
@@ -1049,5 +1049,8 @@ function getPersonToPersonDirection(personA, personB) {
 
         updateList(points);
         updateList(paths);
+
+        const largestFamilyIndex = Family.getIDFromDiv(graph.firstElementChild);
+        FAMILIES[largestFamilyIndex].updateWorkspacePositions();
     });
 }

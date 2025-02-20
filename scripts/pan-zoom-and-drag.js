@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
             trashCan.style.pointerEvents = "all";
             event.target.releasePointerCapture(event.pointerId);
         }
-        else if (event.target.parentElement.classList.contains("person")) {
+        else if (event.target.parentElement && event.target.parentElement.classList.contains("person")) {
             DRAGGING_ELEMENTS = [event.target.parentElement.person];
             positionBeforeDragging = getPersonTransforms(event.target.parentElement.person);
             addUIElements(event.target.parentElement.person);
