@@ -45,6 +45,7 @@ makeDraggableBasic(GENDERMENU);
 const genderOptions = document.getElementsByName("gender");
 for (const option of genderOptions) {
     option.onchange = () => {
+        console.debug("onchange")
         if (menuTarget) {
             menuTarget.gender = option.value;
         }
@@ -349,6 +350,7 @@ function createRelationshipText(person) {
 function clearSelections() {
     selected.forEach((selection) => {
         selection.classList.remove("selected");
+        selection.firstElementChild.contentEditable = false;
     });
     selected = [];
     for (const text of RELATIONSHIPTEXTS.values()) {
@@ -416,7 +418,8 @@ document.addEventListener("contextmenu", (event) => {
 
 let isEditing = false;
 document.addEventListener("dblclick", (event) => {
-    if (isEditing) {
+    console.debug("dblclick", event.target);
+    if (isEditing || (event.target.tagName === "I" && event.target.parentElement.tagName === "LABEL") || event.target.tagName === "LABEL") {
         return;
     }
     
@@ -431,6 +434,7 @@ document.addEventListener("dblclick", (event) => {
     }
 
     if (target) {
+        target.contentEditable = true;
         target.focus();
         
         showGenderMenu(target.parentElement);
@@ -440,11 +444,12 @@ document.addEventListener("dblclick", (event) => {
 });
 
 document.addEventListener("click", (event) => {
+    console.debug("click", event.target);
     if (event.target.tagName === "FORM" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL" || event.target.tagName === "BUTTON" ||
         (event.target.tagName === "I" && event.target.parentElement.tagName === "LABEL") || isEditing) {
         return;
     }
-    event.preventDefault();
+    // event.preventDefault();
 
     let target = undefined;
     menuTarget = undefined;
@@ -469,8 +474,6 @@ document.addEventListener("click", (event) => {
 
 // This is to prevent the person's name from losing focus when clicking on a gender option;
 document.addEventListener("pointerdown", (e) => {
-    console.debug(e.target);
-    // e.preventDefault();
     if (e.target.tagName !== "LABEL"  && e.target.tagName !== "I") {
         return;
     }

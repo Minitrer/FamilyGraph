@@ -57,7 +57,6 @@ export default class Person {
         nameElement.textContent = name;
         nameElement.setAttribute("placeholder", "Name");
         nameElement.className = "name";
-        nameElement.contentEditable = true;
         nameElement.spellcheck = false;
         nameElement.autofocus = true;
         nameElement.addEventListener("focus", () => {
@@ -71,11 +70,6 @@ export default class Person {
             selection.addRange(range);
         });
         this.#div.appendChild(nameElement);
-
-        this.#div.addEventListener("pointerdown", (e) => {
-            e.preventDefault();
-            return;
-        });
 
         // Set up properties to make the div draggable
         this.#div.style.setProperty("--pos-x", 0);
