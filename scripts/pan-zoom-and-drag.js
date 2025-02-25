@@ -53,7 +53,7 @@ export function centerWorkspace() {
     setWorkspaceScale(rounded);
 }
 
- export function setWorkspaceScale(scale) {
+export function setWorkspaceScale(scale) {
     TRANSFORM_SCALE = scale;
     workspace.style.setProperty("--scale", TRANSFORM_SCALE);
 }
@@ -61,20 +61,59 @@ export function centerWorkspace() {
 document.addEventListener("DOMContentLoaded", () => {
     makeDraggableBasic(workspace);
 
+    let draggingPos = new Vec2();
     function drag(event) {
+        isDragging = true;
         DRAGGING_ELEMENTS.forEach((element) => {
             const newPos = new Vec2(
                 element.transformPos.x + (event.pageX - CLICKED_POS.x) * (1 / TRANSFORM_SCALE),
                 element.transformPos.y + (event.pageY - CLICKED_POS.y) * (1 / TRANSFORM_SCALE)
             );
+            draggingPos.x = event.pageX;
+            draggingPos.y = event.pageY;
     
             element.onDrag(newPos);
         });
     }
+    function pinchZoom(event) {
+        const index = eventCache.findIndex((e) => e.pointerId === event.pointerId);
+        if (index < 0) {
+            return;
+        }
+        eventCache[index] = event;
+        if (eventCache.length > 1) {
+            const currentDistance = getPinchDistance();
+            setWorkspaceScale(currentDistance / startPinchDistance * startScale);
+        }
+    }
+    function getPinchDistance() {
+        return new Vec2(eventCache[1].pageX - eventCache[0].pageX, eventCache[1].pageY - eventCache[0].pageY).magnitude();
+    }
 
+    const eventCache = [];
+    let startPinchDistance = -1;
+    let startScale = 1.0;
     let isDragging = false;
     document.addEventListener("pointerdown", (event) => {
-        if (isDragging || (event.target.parentElement && event.target.parentElement.id === "help-text") || event.target.id === "help-text") {
+        if ((event.target.parentElement && event.target.parentElement.id === "help-text") || event.target.id === "help-text") {
+            return;
+        }
+        if (eventCache.length > 1) {
+            return;
+        }
+
+        eventCache.push(event);
+        if (eventCache.length === 2) {
+            if (isDragging) {
+                cancelDrag();
+                document.removeEventListener("pointerup", cancelDrag);
+            }
+
+            startPinchDistance = getPinchDistance();
+            startScale = TRANSFORM_SCALE;
+            return;
+        }
+        if (isDragging) {
             return;
         }
 
@@ -106,6 +145,37 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         let positionBeforeDragging = undefined;
+        function cancelDrag(event=undefined) {
+            isDragging = false;
+            let positionAfterDragging = undefined;
+            if (event) {
+                draggingPos.x = event.pageX;
+                draggingPos.y = event.pageY;
+                event.preventDefault();
+            }
+            DRAGGING_ELEMENTS.forEach((element) => {
+                element.transformPos.x += (draggingPos.x - CLICKED_POS.x) * (1 / TRANSFORM_SCALE);
+                element.transformPos.y += (draggingPos.y - CLICKED_POS.y) * (1 / TRANSFORM_SCALE);
+
+                if (element instanceof Person) {
+                    positionAfterDragging = getPersonTransforms(element);
+                    draggedPerson(element, positionBeforeDragging, positionAfterDragging);
+                    return;
+                }
+                if (element.classList.contains("point")) {
+                    positionAfterDragging = getPointTransforms(element);
+                    draggedPoint(element, positionBeforeDragging, positionAfterDragging);
+                    return;
+                }
+            });
+            
+            document.removeEventListener("pointermove", drag);
+            DRAGGING_ELEMENTS = [];
+            
+            const trashCan = document.getElementById("trash-can");
+            trashCan.style.pointerEvents = "none";
+        }
+
 
         if (event.buttons === 2 || event.buttons === 4) {
             DRAGGING_ELEMENTS = [workspace];
@@ -138,35 +208,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         CLICKED_POS.x = event.pageX;
         CLICKED_POS.y = event.pageY;
+        draggingPos.x = event.pageX;
+        draggingPos.y = event.pageY;
 
         document.addEventListener("pointermove", drag);
-        
-        document.addEventListener("pointerup", (event) => {
-            isDragging = false;
-            let positionAfterDragging = undefined;
-            DRAGGING_ELEMENTS.forEach((element) => {
-                element.transformPos.x += (event.pageX - CLICKED_POS.x) * (1 / TRANSFORM_SCALE);
-                element.transformPos.y += (event.pageY - CLICKED_POS.y) * (1 / TRANSFORM_SCALE); 
+        document.addEventListener("pointerup", cancelDrag, {once: true});
+    });
 
-                if (element instanceof Person) {
-                    positionAfterDragging = getPersonTransforms(element);
-                    draggedPerson(element, positionBeforeDragging, positionAfterDragging);
-                    return;
-                }
-                if (element.classList.contains("point")) {
-                    positionAfterDragging = getPointTransforms(element);
-                    draggedPoint(element, positionBeforeDragging, positionAfterDragging);
-                    return;
-                }
-            });
-            
-            document.removeEventListener("pointermove", drag);
-            DRAGGING_ELEMENTS = [];
-            
-            const trashCan = document.getElementById("trash-can");
-            trashCan.style.pointerEvents = "none";
-            event.preventDefault();
-        }, {once: true});
+    document.addEventListener("pointermove", pinchZoom);
+    ["pointerup", "pointercancel"].forEach((type) => {
+        document.addEventListener(type, (e) => {
+            const index = eventCache.findIndex((_e) => _e.pointerId === e.pointerId);
+            if (index < 0) {
+                return;
+            }
+            eventCache.splice(index, 1);
+        });
     });
 
     document.addEventListener("wheel", (event) => {

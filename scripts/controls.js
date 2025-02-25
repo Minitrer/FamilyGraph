@@ -45,7 +45,6 @@ makeDraggableBasic(GENDERMENU);
 const genderOptions = document.getElementsByName("gender");
 for (const option of genderOptions) {
     option.onchange = () => {
-        console.debug("onchange")
         if (menuTarget) {
             menuTarget.gender = option.value;
         }
@@ -418,7 +417,6 @@ document.addEventListener("contextmenu", (event) => {
 
 let isEditing = false;
 document.addEventListener("dblclick", (event) => {
-    console.debug("dblclick", event.target);
     if (isEditing || (event.target.tagName === "I" && event.target.parentElement.tagName === "LABEL") || event.target.tagName === "LABEL") {
         return;
     }
@@ -444,7 +442,6 @@ document.addEventListener("dblclick", (event) => {
 });
 
 document.addEventListener("click", (event) => {
-    console.debug("click", event.target);
     if (event.target.tagName === "FORM" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL" || event.target.tagName === "BUTTON" ||
         (event.target.tagName === "I" && event.target.parentElement.tagName === "LABEL") || isEditing) {
         return;
