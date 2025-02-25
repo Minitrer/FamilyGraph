@@ -600,7 +600,6 @@ export default class Person {
         const newPerson = new Person();
         if (graph.childElementCount === 0) {
             Family.createFamily([newPerson]);
-            newPerson.div.firstElementChild.focus();
             return newPerson;
         }
         function getLastPerson() {
@@ -614,7 +613,6 @@ export default class Person {
         // lastPerson has parents and is single
         if (lastPerson.div.parentElement.className === "children") {
             lastPerson.groups[lastPerson.groups.length - 1].addChild(newPerson);
-            newPerson.div.firstElementChild.focus();
             return newPerson;
         }
         if (lastPerson.spouses.length === 0 || lastPerson.spouses.every((spouse) => spouse.isHidden)) {
@@ -622,14 +620,12 @@ export default class Person {
             if (lastPerson.div.parentElement.className === "parents") {
                 lastPerson.groups.forEach((group) => {
                     group.addParent(newPerson);
-                    newPerson.div.firstElementChild.focus();
                 });
                 return newPerson;
             }
         }
         // lastPerson is a married orphan
         lastPerson.groups[0].addChild(newPerson);
-        newPerson.div.firstElementChild.focus();
         return newPerson;
     }
 }

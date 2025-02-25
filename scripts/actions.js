@@ -43,8 +43,14 @@ function pushStack(command, stack) {
     }
 }
 
+function editName(person) {
+    person.div.firstElementChild.contentEditable = true;
+    person.div.firstElementChild.focus();
+}
+
 export function addPerson(addTo=undefined) {
     const newPerson = Person.createPerson(addTo);
+    editName(newPerson);
 
     const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
     command.onRemoved = () => {
@@ -73,18 +79,18 @@ export function addParent(person) {
                 continue;
             }
             person.groups[i].addParent(newPerson);
-            newPerson.div.firstElementChild.focus();
+            editName(newPerson);
             return;
         }
         person.family.addGroup([newPerson], [person]);
-        newPerson.div.firstElementChild.focus();
+        editName(newPerson);
         return;
     }
     // person is in a family (either married or has children or both)
     for (let i = 0, length = person.groups.length; i < length; i++) {
         if (person.groups[i].children.includes(person.family) && person.groups[i].parents.length < 2) {
             person.groups[i].addParent(newPerson);
-            newPerson.div.firstElementChild.focus();
+            editName(newPerson);
             return;
         }
     }
@@ -95,14 +101,14 @@ export function addParent(person) {
     // No parent is single
     if (person.parents.length > 0) {
         person.parents[0].family.addGroup([newPerson], [person.family], subFamilyMap);
-        newPerson.div.firstElementChild.focus();
+        editName(newPerson);
         return;
     }
     // Find larger family in spouses
     for (let i = 0, length = person.spouses.length; i < length; i++) {
         if (person.spouses[i].parents.length > 0) {
             person.spouses[i].parents[0].family.addGroup([newPerson], [person.family], subFamilyMap);
-            newPerson.div.firstElementChild.focus();
+            editName(newPerson);
             return;
         }
     }
@@ -111,7 +117,7 @@ export function addParent(person) {
     if (person.family.div.parentElement.id === "graph")
     {
         Family.createFamily([newPerson], [person.family], person.family, subFamilyMap);
-        newPerson.div.firstElementChild.focus();
+        editName(newPerson);
         return;
     }
     // Find larger family in other parents
@@ -122,7 +128,7 @@ export function addParent(person) {
         for (let j = 0, lengthJ = person.family.groups[i].parents.length; j < lengthJ; j++) {
             if (person.family.groups[i].parents[j].parents.length > 0) {
                 person.family.groups[i].parents[j].parents[0].family.addGroup([newPerson], [person.family], subFamilyMap);
-                newPerson.div.firstElementChild.focus();
+                editName(newPerson);
                 return;
             }
         }
@@ -134,7 +140,7 @@ export function addParent(person) {
         const largerFamilyID = Family.getIDFromDiv(largerFamilyDiv);
 
         FAMILIES[largerFamilyID].addGroup([newPerson], [person.family], subFamilyMap);
-        newPerson.div.firstElementChild.focus();
+        editName(newPerson);
         return;
     }
 
@@ -146,7 +152,7 @@ export function addSpouce(person) {
         for (let i = 0, length = person.groups.length; i < length; i++) {
             if (person.groups[i].parents.includes(person)) {
                 person.groups[i].addParent(newPerson);
-                newPerson.div.firstElementChild.focus();
+                editName(newPerson);
                 return;
             }
         }
@@ -154,7 +160,7 @@ export function addSpouce(person) {
         return;
     }
     Family.createFamily([person, newPerson], undefined, person);
-    newPerson.div.firstElementChild.focus();
+    editName(newPerson);
 
     const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
         command.onRemoved = () => {
@@ -179,7 +185,7 @@ export function addChild(person) {
         for (let i = 0, length = person.groups.length; i < length; i++) {
             if (person.groups[i].parents.includes(person)) {
                 person.groups[i].addChild(newPerson);
-                newPerson.div.firstElementChild.focus();
+                editName(newPerson);
                 return;
             }
         }
@@ -187,7 +193,7 @@ export function addChild(person) {
         return;
     }
     Family.createFamily([person], [newPerson], person);
-    newPerson.div.firstElementChild.focus();
+    editName(newPerson);
 }
 
 export function hidePerson(person) {
