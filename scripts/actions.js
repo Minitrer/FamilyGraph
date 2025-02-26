@@ -61,6 +61,37 @@ export function addPerson(addTo=undefined) {
     pushStack(command, undoStack);
 }
 
+function addNewParentGroup(person, newPerson, subFamilyMap) {
+    // person is an orphan single parent
+    // Check if person is of the oldest generation
+    if (person.family.div.parentElement.id === "graph")
+    {
+        Family.createFamily([newPerson], [person.family], person.family, subFamilyMap);
+        return true;
+    }
+    // Find larger family in other parents
+    for (let i = 0, length = person.family.groups.length; i < length; i++) {
+        if (person.family.groups[i].parents.includes(person)) {
+            continue;
+        }
+        for (let j = 0, lengthJ = person.family.groups[i].parents.length; j < lengthJ; j++) {
+            if (person.family.groups[i].parents[j].parents.length > 0) {
+                person.family.groups[i].parents[j].parents[0].family.addGroup([newPerson], [person.family], subFamilyMap);
+                return true;
+            }
+        }
+    }
+    // Find larger family through DOM tree
+    // Maybe figure out a different way cause this is bad
+    if (person.family.div.parentElement.className === "children") {
+        const largerFamilyDiv = person.family.div.parentElement.parentElement;
+        const largerFamilyID = Family.getIDFromDiv(largerFamilyDiv);
+
+        FAMILIES[largerFamilyID].addGroup([newPerson], [person.family], subFamilyMap);
+        return true;
+    }
+    return false;
+}
 export function addParent(person) {
     const newPerson = new Person();
 
@@ -112,39 +143,11 @@ export function addParent(person) {
             return;
         }
     }
-    // person is an orphan single parent
-    // Check if person is of the oldest generation
-    if (person.family.div.parentElement.id === "graph")
-    {
-        Family.createFamily([newPerson], [person.family], person.family, subFamilyMap);
-        editName(newPerson);
-        return;
-    }
-    // Find larger family in other parents
-    for (let i = 0, length = person.family.groups.length; i < length; i++) {
-        if (person.family.groups[i].parents.includes(person)) {
-            continue;
-        }
-        for (let j = 0, lengthJ = person.family.groups[i].parents.length; j < lengthJ; j++) {
-            if (person.family.groups[i].parents[j].parents.length > 0) {
-                person.family.groups[i].parents[j].parents[0].family.addGroup([newPerson], [person.family], subFamilyMap);
-                editName(newPerson);
-                return;
-            }
-        }
-    }
-    // Find larger family through DOM tree
-    // Maybe figure out a different way cause this is bad
-    if (person.family.div.parentElement.className === "children") {
-        const largerFamilyDiv = person.family.div.parentElement.parentElement;
-        const largerFamilyID = Family.getIDFromDiv(largerFamilyDiv);
 
-        FAMILIES[largerFamilyID].addGroup([newPerson], [person.family], subFamilyMap);
-        editName(newPerson);
-        return;
+    if (!addNewParentGroup(person, newPerson, subFamilyMap)) {
+        console.error(`Failed to add parent of ${person}`);
     }
-
-    console.error(`Failed to add parent of ${person}`);
+    editName(newPerson);
 }
 export function addSpouce(person) {
     const newPerson = new Person();
@@ -156,7 +159,7 @@ export function addSpouce(person) {
                 return;
             }
         }
-        console.error("addSpouce action failed, person somehow in parent div without being in a group as a parent");
+        console.error(`Failed to addSpouce to ${person}, person somehow in parent div without being in a group as a parent`);
         return;
     }
     Family.createFamily([person, newPerson], undefined, person);
@@ -189,11 +192,50 @@ export function addChild(person) {
                 return;
             }
         }
-        console.error("addChild action failed, person somehow in parent div without being in a group as a parent");
+        console.error(`Failed to addChild to ${person}, person somehow in parent div without being in a group as a parent`);
         return;
     }
     Family.createFamily([person], [newPerson], person);
     editName(newPerson);
+}
+export function addSibling(person) {
+    const newPerson = new Person();
+    
+    const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
+    command.onRemoved = () => {
+        if (newPerson.isHidden) {
+            newPerson.delete();
+        }
+    }
+    pushStack(command, undoStack);
+
+    const groupsAsChild = person.groups.filter((group) => group.children.includes(person));
+    if (groupsAsChild.length === 0) {
+        const parent = new Person();
+
+        const subFamilyMap = {};
+        subFamilyMap[person.family.id] = person;
+
+        if (!addNewParentGroup(person, parent, subFamilyMap)) {
+            parent.delete();
+            console.error(`Failed to add Sibling to ${person}, could not create new parent group`);
+        }
+        parent.groups[0].addChild(newPerson);
+        parent.hide();
+        editName(newPerson);
+        return;
+    }
+    // Prioritise groups with visible parents
+    const groupsWithParents = groupsAsChild.filter((group) => group.getVisiblePeople(group.parents).length > 0);
+    const groupsToFilter = groupsWithParents.length > 0? groupsWithParents : groupsAsChild;
+    // Prioritise groups with visible siblings
+    const groupsWithSiblings = groupsToFilter.filter((group) => group.getVisiblePeople(group.children).length > 1);
+    
+    const groupToAdd = groupsWithSiblings.length > 0? groupsWithSiblings[0] : groupsToFilter[0];
+
+    groupToAdd.addChild(newPerson);
+    editName(newPerson);
+    return;
 }
 
 export function hidePerson(person) {

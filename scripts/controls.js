@@ -98,6 +98,7 @@ redoButton.addEventListener("click", (e) => {
 const addParentButton = document.createElement("button");
 const addSpouceButton = document.createElement("button");
 const addChildButton = document.createElement("button");
+const addSiblingButton = document.createElement("button");
 const editButton = document.createElement("button");
 const resetTransformButton = document.createElement("button");
 const deleteButton = document.createElement("button");
@@ -105,6 +106,7 @@ const deleteButton = document.createElement("button");
 addParentButton.textContent = "Add parent";
 addSpouceButton.textContent = "Add spouce";
 addChildButton.textContent = "Add child";
+addSiblingButton.textContent = "Add sibling";
 editButton.textContent = "Edit";
 resetTransformButton.textContent = "Reset position";
 deleteButton.textContent = "Delete";
@@ -112,11 +114,12 @@ deleteButton.textContent = "Delete";
 addParentButton.prepend(addIcon.cloneNode(true));
 addSpouceButton.prepend(addIcon.cloneNode(true));
 addChildButton.prepend(addIcon.cloneNode(true));
+addSiblingButton.prepend(addIcon.cloneNode(true));
 editButton.prepend(editIcon);
 resetTransformButton.prepend(transformIcon.cloneNode(true));
 deleteButton.prepend(trashIcon);
 
-const onPerson = [addParentButton, addSpouceButton, addChildButton, editButton, horizontalRule, resetTransformButton, deleteButton];
+const onPerson = [addParentButton, addSpouceButton, addChildButton, addSiblingButton, editButton, horizontalRule, resetTransformButton, deleteButton];
 
 addParentButton.addEventListener("click", (e) => {
     onMenuClick(e, () => { Actions.addParent(menuTarget); });
@@ -126,6 +129,9 @@ addSpouceButton.addEventListener("click", (e) => {
 });
 addChildButton.addEventListener("click", (e) => {
     onMenuClick(e, () => { Actions.addChild(menuTarget); });
+});
+addSiblingButton.addEventListener("click", (e) => {
+    onMenuClick(e, () => { Actions.addSibling(menuTarget); });
 });
 editButton.addEventListener("click", (e) => {
     e.preventDefault();
@@ -578,6 +584,16 @@ document.addEventListener("keyup", (e) => {
             }
             selected.forEach((selection) => {
                 Actions.addChild(selection.person);
+            });
+            return;
+        // Add sibling
+        case "a":
+        case "A":
+            if ((document.activeElement.className === "name" && !e.altKey) || selected.length === 0) {
+                return;
+            }
+            selected.forEach((selection) => {
+                Actions.addSibling(selection.person);
             });
             return;
         // Delete person
