@@ -95,7 +95,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let startScale = 1.0;
     let isDragging = false;
     document.addEventListener("pointerdown", (event) => {
-        if ((event.target.parentElement && event.target.parentElement.id === "help-text") || event.target.id === "help-text") {
+        // console.debug("down");
+        if ((event.target.parentElement && event.target.parentElement.id === "help-text") || event.target.id === "help-text" || 
+             event.target.tagName === "option" || event.target.id.includes("select")) {
             return;
         }
         if (eventCache.length > 1) {
@@ -216,8 +218,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.addEventListener("pointermove", pinchZoom);
-    ["pointerup", "pointercancel"].forEach((type) => {
+    ["pointerup", "pointercancel", "pointerout", "pointerleave"].forEach((type) => {
         document.addEventListener(type, (e) => {
+            // console.debug("up");
             const index = eventCache.findIndex((_e) => _e.pointerId === e.pointerId);
             if (index < 0) {
                 return;

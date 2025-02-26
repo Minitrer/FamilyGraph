@@ -241,14 +241,16 @@ function onEdit(targetPerson) {
 
     contextMenu.replaceChildren();
     
-    if (targetPerson.parents.length === 0 && targetPerson.children.length === 0) {
+    const visibleParents = targetPerson.parents.filter((parent) => !parent.isHidden);
+    const visibleChildren = targetPerson.children.filter((child) => !child.isHidden);
+    if (visibleParents.length === 0 && visibleChildren.length === 0) {
         return;
     }
     resetEditRelationshipMenu();
     contextMenu.appendChild(editRelationship);
-    if (targetPerson.parents.length > 0) {
+    if (visibleParents.length > 0) {
         editRelationship.appendChild(editRelationshipParent);
-        targetPerson.parents.forEach(parent => {
+        visibleParents.forEach(parent => {
             const option = document.createElement("option");
             option.value = parent.id;
             option.textContent = (parent.name !== "")? `${parent.name}` : `#${parent.id}`;
@@ -258,12 +260,12 @@ function onEdit(targetPerson) {
         relationshipParentID = Number(editRelationshipSelectParent.value);
         checkRelationshipType("parent");
     }
-    if (targetPerson.children.length > 0) {
-        if (targetPerson.parents.length > 0) {
+    if (visibleChildren.length > 0) {
+        if (visibleParents.length > 0) {
             editRelationship.appendChild(horizontalRule);
         }
         editRelationship.appendChild(editRelationshipChild);
-        targetPerson.children.forEach(child => {
+        visibleChildren.forEach(child => {
             const option = document.createElement("option");
             option.value = child.id;
             option.textContent = (child.name !== "")? `${child.name}` : `#${child.id}`;
@@ -349,7 +351,6 @@ function createRelationshipText(person) {
 function clearSelections() {
     selected.forEach((selection) => {
         selection.classList.remove("selected");
-        selection.firstElementChild.contentEditable = false;
     });
     selected = [];
     for (const text of RELATIONSHIPTEXTS.values()) {
@@ -378,6 +379,7 @@ document.addEventListener("focusout", (event) => {
     if (!event.target.classList.contains("name")) {
         return;
     }
+    event.target.contentEditable = false;
     clearSelections();
 });
 
@@ -909,3 +911,6 @@ document.addEventListener("keydown", (e) => {
             return;
     }
 });
+document.addEventListener("click", (e) => {
+    // console.debug("click", e.target);
+})
