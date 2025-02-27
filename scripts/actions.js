@@ -54,7 +54,7 @@ export function addPerson(addTo=undefined) {
 
     const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
     command.onRemoved = () => {
-        if (newPerson.isHidden) {
+        if (newPerson && newPerson.div && newPerson.isHidden) {
             newPerson.delete();
         }
     }
@@ -97,7 +97,7 @@ export function addParent(person) {
 
     const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
         command.onRemoved = () => {
-        if (newPerson.isHidden) {
+        if (newPerson && newPerson.div && newPerson.isHidden) {
             newPerson.delete();
         }
     }
@@ -167,7 +167,7 @@ export function addSpouce(person) {
 
     const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
         command.onRemoved = () => {
-        if (newPerson.isHidden) {
+        if (newPerson && newPerson.div && newPerson.isHidden) {
             newPerson.delete();
         }
     }
@@ -178,7 +178,7 @@ export function addChild(person) {
 
     const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
     command.onRemoved = () => {
-        if (newPerson.isHidden) {
+        if (newPerson && newPerson.div && newPerson.isHidden) {
             newPerson.delete();
         }
     }
@@ -203,7 +203,7 @@ export function addSibling(person) {
     
     const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
     command.onRemoved = () => {
-        if (newPerson.isHidden) {
+        if (newPerson && newPerson.div && newPerson.isHidden) {
             newPerson.delete();
         }
     }
@@ -241,7 +241,7 @@ export function addSibling(person) {
 export function hidePerson(person) {
     const command = new Command(() => { person.show() }, () => { person.hide() });
     command.onRemoved = () => {
-        if (person.isHidden) {
+        if (person && person.div && person.isHidden) {
             person.delete();
         }
     }

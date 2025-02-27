@@ -927,6 +927,3 @@ document.addEventListener("keydown", (e) => {
             return;
     }
 });
-document.addEventListener("click", (e) => {
-    // console.debug("click", e.target);
-})

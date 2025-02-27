@@ -847,12 +847,18 @@ class ParentChildGroup {
         if (parentIndex > -1) {
             this.parents.splice(parentIndex, 1);
 
+            if (person.isHidden) {
+                return;
+            }
+
             if (this.parents.length === 0 && (this.children.length === 0 || (this.children.length === 1 && this.children[0] instanceof Family))) {
                 this.delete();
                 return;
             }
             if (this.parents.length < 3) {
-                this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);
+                if (this.parentsConnectionPoint) {
+                    this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);
+                }
 
                 this.parents.forEach((parent) => {
                     const index = parent.groups.indexOf(this)
@@ -863,7 +869,7 @@ class ParentChildGroup {
                 if (this.parents.length > 0) {
                     this.createParentConnectionPoint();
                 }
-                else {
+                else if (this.childrenConnectionPoint) {
                     this.childrenConnectionPoint = deleteConnectionPoint(this.childrenConnectionPoint);
                 }
             }

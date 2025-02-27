@@ -534,19 +534,25 @@ export default class Person {
 
     delete() {
         // Correct relationships
-        for (const id of this.relationships.keys()) {
-            const higherIds = Array.from(PEOPLE[id].relationships.keys().filter(_id => _id > this.id), (x) => x - 1).sort();
-
-            higherIds.forEach(i => {
-                PEOPLE[id].relationships.set(i, PEOPLE[id].relationships.get(i + 1));
+        const deletedId = this.id;
+        for (let i = 0; i < PEOPLE.length; i++) {
+            if (i === deletedId) {
+                continue;
+            }
+            const relationshipIDs = Array.from(PEOPLE[i].relationships.keys()).sort((a, b) => a - b);
+            relationshipIDs.forEach((id) => {
+                if (id < deletedId) {
+                    return;
+                }
+                if (id === deletedId) {
+                    PEOPLE[i].relationships.delete(id);
+                    return;
+                }
+                PEOPLE[i].relationships.set(id - 1, PEOPLE[i].relationships.get(id));
+                PEOPLE[i].relationships.delete(id);
             });
-            if (higherIds.length !== 0) {
-                PEOPLE[id].relationships.delete(higherIds[higherIds.length - 1] + 1);
-            }
-            if (id > this.id) {
-                PEOPLE[id].relationships.delete(id - 1);
-            }
         }
+        
         this.#relationships.clear();
         this.#relationships = null;
         
@@ -570,8 +576,8 @@ export default class Person {
             group.remove(this);
         });
         this.#groups = null;
-                
-        if (PEOPLE.length === 0) {
+            
+        if (PEOPLE.length === 0 || this.isHidden) {
             return;
         }
         Family.updateAll();

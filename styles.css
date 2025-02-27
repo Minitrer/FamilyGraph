@@ -94,10 +94,9 @@ html, body, #workspace {
     overflow: hidden;
 
     display: flex;
-    flex-direction: column;
     justify-content: flex-start;
     align-content: center;
-    align-items: center;   
+    align-items: center;
 
     --pos-x: 0;
     --pos-y: 0;
@@ -116,7 +115,6 @@ html, body, #workspace {
     margin: 0;
     padding: 0;
 
-    flex-flow: row wrap;
     justify-content: space-evenly;
 
     background-color: var(--black-1);
@@ -298,6 +296,7 @@ html, body, #workspace {
 }
 
 .person {
+    white-space: nowrap;
     padding: 0.2em 0.4em;
     border-radius: 0.5em;
     border: none;
