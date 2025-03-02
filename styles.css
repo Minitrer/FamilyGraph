@@ -204,11 +204,13 @@ html, body, #workspace {
     text-align: left;
 }
 
-#trash-can, #help {
+#trash-can, #help, #save-and-load {
     position: fixed;
+}
+#trash-can, #help {
     top: 0;
 }
-#trash-can, #help-icon {
+#trash-can, #help-icon, #save, #load {
     padding: 1em;
     aspect-ratio: 1/1;
     width: min-content;
@@ -227,13 +229,13 @@ html, body, #workspace {
 #help-icon{
     pointer-events: auto;
 }
-#trash-can i, #help-icon i {
+#trash-can i, #help-icon i, #save-and-load i {
     display: block;
     font-size: 4em;
     -webkit-user-select: none; /* Safari */
     user-select: none; /* Standard syntax */
 }
-#help-icon:hover {
+#help-icon:hover, #save:hover, #load:hover {
     color: rgba(255, 255, 255, 0.4);
 }
 #help-icon:hover~#help-text, #help-text:hover {
@@ -265,6 +267,17 @@ html, body, #workspace {
 }
 #help-text * {
     pointer-events: none;
+}
+
+#save-and-load {
+    bottom: 0;
+    right: 0;
+}
+#load {
+    display: block;
+}
+#save:hover, #load:hover {
+    cursor: pointer;
 }
 
 #graph, .family, .parents, .children {
@@ -332,10 +345,12 @@ html, body, #workspace {
     margin: 0%;
     padding: 0%;
     color: var(--white);
-    text-shadow: 0px 0px 10px var(--black-1), 0px 0px 10px var(--black-1), 0px 0px 10px var(--black-1);
     font-size: 2em;
     -webkit-user-select: none; /* Safari */
     user-select: none; /* Standard syntax */
+}
+.name, .relationship {
+    text-shadow: 0px 0px 10px var(--black-1), 0px 0px 10px var(--black-1), 0px 0px 10px var(--black-1);
 }
 .name:focus {
     outline: none;

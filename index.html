@@ -5,9 +5,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="initial-scale=1, width=device-width">
 
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,-25&icon_names=add,agender,crop_free,delete,edit,female,help,male,point_scan,redo,transform,undo"/>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,-25&icon_names=add,agender,crop_free,delete,edit,female,file_open,help,male,point_scan,redo,save,transform,undo"/>
         <link href="styles.css" rel="stylesheet">
-        <script src="scripts/main.js" type="module"></script>
+        <script src="scripts/save-and-load.js" type="module"></script>
         <script src="scripts/pan-zoom-and-drag.js" type="module"></script>
         <script src="scripts/controls.js" type="module"></script>
         
@@ -85,7 +85,16 @@
         <div id="trash-can">
             <i class="material-symbols-rounded">delete</i>
         </div>
-        <div id="help">
+        <div id="save-and-load">
+            <div id="save" title="Save to file">
+                <i class="material-symbols-rounded">save</i>
+            </div>
+            <input type="file" id="import" name="import" accept=".json" class="hidden">
+            <label id="load" title="Open saved file" for="import">
+                <i class="material-symbols-rounded">file_open</i>
+            </label>
+        </div>
+        <div id="help" title="Help">
             <div id="help-icon">
                 <i class="material-symbols-rounded">help</i>
             </div>

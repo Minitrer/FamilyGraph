@@ -34,27 +34,14 @@ export default class Person {
     #NameBeforeHiding = "";
     connections = {};
 
-    constructor(name="Name", family=undefined, spouse=undefined, parents=undefined, children=undefined) {
+    constructor(jsonObject) {
         PEOPLE.push(this);
-
-        if (family) {
-            this.#family = family;
-        }
-        if (spouse) {
-            this.#spouses = spouse;
-        }
-        if (parents) {
-            this.#parents = parents;
-        }
-        if (children) {
-            this.#children = children;
-        }
 
         this.#div = document.createElement("div");
         this.#div.setAttribute("class", "person agender");
 
         const nameElement = document.createElement("h1");
-        nameElement.textContent = name;
+        nameElement.textContent = "Name";
         nameElement.setAttribute("placeholder", "Name");
         nameElement.className = "name";
         nameElement.spellcheck = false;
@@ -79,6 +66,10 @@ export default class Person {
         this.#div.person = this;
 
         observer.observe(this.#div);
+
+        if (jsonObject) {
+            this.load(jsonObject);
+        }
     }
     
     get id() {
@@ -583,6 +574,41 @@ export default class Person {
         Family.updateAll();
     }
 
+    toJSON() {
+        return {
+            name: this.name,
+            familyID: this.#family.id,
+            groupIDs: getIDs(this.#groups),
+            spouseIDs: getIDs(this.#spouses),
+            parentIDs: getIDs(this.#parents),
+            childrenIDs: getIDs(this.#children),
+            gender: this.#gender,
+            transformPos: this.#transformPos,
+            workspacePos: this.#workspacePos,
+            connectionPoints: this.#connectionPoints,
+            // connections: this.connections,
+        }
+    }
+    load(jsonObject) {
+        this.name = jsonObject.name;
+        this.#spouses = fromIDs(jsonObject.spouseIDs, PEOPLE);
+        this.#parents = fromIDs(jsonObject.parentIDs, PEOPLE);
+        this.#children = fromIDs(jsonObject.childrenIDs, PEOPLE);
+        this.#gender = jsonObject.gender;
+        this.#transformPos = jsonObject.transformPos;
+        this.#workspacePos = jsonObject.workspacePos;
+        this.#connectionPoints = jsonObject.connectionPoints;
+        // this.connections = jsonObject.connections;
+    }
+
+    static fromJSON(string) {
+        let jsonObject = JSON.parse(string);
+        return new Person(jsonObject);
+    }
+    static setPEOPLE(newPeople) {
+        PEOPLE = newPeople;
+    }
+
     static resetAllTransforms(points=undefined) {
         PEOPLE.forEach((person) => {
             person.resetTransform();
@@ -634,4 +660,11 @@ export default class Person {
         lastPerson.groups[0].addChild(newPerson);
         return newPerson;
     }
+}
+
+function getIDs(array) {
+    return Array.from(array, (person) => person.id);
+}
+function fromIDs(ids, array) {
+    return ids.map((id) => array[id]);
 }

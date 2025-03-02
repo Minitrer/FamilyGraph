@@ -382,6 +382,9 @@ class ParentChildGroup {
     get isHidden() {
         return this.#isHidden;
     }
+    get id() {
+        return this.#family.groups.indexOf(this);
+    }
     
     getInbetweenPoint() {
         const visibleChildren = this.getVisiblePeople(this.children);
