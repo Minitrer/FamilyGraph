@@ -1,6 +1,6 @@
-import Family from "./family.js";
-import { PEOPLE } from "./person.js";
-import Person from "./person.js";
+import Family, { FAMILIES } from "./family.js";
+import Person, { PEOPLE } from "./person.js";
+import { forget } from "./actions.js";
 
 const saveDiv = document.getElementById("save");
 const input = document.getElementById("import");
@@ -11,8 +11,15 @@ saveDiv.addEventListener("click", (event) => {
     }
     event.preventDefault();
 
+    const blobContent = PEOPLE.filter((person) => !person.isHidden);
+    const familiesData = FAMILIES.filter((family) => !family.isHidden);
+    const domStructure = createStructureObject();
+    blobContent.push(familiesData);
+    blobContent.push(domStructure);
+
+    const file = new Blob([JSON.stringify(blobContent, null, 4)], { type: "text/plain" });
+    
     const a = document.createElement("a");
-    const file = new Blob([JSON.stringify(PEOPLE, null, 4)], { type: "text/plain" });
     a.href = URL.createObjectURL(file);
     a.download = "family.json";
     a.click();
@@ -35,15 +42,68 @@ input.addEventListener("change", (event) => {
         console.error(`Failed to read file: ${file.name}`);
     }, { once: true });
     reader.addEventListener("load", () => {
-        const newPeople = JSON.parse(reader.result);
-        console.debug(newPeople);
+        const peopleData = JSON.parse(reader.result);
+        const domStructure = peopleData.pop();
+        const familiesData = peopleData.pop();
 
-        // TODO: Make loop to recreate saved state
-        // Person.setPEOPLE(Array.from(newPeople, (object) => new Person()));
-        // PEOPLE.forEach((person, i) => person.load(newPeople[i]));
+        for (let i = 0, length = PEOPLE.length; i < length; i++) {
+            PEOPLE[0].delete();
+        }
+        forget();
+        console.debug(PEOPLE);
+        console.debug(FAMILIES);
+        // console.debug(peopleData);
+        // console.debug(familiesData);
+        // console.debug(domStructure);
+
+        Person.setPEOPLE(Array.from(peopleData, () => new Person()));
+        
+        Family.load(familiesData);
+        PEOPLE.forEach((person, i) => person.load(peopleData[i]));
+
+        const firstFamily = FAMILIES[domStructure.familyID];
+        function appendFamilyDivs(family, domObject) {
+            domObject.parents.forEach((parentID) => {
+                family.parentsDiv.append(PEOPLE[parentID].div);
+            });
+
+            domObject.children.forEach((child) => {
+                if (typeof child === "number") {
+                    family.childrenDiv.append(PEOPLE[child].div);
+                    return;
+                }
+                family.childrenDiv.append(FAMILIES[child.familyID].div);
+                appendFamilyDivs(FAMILIES[child.familyID], child);
+            })
+        }
+        appendFamilyDivs(firstFamily, domStructure);
+
+        const graph = document.getElementById("graph");
+        graph.append(firstFamily.div);
+
+        Family.updateAll();
         
         console.debug(PEOPLE);
+        console.debug(FAMILIES);
     }, { once: true });
 
     reader.readAsText(file);
 });
+
+function createStructureObject(from=document.getElementById("graph")) {
+    if (from.id === "graph") {
+        return createStructureObject(from.children[0]);
+    }
+    if (from.id.includes("family")) {
+        const ID = Family.getIDFromDiv(from);
+        return {
+            familyID: ID,
+            parents: Array.from(from.children[0].children, (parent) => createStructureObject(parent)),
+            children: Array.from(from.children[1].children, (child) => createStructureObject(child)),
+            groupCount: FAMILIES[ID].groups.length,
+        }
+    }
+    if (from.classList.contains("person")) {
+        return from.person.id;
+    }
+}

@@ -720,6 +720,9 @@ document.addEventListener("keyup", (e) => {
             }
         }
         case "ArrowUp":
+            if (document.activeElement.className === "name" && !e.altKey) {
+                return;
+            }
             function findFirstVisibleParent(selected) {
                 const firstParent = selected.person.parents.find((parent) => !parent.isHidden);
                 if (firstParent) {
@@ -739,6 +742,9 @@ document.addEventListener("keyup", (e) => {
             }
             return NavigatePeople(findFirstVisibleParent);
         case "ArrowDown":
+            if (document.activeElement.className === "name" && !e.altKey) {
+                return;
+            }
             function findFirstVisibleChild(selected) {
                 const firstChild = selected.person.children.find((child) => !child.isHidden);
                 if (firstChild) {
@@ -775,6 +781,9 @@ document.addEventListener("keyup", (e) => {
             return from.querySelector(`#${from.id}>${".children>.family>".repeat(nestedCount - 1)}.children>div`);
         }
         case "ArrowLeft": 
+            if (document.activeElement.className === "name" && !e.altKey) {
+                return;
+            }
             function findPreviousPerson(selected) {
                 function getPersonDiv(div) {
                     if (div.person) {
@@ -819,6 +828,9 @@ document.addEventListener("keyup", (e) => {
             }
             return NavigatePeople(findPreviousPerson);
         case "ArrowRight": {
+            if (document.activeElement.className === "name" && !e.altKey) {
+                return;
+            }
             function findNextPerson(selected) {
                 function getPersonDiv(div) {
                     if (div.person) {

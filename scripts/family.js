@@ -1,5 +1,5 @@
 import createConnection from "./connection.js";
-import Person from "./person.js";
+import Person, { PEOPLE } from "./person.js";
 import Vec2 from "./vec2.js";
 
 export let FAMILIES = [];
@@ -12,8 +12,7 @@ export default class Family {
     #isHidden = false;
     #DOMPositionAfterHiding;
 
-    // subFamilyMap is a dictionary with subfamilies's ids as keys and one of their parents as values
-    constructor(parents, children=undefined, subFamilyMap=undefined) {
+    constructor() {
 
         FAMILIES.push(this);
         
@@ -30,8 +29,6 @@ export default class Family {
         this.#parentsDiv.setAttribute("class", "parents");
         this.#childrenDiv = document.createElement("div");
         this.#childrenDiv.setAttribute("class", "children");
-        
-        this.#groups[0] = new ParentChildGroup(parents, children, this, subFamilyMap);
 
         // Append divs
         this.#div.appendChild(this.#parentsDiv);
@@ -260,6 +257,28 @@ export default class Family {
         Family.updateAll();
     }
 
+    toJSON() {
+        return {
+            groups: this.#groups.filter((group) => !group.isHidden),
+        }
+    }
+    load(familiesData) {
+        this.#groups = familiesData[this.id].groups.map((group) => {
+            const parents = group.parents.map((id) => PEOPLE[id]);
+            const children = group.children.map((child) => {
+                if (typeof child === "number") {
+                    return PEOPLE[child];
+                }
+                return FAMILIES[child.familyID];
+            });
+            const subFamilyMap = {};
+            Object.keys(group.subFamilyMap).forEach((id) => {
+                subFamilyMap[id] = PEOPLE[group.subFamilyMap[id]];
+            });
+            return new ParentChildGroup(parents, children, this, subFamilyMap);
+        });
+    }
+
     static hiddenCount = 0;
     static getVisibleLength() {
         return FAMILIES.length - Family.hiddenCount;
@@ -285,13 +304,15 @@ export default class Family {
         let family;
         if (!source) {
             const container = graph;
-            family = new Family(parents, children, subFamilyMap);
+            family = new Family();
+            family.#groups[0] = new ParentChildGroup(parents, children, family, subFamilyMap);
             container.appendChild(family.div);
         }
         else {
             const sibling = source.div.previousSibling;
             const container = source.div.parentElement;
-            family = new Family(parents, children, subFamilyMap);
+            family = new Family();
+            family.#groups[0] = new ParentChildGroup(parents, children, family, subFamilyMap);
             source.groups.forEach((group) => {
                 if (group.children.includes(source)) {
                     group.convertChildToFamily(source, family);
@@ -312,6 +333,15 @@ export default class Family {
     static getIDFromDiv(div) {
         return Number(div.id.substring(7));
     }
+
+    static load(familiesData) {
+        // Initialize FAMILIES
+        FAMILIES = Array.from(familiesData, () => new Family());
+
+        FAMILIES.forEach((family) => {
+            family.load(familiesData);
+        });
+    }
 }
 
 const connectionPointGap = 30;
@@ -328,6 +358,7 @@ class ParentChildGroup {
     #subFamilyMap = {};
     #isHidden = false;
     
+    // subFamilyMap is a dictionary with subfamilies's ids as keys and one of their parents as values
     constructor(parents, children, family, subFamilyMap=undefined) {
         this.#family = family;
         this.parents = parents;
@@ -892,8 +923,10 @@ class ParentChildGroup {
             if (this.children.length > 0) {
                 const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[`${this.children[0].id}`];
                 const index = singleChild.groups.indexOf(this);
-                singleChild.connections[`children ${index}`].remove();
-                delete singleChild.connections[`children ${index}`];
+                if (singleChild.connections[`children ${index}`]) {
+                    singleChild.connections[`children ${index}`].remove();
+                    delete singleChild.connections[`children ${index}`];
+                }
 
                 this.createChildConnectionPoint();
             }
@@ -954,6 +987,23 @@ class ParentChildGroup {
         return people.filter((person) => {
             return !person.isHidden && (person instanceof Person || !this.#subFamilyMap[`${person.id}`].isHidden);
         });
+    }
+
+    toJSON() {
+        const subFamilyMap = {};
+        Object.keys(this.#subFamilyMap).forEach((key) => {
+            subFamilyMap[key] = this.#subFamilyMap[key].id;
+        });
+        return {
+            parents: Array.from(this.getVisiblePeople(this.parents), (parent) => parent.id),
+            children: Array.from(this.getVisiblePeople(this.children), (child) => {
+                if (child instanceof Person) {
+                    return child.id;
+                }
+                return { familyID: child.id };
+            }),
+            subFamilyMap: subFamilyMap,
+        }
     }
 }
 

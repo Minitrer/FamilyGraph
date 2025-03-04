@@ -42,6 +42,10 @@ function pushStack(command, stack) {
         removed.onRemoved();
     }
 }
+export function forget() {
+    undoStack.splice(0, undoStack.length);
+    redoStack.splice(0, redoStack.length);
+}
 
 function editName(person) {
     person.div.firstElementChild.contentEditable = true;
@@ -127,7 +131,7 @@ export function addParent(person) {
     }
 
     const subFamilyMap = {};
-    subFamilyMap[person.family.id] = person;
+    subFamilyMap[`${person.family.id}`] = person;
 
     // No parent is single
     if (person.parents.length > 0) {
@@ -214,7 +218,7 @@ export function addSibling(person) {
         const parent = new Person();
 
         const subFamilyMap = {};
-        subFamilyMap[person.family.id] = person;
+        subFamilyMap[`${person.family.id}`] = person;
 
         if (!addNewParentGroup(person, parent, subFamilyMap)) {
             parent.delete();

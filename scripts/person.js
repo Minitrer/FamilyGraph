@@ -586,7 +586,6 @@ export default class Person {
             transformPos: this.#transformPos,
             workspacePos: this.#workspacePos,
             connectionPoints: this.#connectionPoints,
-            // connections: this.connections,
         }
     }
     load(jsonObject) {
@@ -594,11 +593,13 @@ export default class Person {
         this.#spouses = fromIDs(jsonObject.spouseIDs, PEOPLE);
         this.#parents = fromIDs(jsonObject.parentIDs, PEOPLE);
         this.#children = fromIDs(jsonObject.childrenIDs, PEOPLE);
-        this.#gender = jsonObject.gender;
-        this.#transformPos = jsonObject.transformPos;
-        this.#workspacePos = jsonObject.workspacePos;
+        this.gender = jsonObject.gender;
+        this.#transformPos = new Vec2(jsonObject.transformPos.x, jsonObject.transformPos.y);
+        this.#workspacePos = new Vec2(jsonObject.workspacePos.x, jsonObject.workspacePos.y);
         this.#connectionPoints = jsonObject.connectionPoints;
-        // this.connections = jsonObject.connections;
+
+        this.#div.style.setProperty("--pos-x", this.#transformPos.x);
+        this.#div.style.setProperty("--pos-y", this.#transformPos.y);
     }
 
     static fromJSON(string) {
