@@ -7,6 +7,16 @@ import { RELATIONSHIPTEXTS } from "./controls.js";
 export let PEOPLE = [];
 const observer = new ResizeObserver(() => {
     Family.updateAll();
+
+    RELATIONSHIPTEXTS.forEach((text, id) => {
+        const x = PEOPLE[id].div.offsetLeft + PEOPLE[id].transformPos.x + PEOPLE[id].div.offsetWidth / 2 - text.offsetWidth / 2;
+        const y = PEOPLE[id].div.offsetTop + PEOPLE[id].transformPos.y + PEOPLE[id].div.offsetHeight;
+        text.style.left = `${x}px`;
+        text.style.top = `${y}px`;
+
+        text.style.setProperty("--pos-x", 0);
+        text.style.setProperty("--pos-y", 0);
+    });
 });
 
 export default class Person {
@@ -362,7 +372,8 @@ export default class Person {
             const nextSibling = isFamily? divToSwap.firstElementChild.lastElementChild : divToSwap;
 
             if (this.#div.offsetLeft + dragAmount.x > nextSibling.person.workspacePos.x) {
-                this.#transformPos.x -= nextSibling.offsetLeft - this.#div.offsetLeft;
+                const widthDifference = this.#div.offsetWidth - nextSibling.offsetWidth;
+                this.#transformPos.x -= nextSibling.offsetLeft - this.#div.offsetLeft - widthDifference;
                 const oldOffset = this.#div.offsetLeft;
 
                 divToSwap.after(this.#div);
@@ -447,6 +458,7 @@ export default class Person {
             return;
         }
         this.#isHidden = true;
+        console.debug(PEOPLE.map((person) => person.connections));
 
         this.#NameBeforeHiding = this.name;
         const children = this.#div.parentElement.children;

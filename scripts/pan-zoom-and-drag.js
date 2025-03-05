@@ -1,5 +1,4 @@
 import Vec2 from "./vec2.js";
-import { GENDERMENU } from "./controls.js";
 import { RELATIONSHIPTEXTS } from "./controls.js";
 import Person from "./person.js";
 import { draggedPerson, draggedPoint } from "./actions.js";
@@ -121,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
         isDragging = true;
         function addUIElements(person) {
             if (person.div.classList.contains("selected")) {
-                DRAGGING_ELEMENTS.push(GENDERMENU);
+                DRAGGING_ELEMENTS.push(document.getElementById("gender-menu"));
                 return;
             }
             if (RELATIONSHIPTEXTS.has(person.id)) {

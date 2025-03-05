@@ -50,11 +50,7 @@ input.addEventListener("change", (event) => {
             PEOPLE[0].delete();
         }
         forget();
-        console.debug(PEOPLE);
         console.debug(FAMILIES);
-        // console.debug(peopleData);
-        // console.debug(familiesData);
-        // console.debug(domStructure);
 
         Person.setPEOPLE(Array.from(peopleData, () => new Person()));
         
@@ -82,9 +78,6 @@ input.addEventListener("change", (event) => {
         graph.append(firstFamily.div);
 
         Family.updateAll();
-        
-        console.debug(PEOPLE);
-        console.debug(FAMILIES);
     }, { once: true });
 
     reader.readAsText(file);
@@ -100,7 +93,6 @@ function createStructureObject(from=document.getElementById("graph")) {
             familyID: ID,
             parents: Array.from(from.children[0].children, (parent) => createStructureObject(parent)),
             children: Array.from(from.children[1].children, (child) => createStructureObject(child)),
-            groupCount: FAMILIES[ID].groups.length,
         }
     }
     if (from.classList.contains("person")) {

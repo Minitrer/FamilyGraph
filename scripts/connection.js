@@ -4,18 +4,17 @@ const pathWidth = 5;
 const curveLength = 10;
 const arrowWidth = 5;
 const padding = pathWidth + arrowWidth;
-const workspace = document.getElementById("workspace");
 
 export default function createConnection(from, to, direction, color="white", hasArrow=true, replace=undefined) {
-    
     if (direction !== "left" &&
         direction !== "right" &&
         direction !== "up" &&
         direction !== "down") {
             console.error("Invalid connection direction, check creation function");
             return;
-        }
-
+    }
+        
+    const workspace = document.getElementById("workspace");
     const dirTo = to.subtract(from);
     let svg = replace;
     if (!replace) {
@@ -163,47 +162,8 @@ export default function createConnection(from, to, direction, color="white", has
                 arrowPositions[1].x -= arrowWidth;
                 arrowPositions[1].y += arrowWidth;
                 break;
-            }
-        //     case "left":
-        //     case "right":
-        //         cornerPos = new Vec2(origin.x + dirTo.x, origin.y);
+        }
 
-        //         if (!hasArrow) {
-        //             break;
-        //         }
-    
-        //         arrowPositions[0].x += arrowWidth;
-        //         arrowPositions[1].x -= arrowWidth;
-    
-        //         if (dirTo.y > 0) {
-        //             arrowPositions[0].y -= arrowWidth;
-        //             arrowPositions[1].y -= arrowWidth;
-        //             break;
-        //         }
-        //         arrowPositions[0].y += arrowWidth;
-        //         arrowPositions[1].y += arrowWidth;
-        //         break;
-        //     case "up":
-        //     case "down":
-        //         cornerPos = new Vec2(origin.x, origin.y + dirTo.y);
-
-        //         if (!hasArrow) {
-        //             break;
-        //         }
-    
-        //         arrowPositions[0].y += arrowWidth;
-        //         arrowPositions[1].y -= arrowWidth;
-    
-        //         if (dirTo.x > 0) {
-        //             arrowPositions[0].x -= arrowWidth;
-        //             arrowPositions[1].x -= arrowWidth;
-        //             break;
-        //         }
-        //         arrowPositions[0].x += arrowWidth;
-        //         arrowPositions[1].x += arrowWidth;
-        //         break;
-        // }   
-    
         const originToCornerLength = cornerPos.subtract(origin).magnitude();
         const cornerToTargetLength = origin.add(dirTo).subtract(cornerPos).magnitude();
         

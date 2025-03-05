@@ -11,16 +11,14 @@ export default class Family {
     #childrenDiv;
     #isHidden = false;
     #DOMPositionAfterHiding;
+    hiddenGroupCount = 0;
 
     constructor() {
 
         FAMILIES.push(this);
         
-        // Setup groups for hiding
-        this.#groups.hiddenCount = 0;
-        this.#groups.getVisibleLength = () => {
-            return this.#groups.length - this.#groups.hiddenCount;
-        }
+        // // Setup groups for hiding
+        // this.groups.hiddenCount = 0;
         // Create divs
         this.#div = document.createElement("div");
         this.#div.setAttribute("class", "family");
@@ -56,6 +54,9 @@ export default class Family {
     
 
     draw(person) {
+        if (person.name === "test2") {
+            console.debug(person);
+        }
         person.groups.forEach((group, i) => {
             if (group.isHidden) {
                 return;
@@ -772,6 +773,21 @@ class ParentChildGroup {
                 if (subChild.connections[`children ${index}`]) {
                     subChild.connections[`children ${index}`].remove();
                     delete subChild.connections[`children ${index}`];
+
+                    // Update connections with higher indexes
+                    const keys = Object.keys(subChild.connections);
+                    if (keys.length > index) {
+                        for (const key of keys) {
+                            let id = Number(key.match(/\d+$/));
+                            if (index > id) {
+                                continue;
+                            }
+                            id--;
+                            const newKey = key.replace(/\d+$/, id);
+                            subChild.connections[newKey] = subChild.connections[key];
+                            delete subChild.connections[key];
+                        }
+                    }
                 }
                 subChild.groups.splice(index, 1);
             }
@@ -784,12 +800,13 @@ class ParentChildGroup {
                 this.childrenConnectionPoint = deleteConnectionPoint(this.childrenConnectionPoint);
             }
     
-            this.#family.groups.hiddenCount++;
+            this.#family.hiddenGroupCount++;
     
             const replaceCondition = this.#family.parentsDiv.childElementCount === 0 &&
                                      this.#family.childrenDiv.childElementCount === 1 &&
                                      this.#family.childrenDiv.firstElementChild.className === "family";
-            if (replaceCondition || this.#family.groups.getVisibleLength() === 0) {
+            if (replaceCondition || this.#family.groups.length === this.#family.hiddenGroupCount) {
+                console.debug(PEOPLE[2].connections);
                 this.#family.hide();
                 return;
             }
@@ -834,7 +851,9 @@ class ParentChildGroup {
         this.children.hiddenCount++;
 
         const visibleChildren = this.getVisiblePeople(this.children);
-        if (this.parents.getVisibleLength() === 0 && visibleChildren.length === 0) {
+        const hideCondition = this.parents.getVisibleLength() === 0 &&
+                              visibleChildren.length === 0 || (visibleChildren.length === 1 && visibleChildren[0] instanceof Family);
+        if (hideCondition) {
             this.hide();
             return;
         }
@@ -889,18 +908,21 @@ class ParentChildGroup {
                 this.delete();
                 return;
             }
-            if (this.parents.length < 3) {
+            if (this.parents.getVisibleLength() < 3) {
                 if (this.parentsConnectionPoint) {
                     this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);
                 }
 
                 this.parents.forEach((parent) => {
+                    if (parent.isHidden) {
+                        return;
+                    }
                     const index = parent.groups.indexOf(this)
                     parent.connections[`parents ${index}`].remove();
                     delete parent.connections[`parents ${index}`];
                 });
 
-                if (this.parents.length > 0) {
+                if (this.parents.getVisibleLength() > 0) {
                     this.createParentConnectionPoint();
                 }
                 else if (this.childrenConnectionPoint) {
@@ -917,11 +939,14 @@ class ParentChildGroup {
             this.delete();
             return;
         }
-        if (this.children.length < 2) {
-            this.childrenConnectionPoint = deleteConnectionPoint(this.childrenConnectionPoint);
+        if (this.children.getVisibleLength() < 2) {
+            if (this.childrenConnectionPoint) {
+                this.childrenConnectionPoint = deleteConnectionPoint(this.childrenConnectionPoint);
+            }
 
-            if (this.children.length > 0) {
-                const singleChild = (this.children[0] instanceof Person)? this.children[0] : this.#subFamilyMap[`${this.children[0].id}`];
+            if (this.children.getVisibleLength() > 0) {
+                const firstVisibleChild = this.children.find((child) => !child.isHidden);
+                const singleChild = (firstVisibleChild instanceof Person)? firstVisibleChild : this.#subFamilyMap[`${firstVisibleChild.id}`];
                 const index = singleChild.groups.indexOf(this);
                 if (singleChild.connections[`children ${index}`]) {
                     singleChild.connections[`children ${index}`].remove();
@@ -930,19 +955,34 @@ class ParentChildGroup {
 
                 this.createChildConnectionPoint();
             }
-            else {
+            else if (this.parentsConnectionPoint) {
                 this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);
             }
         }
     }
 
     delete() {
-        if (this.children[0]) {
+        if (this.children[0] && !this.children[0].isHidden) {
             const subChild = this.#subFamilyMap[`${this.children[0].id}`];
             const index = subChild.groups.indexOf(this);
             if (subChild.connections[`children ${index}`]) {
                 subChild.connections[`children ${index}`].remove();
                 delete subChild.connections[`children ${index}`];
+
+                // Update connections with higher indexes
+                const keys = Object.keys(subChild.connections);
+                if (keys.length > index) {
+                    for (const key of keys) {
+                        let id = Number(key.match(/\d+$/));
+                        if (index > id) {
+                            continue;
+                        }
+                        id--;
+                        const newKey = key.replace(/\d+$/, id);
+                        subChild.connections[newKey] = subChild.connections[key];
+                        delete subChild.connections[key];
+                    }
+                }
             }
             subChild.groups.splice(index, 1);
         }
@@ -1085,7 +1125,6 @@ function getPersonToPersonDirection(personA, personB) {
         oldOffset.x = personDiv.offsetLeft;
         oldOffset.y = personDiv.offsetTop;
 
-        // console.debug(`offset: ${personDiv.offsetTop}, old: ${oldOffset.y}, diff: ${diffY}`);
         const points = document.getElementsByClassName("point");
         const paths = document.getElementsByClassName("path");
 

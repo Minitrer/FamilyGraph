@@ -39,8 +39,8 @@ redoIcon.textContent = "redo";
 // 
 // Menu for changing the target person's gender
 // 
-export const GENDERMENU = document.getElementById("gender-menu");
-makeDraggableBasic(GENDERMENU);
+const genderMenu = document.getElementById("gender-menu");
+makeDraggableBasic(genderMenu);
 
 const genderOptions = document.getElementsByName("gender");
 for (const option of genderOptions) {
@@ -315,21 +315,21 @@ function setGenderOption(target) {
     currentGenderOption.checked = true;
 }
 function showGenderMenu(selected) {
-    GENDERMENU.className = "show";
-    const x = selected.offsetLeft + selected.person.transformPos.x + selected.offsetWidth / 2 - GENDERMENU.offsetWidth / 2;
-    const y = selected.offsetTop + selected.person.transformPos.y - GENDERMENU.offsetHeight;
-    GENDERMENU.style.left = `${x}px`;
-    GENDERMENU.style.top = `${y}px`;
+    genderMenu.className = "show";
+    const x = selected.offsetLeft + selected.person.transformPos.x + selected.offsetWidth / 2 - genderMenu.offsetWidth / 2;
+    const y = selected.offsetTop + selected.person.transformPos.y - genderMenu.offsetHeight;
+    genderMenu.style.left = `${x}px`;
+    genderMenu.style.top = `${y}px`;
 }
 function resetGenderMenuPosition() {
-    GENDERMENU.style.setProperty("--pos-x", 0);
-    GENDERMENU.style.setProperty("--pos-y", 0);
-    GENDERMENU.transformPos.x = 0;
-    GENDERMENU.transformPos.y = 0;
+    genderMenu.style.setProperty("--pos-x", 0);
+    genderMenu.style.setProperty("--pos-y", 0);
+    genderMenu.transformPos.x = 0;
+    genderMenu.transformPos.y = 0;
 }
 
-const workspace = document.getElementById("workspace");
 function createRelationshipText(person) {
+    const workspace = document.getElementById("workspace");
     for (const [id, relationship] of person.relationships) {
         if (PEOPLE[id].isHidden) {
             continue;
@@ -364,7 +364,7 @@ function clearSelections() {
     }
     RELATIONSHIPTEXTS.clear();
 
-    GENDERMENU.className = "hidden";
+    genderMenu.className = "hidden";
     resetGenderMenuPosition();
 
     document.activeElement.blur();
@@ -536,7 +536,7 @@ document.addEventListener("keyup", (e) => {
         case "N":
             if (document.activeElement.className === "name") {
                 // Choose agender
-                if (GENDERMENU.className === "hidden" || !e.altKey) {
+                if (genderMenu.className === "hidden" || !e.altKey) {
                     return;
                 }
                 const element = document.getElementById("agender");
@@ -544,7 +544,7 @@ document.addEventListener("keyup", (e) => {
                     return;
                 }
                 element.click();
-                GENDERMENU.className = "hidden";
+                genderMenu.className = "hidden";
                 resetGenderMenuPosition();
                 return;
             }
@@ -628,19 +628,19 @@ document.addEventListener("keyup", (e) => {
             if (!e.ctrlKey || document.activeElement.className !== "name") {
                 return;
             }
-            if (GENDERMENU.className === "hidden") {
+            if (genderMenu.className === "hidden") {
                 showGenderMenu(document.activeElement.parentElement);
                 return;
             }
             else {
-                GENDERMENU.className = "hidden";
+                genderMenu.className = "hidden";
                 resetGenderMenuPosition();
                 return;
             }
         // Select gender   
         case "m":
         case "M": {
-            if (GENDERMENU.className === "hidden" || !e.altKey) {
+            if (genderMenu.className === "hidden" || !e.altKey) {
                 return;
             }
             const element = document.getElementById("male");
@@ -648,13 +648,13 @@ document.addEventListener("keyup", (e) => {
                 return;
             }
             element.click();
-            GENDERMENU.className = "hidden";
+            genderMenu.className = "hidden";
             resetGenderMenuPosition();
             return;
         }
         case "f":
         case "F": {
-            if (GENDERMENU.className === "hidden" || !e.altKey) {
+            if (genderMenu.className === "hidden" || !e.altKey) {
                 return;
             }
             const element = document.getElementById("female");
@@ -662,7 +662,7 @@ document.addEventListener("keyup", (e) => {
                 return;
             }
             element.click();
-            GENDERMENU.className = "hidden";
+            genderMenu.className = "hidden";
             resetGenderMenuPosition();
             return;
         }
@@ -930,7 +930,7 @@ document.addEventListener("keydown", (e) => {
         case "N":
         case "f":
         case "F":
-            if (!e.altKey || document.activeElement.className !== "name" || GENDERMENU.className === "hidden") {
+            if (!e.altKey || document.activeElement.className !== "name" || genderMenu.className === "hidden") {
                 return;
             }
             e.preventDefault();
