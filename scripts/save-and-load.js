@@ -50,7 +50,6 @@ input.addEventListener("change", (event) => {
             PEOPLE[0].delete();
         }
         forget();
-        console.debug(FAMILIES);
 
         Person.setPEOPLE(Array.from(peopleData, () => new Person()));
         

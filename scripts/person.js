@@ -42,7 +42,7 @@ export default class Person {
         parent: undefined,
     };
     #NameBeforeHiding = "";
-    connections = {};
+    connections = new Map();
 
     constructor(jsonObject) {
         PEOPLE.push(this);
@@ -458,7 +458,6 @@ export default class Person {
             return;
         }
         this.#isHidden = true;
-        console.debug(PEOPLE.map((person) => person.connections));
 
         this.#NameBeforeHiding = this.name;
         const children = this.#div.parentElement.children;
@@ -478,7 +477,7 @@ export default class Person {
             return;
         }
 
-        Object.values(this.connections).forEach((connection) => {
+        this.connections.forEach((connection) => {
             connection.remove();
         });
 
@@ -525,7 +524,7 @@ export default class Person {
             children.item(this.#DOMPositionBeforeHiding.index - 1).after(this.#div);
         }
         const workspace = document.getElementById("workspace");
-        Object.values(this.connections).forEach((connection) => {
+        this.connections.forEach((connection) => {
             workspace.append(connection);
         });
         this.name = this.#NameBeforeHiding;
@@ -563,7 +562,7 @@ export default class Person {
         this.orphanSelf();
         this.orphan();
 
-        Object.values(this.connections).forEach((connection) => {
+        this.connections.forEach((connection) => {
             connection.remove();
         });
         this.connections = null;
