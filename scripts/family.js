@@ -221,10 +221,8 @@ export default class Family {
     }
 
     delete() {
+        // Correct SubFamilyMaps
         for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
-            FAMILIES[i].div.id = `family ${i - 1}`;
-
-            // Correct SubFamilyMaps
             if (FAMILIES[i].div.parentElement && FAMILIES[i].div.parentElement.className === "children") {
                 const largerFamilyID = Family.getIDFromDiv(FAMILIES[i].div.parentElement.parentElement);
                 if (largerFamilyID === this.id) {
@@ -238,6 +236,11 @@ export default class Family {
                 });
             }
         }
+        // Correct div ids
+        for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
+            FAMILIES[i].div.id = `family ${i - 1}`;
+        }
+
         FAMILIES.splice(this.id, 1);
 
         this.#parentsDiv.remove();
@@ -255,9 +258,16 @@ export default class Family {
         Family.updateAll();
     }
 
-    toJSON() {
+    toJSON(visiblePeople, visibleFamilies) {
+        const groupJSONs = []
+        this.#groups.forEach((group) => {
+            if (group.isHidden) {
+                return;
+            }
+            groupJSONs.push(group.toJSON(visiblePeople, visibleFamilies));
+        });
         return {
-            groups: this.#groups.filter((group) => !group.isHidden),
+            groups: groupJSONs,
         }
     }
     load(familiesData) {
@@ -339,6 +349,10 @@ export default class Family {
         FAMILIES.forEach((family) => {
             family.load(familiesData);
         });
+    }
+
+    static save(visiblePeople, visibleFamilies) {
+        return visibleFamilies.map((family) => family.toJSON(visiblePeople, visibleFamilies));
     }
 }
 
@@ -883,9 +897,8 @@ class ParentChildGroup {
         const parentIndex = this.parents.indexOf(person);
         if (parentIndex > -1) {
             this.parents.splice(parentIndex, 1);
-
             if (person.isHidden) {
-                return;
+                this.parents.hiddenCount--;
             }
 
             if (this.parents.length === 0 && (this.children.length === 0 || (this.children.length === 1 && this.children[0] instanceof Family))) {
@@ -898,12 +911,12 @@ class ParentChildGroup {
                 }
 
                 this.parents.forEach((parent) => {
-                    if (parent.isHidden) {
-                        return;
-                    }
                     const index = parent.groups.indexOf(this)
-                    parent.connections.get(`parents ${index}`).remove();
-                    delete parent.connections.delete(`parents ${index}`);
+                    const connection = parent.connections.get(`parents ${index}`);
+                    if (connection) {
+                        connection.remove();
+                        parent.connections.delete(`parents ${index}`);
+                    }
                 });
 
                 if (this.parents.getVisibleLength() > 0) {
@@ -918,8 +931,11 @@ class ParentChildGroup {
         
         const childIndex = (this.children.indexOf(person) > -1)? this.children.indexOf(person) : this.children.indexOf(person.family);
         this.children.splice(childIndex, 1);
+        if (person.isHidden) {
+            this.children.hiddenCount--;
+        }
 
-        if (this.parents.length === 0 && this.children.length === 0) {
+        if (this.parents.length === 0 && (this.children.length === 0 || (this.children.length === 1 && this.children[0] instanceof Family))) {
             this.delete();
             return;
         }
@@ -1001,21 +1017,42 @@ class ParentChildGroup {
         });
     }
 
-    toJSON() {
+    toJSON(visiblePeople, visibleFamilies) {
         const subFamilyMap = {};
         Object.keys(this.#subFamilyMap).forEach((key) => {
-            subFamilyMap[key] = this.#subFamilyMap[key].id;
+            const index = visibleFamilies.indexOf(FAMILIES[key]);
+            if (index < 0) {
+                return;
+            }
+            subFamilyMap[`${index}`] = visiblePeople.indexOf(this.#subFamilyMap[key]);
         });
+
+        const parentIDs = [];
+        const childrenIDs = [];
+
+        this.parents.forEach((parent) => {
+            if (parent.isHidden) {
+                return;
+            }
+            parentIDs.push(visiblePeople.indexOf(parent));
+        });
+        this.children.forEach((child) => {
+            if (child.isHidden) {
+                return;
+            }
+            if (child instanceof Person) {
+                childrenIDs.push(visiblePeople.indexOf(child));
+                return;
+            }
+            childrenIDs.push({ familyID: visibleFamilies.indexOf(child) });
+            return;
+        })
+
         return {
-            parents: Array.from(this.getVisiblePeople(this.parents), (parent) => parent.id),
-            children: Array.from(this.getVisiblePeople(this.children), (child) => {
-                if (child instanceof Person) {
-                    return child.id;
-                }
-                return { familyID: child.id };
-            }),
+            parents: parentIDs,
+            children: childrenIDs,
             subFamilyMap: subFamilyMap,
-        }
+        };
     }
 }
 

@@ -213,7 +213,19 @@ export function addSibling(person) {
     }
     pushStack(command, undoStack);
 
-    const groupsAsChild = person.groups.filter((group) => group.children.includes(person));
+    const groupsAsChild = person.groups.filter((group) =>  {
+        if (group.children.includes(person)) {
+            return true;
+        }
+        const family = group.children.find((child) => child === person.family);
+        if (!family) {
+            return false;
+        }
+        if (group.subFamilyMap[`${family.id}`] === person) {
+            return true;
+        }
+        return false;
+    });
     if (groupsAsChild.length === 0) {
         const parent = new Person();
 

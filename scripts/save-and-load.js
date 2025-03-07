@@ -11,9 +11,12 @@ saveDiv.addEventListener("click", (event) => {
     }
     event.preventDefault();
 
-    const blobContent = PEOPLE.filter((person) => !person.isHidden);
-    const familiesData = FAMILIES.filter((family) => !family.isHidden);
-    const domStructure = createStructureObject();
+    const visibleFamilies = FAMILIES.filter((family) => !family.isHidden);
+    const visiblePeople = PEOPLE.filter((person) => !person.isHidden);
+
+    const blobContent = Person.save(visiblePeople, visibleFamilies);
+    const familiesData = Family.save(visiblePeople, visibleFamilies);
+    const domStructure = createStructureObject(visiblePeople, visibleFamilies);
     blobContent.push(familiesData);
     blobContent.push(domStructure);
 
@@ -48,6 +51,7 @@ input.addEventListener("change", (event) => {
 
         for (let i = 0, length = PEOPLE.length; i < length; i++) {
             PEOPLE[0].delete();
+            console.debug(FAMILIES);
         }
         forget();
 
@@ -77,24 +81,26 @@ input.addEventListener("change", (event) => {
         graph.append(firstFamily.div);
 
         Family.updateAll();
+
+        input.value = "";
     }, { once: true });
 
     reader.readAsText(file);
 });
 
-function createStructureObject(from=document.getElementById("graph")) {
+function createStructureObject(visiblePeople, visibleFamilies, from=document.getElementById("graph")) {
     if (from.id === "graph") {
-        return createStructureObject(from.children[0]);
+        return createStructureObject(visiblePeople, visibleFamilies, from.children[0]);
     }
     if (from.id.includes("family")) {
-        const ID = Family.getIDFromDiv(from);
+        const ID = visibleFamilies.indexOf(FAMILIES[Family.getIDFromDiv(from)]);
         return {
             familyID: ID,
-            parents: Array.from(from.children[0].children, (parent) => createStructureObject(parent)),
-            children: Array.from(from.children[1].children, (child) => createStructureObject(child)),
+            parents: Array.from(from.children[0].children, (parent) => createStructureObject(visiblePeople, visibleFamilies, parent)),
+            children: Array.from(from.children[1].children, (child) => createStructureObject(visiblePeople, visibleFamilies, child)),
         }
     }
     if (from.classList.contains("person")) {
-        return from.person.id;
+        return visiblePeople.indexOf(from.person);
     }
 }

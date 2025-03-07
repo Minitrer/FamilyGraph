@@ -585,14 +585,14 @@ export default class Person {
         Family.updateAll();
     }
 
-    toJSON() {
+    toJSON(visiblePeople, visibleFamilies) {
         return {
             name: this.name,
-            familyID: this.#family.id,
+            familyID: visibleFamilies.indexOf(this.#family),
             groupIDs: getIDs(this.#groups),
-            spouseIDs: getIDs(this.#spouses),
-            parentIDs: getIDs(this.#parents),
-            childrenIDs: getIDs(this.#children),
+            spouseIDs: getIDs(this.#spouses, visiblePeople),
+            parentIDs: getIDs(this.#parents, visiblePeople),
+            childrenIDs: getIDs(this.#children, visiblePeople),
             gender: this.#gender,
             transformPos: this.#transformPos,
             workspacePos: this.#workspacePos,
@@ -613,6 +613,9 @@ export default class Person {
         this.#div.style.setProperty("--pos-y", this.#transformPos.y);
     }
 
+    static save(visiblePeople, visibleFamilies) {
+        return visiblePeople.map((person) => person.toJSON(visiblePeople, visibleFamilies));
+    }
     static fromJSON(string) {
         let jsonObject = JSON.parse(string);
         return new Person(jsonObject);
@@ -674,8 +677,12 @@ export default class Person {
     }
 }
 
-function getIDs(array) {
-    return Array.from(array, (person) => person.id);
+function getIDs(array, visibleGlobal=undefined) {
+    if (visibleGlobal) {
+        return Array.from(array.filter((item) => !item.isHidden), (visibleItem) => visibleGlobal.indexOf(visibleItem));
+    }
+    const visibleArray = array.filter((item) => !item.isHidden);
+    return Array.from(visibleArray, (visibleItem) => visibleArray.indexOf(visibleItem));
 }
 function fromIDs(ids, array) {
     return ids.map((id) => array[id]);
