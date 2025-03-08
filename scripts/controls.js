@@ -45,7 +45,6 @@ makeDraggableBasic(genderMenu);
 const genderOptions = document.getElementsByName("gender");
 for (const option of genderOptions) {
     option.onchange = () => {
-        console.debug("change");
         if (menuTarget) {
             menuTarget.gender = option.value;
         }
@@ -451,8 +450,6 @@ document.addEventListener("dblclick", (event) => {
 });
 
 document.addEventListener("click", (event) => {
-    console.debug("click", event.target);
-    // console.debug(event.composedPath());
     if (event.target.tagName === "FIELDSET" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL" || event.target.tagName === "BUTTON" ||
         (event.target.tagName === "I" && event.target.parentElement.tagName === "LABEL") || isEditing) {
             return;
@@ -943,6 +940,31 @@ document.addEventListener("keydown", (e) => {
     }
 });
 
-["mousedown", "mouseup", "dbclick"].forEach((type) => document.addEventListener(type, (e) => {
-    console.debug(type, e.target);
-}));
+// Hack to fix a bug with chrome where gender options won't click the input unless double-clicked when a part of the person's name is selected
+{
+    let isChrome = navigator.userAgent.includes("Chrome");
+    if (isChrome) {
+        document.addEventListener("DOMContentLoaded", () => {
+            const genderMenuButtons = document.getElementById("gender-menu-buttons");
+            const labels = genderMenuButtons.querySelectorAll("label");
+            const icons = genderMenuButtons.querySelectorAll("i");
+
+            labels.forEach((label) => {
+                const input = document.getElementById(label.htmlFor);
+                label.addEventListener("click", (e) => {
+                    input.click();
+                    e.stopPropagation();
+                    e.preventDefault();
+                });
+            });
+            icons.forEach((icon) => {
+                const input = document.getElementById(icon.parentElement.htmlFor);
+                icon.addEventListener("click", (e) => {
+                    input.click();
+                    e.stopPropagation();
+                    e.preventDefault();
+                });
+            });
+        });
+    }
+}
