@@ -40,6 +40,7 @@ function pushStack(command, stack) {
     const removed = stack.shift()
     if (Object.hasOwn(removed, "onRemoved")) {
         removed.onRemoved();
+        console.debug("removed");
     }
 }
 export function forget() {
@@ -54,8 +55,7 @@ function editName(person) {
 
 export function addPerson(addTo=undefined) {
     const newPerson = Person.createPerson(addTo);
-    editName(newPerson);
-
+    
     const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
     command.onRemoved = () => {
         if (newPerson && newPerson.div && newPerson.isHidden) {
@@ -63,6 +63,8 @@ export function addPerson(addTo=undefined) {
         }
     }
     pushStack(command, undoStack);
+
+    editName(newPerson);
 }
 
 function addNewParentGroup(person, newPerson, subFamilyMap) {
@@ -155,6 +157,15 @@ export function addParent(person) {
 }
 export function addSpouce(person) {
     const newPerson = new Person();
+
+    const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
+        command.onRemoved = () => {
+        if (newPerson && newPerson.div && newPerson.isHidden) {
+            newPerson.delete();
+        }
+    }
+    pushStack(command, undoStack);
+    
     if (person.div.parentElement.className === "parents") {
         for (let i = 0, length = person.groups.length; i < length; i++) {
             if (person.groups[i].parents.includes(person)) {
@@ -168,14 +179,6 @@ export function addSpouce(person) {
     }
     Family.createFamily([person, newPerson], undefined, person);
     editName(newPerson);
-
-    const command = new Command(() => { newPerson.hide() }, () => { newPerson.show() });
-        command.onRemoved = () => {
-        if (newPerson && newPerson.div && newPerson.isHidden) {
-            newPerson.delete();
-        }
-    }
-    pushStack(command, undoStack);
 }
 export function addChild(person) {
     const newPerson = new Person();

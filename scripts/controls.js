@@ -45,6 +45,7 @@ makeDraggableBasic(genderMenu);
 const genderOptions = document.getElementsByName("gender");
 for (const option of genderOptions) {
     option.onchange = () => {
+        console.debug("change");
         if (menuTarget) {
             menuTarget.gender = option.value;
         }
@@ -450,24 +451,26 @@ document.addEventListener("dblclick", (event) => {
 });
 
 document.addEventListener("click", (event) => {
-    if (event.target.tagName === "FORM" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL" || event.target.tagName === "BUTTON" ||
+    console.debug("click", event.target);
+    // console.debug(event.composedPath());
+    if (event.target.tagName === "FIELDSET" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL" || event.target.tagName === "BUTTON" ||
         (event.target.tagName === "I" && event.target.parentElement.tagName === "LABEL") || isEditing) {
-        return;
-    }
-    // event.preventDefault();
-
-    let target = undefined;
-    menuTarget = undefined;
-    if (event.target.classList.contains("person")) {
-        target = event.target;
-    }
-    else if (event.target.classList.contains("name")) {
-        target = event.target.parentElement;
-    }
-
-    if (target) {
-        if (Math.abs(event.pageX - CLICKED_POS.x) > 1 || Math.abs(event.pageY - CLICKED_POS.y) > 1) {
             return;
+        }
+        // event.preventDefault();
+        
+        let target = undefined;
+        menuTarget = undefined;
+        if (event.target.classList.contains("person")) {
+            target = event.target;
+        }
+        else if (event.target.classList.contains("name")) {
+            target = event.target.parentElement;
+        }
+        
+        if (target) {
+            if (Math.abs(event.pageX - CLICKED_POS.x) > 1 || Math.abs(event.pageY - CLICKED_POS.y) > 1) {
+                return;
         }
         resetGenderMenuPosition();
         selectPeople([target]);
@@ -720,7 +723,7 @@ document.addEventListener("keyup", (e) => {
             }
         }
         case "ArrowUp":
-            if (document.activeElement.className === "name" && !e.altKey) {
+            if ((document.activeElement.className === "name" && !e.altKey) || PEOPLE.length === 0 || !document.querySelector(".person")) {
                 return;
             }
             function findFirstVisibleParent(selected) {
@@ -742,7 +745,7 @@ document.addEventListener("keyup", (e) => {
             }
             return NavigatePeople(findFirstVisibleParent);
         case "ArrowDown":
-            if (document.activeElement.className === "name" && !e.altKey) {
+            if ((document.activeElement.className === "name" && !e.altKey) || PEOPLE.length === 0 || !document.querySelector(".person")) {
                 return;
             }
             function findFirstVisibleChild(selected) {
@@ -781,7 +784,7 @@ document.addEventListener("keyup", (e) => {
             return from.querySelector(`#${from.id}>${".children>.family>".repeat(nestedCount - 1)}.children>div`);
         }
         case "ArrowLeft": 
-            if (document.activeElement.className === "name" && !e.altKey) {
+            if ((document.activeElement.className === "name" && !e.altKey) || PEOPLE.length === 0 || !document.querySelector(".person")) {
                 return;
             }
             function findPreviousPerson(selected) {
@@ -828,7 +831,7 @@ document.addEventListener("keyup", (e) => {
             }
             return NavigatePeople(findPreviousPerson);
         case "ArrowRight": {
-            if (document.activeElement.className === "name" && !e.altKey) {
+            if ((document.activeElement.className === "name" && !e.altKey) || PEOPLE.length === 0 || !document.querySelector(".person")) {
                 return;
             }
             function findNextPerson(selected) {
@@ -939,3 +942,7 @@ document.addEventListener("keydown", (e) => {
             return;
     }
 });
+
+["mousedown", "mouseup", "dbclick"].forEach((type) => document.addEventListener(type, (e) => {
+    console.debug(type, e.target);
+}));

@@ -121,6 +121,11 @@ html, body, #workspace {
 }
 #gender-menu-buttons input, #parent-relationship-buttons input, #child-relationship-buttons input  {
     display: none;
+    -webkit-user-select:none;
+    -khtml-user-select:none;
+    -moz-user-select:none;
+    -o-user-select:none;
+    user-select:none;
 }
 #gender-menu-buttons label, #parent-relationship-buttons label, #child-relationship-buttons label  {
     display: block;
@@ -178,6 +183,13 @@ html, body, #workspace {
 }
 #gender-menu-buttons input:checked:hover+label, #edit-relationship input:checked:hover+label {
     cursor: default;
+}
+#gender-menu-buttons input[type=checkbox] + label, #gender-menu-buttons input[type=checkbox] + label i {
+    -webkit-user-select:none;
+    -khtml-user-select:none;
+    -moz-user-select:none;
+    -o-user-select:none;
+    user-select:none;
 }
 
 #edit-relationship, #edit-relationship>div {

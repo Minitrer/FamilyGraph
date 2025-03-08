@@ -56,16 +56,7 @@ export default class Person {
         nameElement.className = "name";
         nameElement.spellcheck = false;
         nameElement.autofocus = true;
-        nameElement.addEventListener("focus", () => {
-            if (this.name === "Name") {
-                nameElement.textContent = "";
-            }
-            const selection = document.getSelection();
-            const range = document.createRange();
-            range.selectNodeContents(nameElement);
-            selection.removeAllRanges();
-            selection.addRange(range);
-        });
+        nameElement.addEventListener("focus", focusName);
         this.#div.appendChild(nameElement);
 
         // Set up properties to make the div draggable
@@ -571,6 +562,7 @@ export default class Person {
         
         observer.unobserve(this.#div);
 
+        this.#div.firstElementChild.removeEventListener("focus", focusName);
         this.#div.remove();
         this.#div = null;
         
@@ -686,4 +678,14 @@ function getIDs(array, visibleGlobal=undefined) {
 }
 function fromIDs(ids, array) {
     return ids.map((id) => array[id]);
+}
+function focusName(e) {
+    if (this.name === "Name") {
+        e.target.textContent = "";
+    }
+    const selection = document.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(e.target);
+    selection.removeAllRanges();
+    selection.addRange(range);
 }
