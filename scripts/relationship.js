@@ -302,54 +302,43 @@ export default class Relationship {
                                 continue;
                             } 
                             
-                            const sibling = PEOPLE[id];
+                            // Other could be sibling or nibling
+                            const other = PEOPLE[id];
                             function setBothStep(isStep=true) {
                                 toRelationship.setStep(isStep);
-                                sibling.relationships.get(to.id).setStep(isStep);
+                                other.relationships.get(to.id).setStep(isStep);
                             }
                             function setBothHalf(isHalf=true) {
                                 toRelationship.setHalf(isHalf);
-                                sibling.relationships.get(to.id).setHalf(isHalf);
+                                other.relationships.get(to.id).setHalf(isHalf);
                             }
 
-                            const biologicalParentsA = to.parents.filter((parent) => {
+                            const tosParents = to.parents;
+                            const tosBiologicalParents = tosParents.filter((parent) => {
                                 const relationship = parent.relationships.get(toID);
                                 return relationship.type === "Child" && relationship.prefix === "";
                             });
-                            if (biologicalParentsA.length === 0) {
+                            if (tosBiologicalParents.length === 0) {
                                 setBothStep();
                                 continue;
                             }
 
-                            const biologicalParentsB = sibling.parents.filter((parent) => {
-                                const relationship = parent.relationships.get(id);
-                                return relationship.type === "Child" && relationship.prefix === "";
-                            });
-                            if (biologicalParentsB === 0) {
-                                setBothStep();
-                                continue;
-                            }
-
-                            let shareCount = 0;
-                            let differs = false;
-                            for (const parentA of biologicalParentsA) {
-                                if (biologicalParentsB.includes(parentA)) {
-                                    shareCount++;
-                                    continue;
+                            const biologicallyShared = tosBiologicalParents.filter((parent) => {
+                                const otherRelationship = parent.relationships.get(id);
+                                if (!otherRelationship) {
+                                    return false;
                                 }
-                                differs = true;
-                            }
-
-                            if (shareCount === 0) {
+                                return otherRelationship.type === "Child" && otherRelationship.prefix === "";
+                            });
+                            if (biologicallyShared.length === 0) {
                                 setBothStep();
                                 continue;
                             }
-                            if (differs || biologicalParentsA.length !== biologicalParentsB.length) {
-                                setBothHalf();
+                            if (biologicallyShared.length === tosBiologicalParents.length) {
+                                setBothStep(false);
                                 continue;
                             }
-
-                            setBothStep(false);
+                            setBothHalf();
                             continue;
                         default:
                             to.relationships.get(id).setStep(toggle);

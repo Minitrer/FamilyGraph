@@ -525,7 +525,7 @@ export default class Person {
         Family.updateAll();
     }
 
-    delete() {
+    delete(update=true) {
         // Correct relationships
         const deletedId = this.id;
         for (let i = 0; i < PEOPLE.length; i++) {
@@ -565,19 +565,26 @@ export default class Person {
         this.#div.firstElementChild.removeEventListener("focus", focusName);
         this.#div.remove();
         this.#div = null;
-        
-        this.#groups.forEach((group) => {
-            group.remove(this);
-        });
-        this.#groups = null;
             
-        if (PEOPLE.length === 0 || this.isHidden) {
+        for (let i = 0, length = this.#groups.length; i < length; i++) {
+            this.#groups[0].remove(this, update);
+        }
+        this.#groups = null;
+        
+        if (PEOPLE.length === 0 || this.isHidden || !update) {
             return;
         }
         Family.updateAll();
     }
 
     toJSON(visiblePeople, visibleFamilies) {
+        const stepRelationshipIDs = [];
+        this.#relationships.forEach((relationship, id) => {
+            if (relationship.prefix !== "Step-") {
+                return;
+            }
+            stepRelationshipIDs.push(visiblePeople.indexOf(PEOPLE[id]));
+        });
         return {
             name: this.name,
             familyID: visibleFamilies.indexOf(this.#family),
@@ -586,6 +593,7 @@ export default class Person {
             parentIDs: getIDs(this.#parents, visiblePeople),
             childrenIDs: getIDs(this.#children, visiblePeople),
             gender: this.#gender,
+            stepRelationshipIDs: stepRelationshipIDs,
             transformPos: this.#transformPos,
             workspacePos: this.#workspacePos,
             connectionPoints: this.#connectionPoints,

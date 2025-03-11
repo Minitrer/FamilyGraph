@@ -3,6 +3,7 @@ import { PEOPLE } from "./person.js";
 import { CLICKED_POS, DRAGGING_ELEMENTS } from "./pan-zoom-and-drag.js";
 import makeDraggableBasic from "./pan-zoom-and-drag.js";
 import * as Actions from "./actions.js";
+import * as SaveLoad from "./save-and-load.js";
 
 let menuTarget;
 let selected = [];
@@ -482,7 +483,7 @@ document.addEventListener("pointerdown", (e) => {
     if (e.target.tagName !== "LABEL"  && e.target.tagName !== "I") {
         return;
     }
-    const label = e.target.tagName === "I"? e.target.parentElement : e.target
+    const label = e.target.tagName === "I"? e.target.parentElement : e.target;
     switch (label.htmlFor) {
         case "male":
         case "agender":
@@ -566,9 +567,14 @@ document.addEventListener("keyup", (e) => {
                 Actions.addParent(selection.person);
             });
             return;
-        // Add spouce
         case "s":
         case "S":
+            // Save
+            if (e.ctrlKey && PEOPLE.length > 0) {
+                SaveLoad.save();
+                return;
+            }
+            // Add spouce
             if ((document.activeElement.className === "name" && !e.altKey) || selected.length === 0) {
                 return;
             }
@@ -666,6 +672,14 @@ document.addEventListener("keyup", (e) => {
             resetGenderMenuPosition();
             return;
         }
+        // Open file
+        case "o":
+        case "O":
+            if (!e.ctrlKey) {
+                return;
+            }
+            SaveLoad.open();
+            return;
         // Confirm name
         case "Enter":
             if (e.shiftKey || document.activeElement.className !== "name") {
@@ -908,6 +922,12 @@ document.addEventListener("keydown", (e) => {
         // Don't show history/edit page when selected a person
         case "s":
         case "S":
+        // Don't let browser save file
+            if (e.ctrlKey) {
+                e.preventDefault();
+                return;
+            }
+            // Fall-through
         case "e":
         case "E":
             if (!e.altKey || selected.length === 0) {
@@ -934,6 +954,13 @@ document.addEventListener("keydown", (e) => {
                 return;
             }
             e.preventDefault();
+            return;
+        // Don't let browser open files
+        case "o":
+        case "O":
+            if (e.ctrlKey) {
+                e.preventDefault();
+            }
             return;
         default:
             return;

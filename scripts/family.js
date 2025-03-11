@@ -208,54 +208,67 @@ export default class Family {
         this.#DOMPositionAfterHiding = this.#div.parentElement;
         if (this.#childrenDiv.childElementCount === 1 && this.#childrenDiv.firstElementChild.className === "family") {
             this.#div.replaceWith(this.#childrenDiv.firstElementChild);
-        }
-        else {
-            this.#div.remove();
-        }
-        
-        Family.hiddenCount++;
-        if (Family.getVisibleLength() === 0) {
             return;
         }
-        Family.updateAll();
+        else if (this.#div.parentElement.className === "children" && this.#div.parentElement.childElementCount === 2) {
+            const largerFamily = FAMILIES[Family.getIDFromDiv(this.#div.parentElement.parentElement)];
+            this.#div.remove();
+            largerFamily.hide();
+            return;
+        }
+        this.#div.remove();
+        
+        Family.hiddenCount++;
+        // if (Family.getVisibleLength() === 0) {
+        //     return;
+        // }
+        // Family.updateAll();
     }
 
-    delete() {
-        // Correct SubFamilyMaps
-        for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
-            if (FAMILIES[i].div.parentElement && FAMILIES[i].div.parentElement.className === "children") {
-                const largerFamilyID = Family.getIDFromDiv(FAMILIES[i].div.parentElement.parentElement);
-                if (largerFamilyID === this.id) {
-                    continue;
-                }
-                FAMILIES[largerFamilyID].groups.forEach((group) => {
-                    if (group.subFamilyMap[`${FAMILIES[i].id}`]) {
-                        group.subFamilyMap[`${FAMILIES[i].id - 1}`] = group.subFamilyMap[`${FAMILIES[i].id}`];
-                        delete group.subFamilyMap[`${FAMILIES[i].id}`];
+    delete(update=true) {
+        console.debug("deleted: ", this.div.id);
+        if (update) {
+            // Correct SubFamilyMaps
+            for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
+                if (FAMILIES[i].div.parentElement && FAMILIES[i].div.parentElement.className === "children") {
+                    const largerFamilyID = Family.getIDFromDiv(FAMILIES[i].div.parentElement.parentElement);
+                    if (largerFamilyID === this.id) {
+                        continue;
                     }
-                });
+                    FAMILIES[largerFamilyID].groups.forEach((group) => {
+                        if (group.subFamilyMap[`${FAMILIES[i].id}`]) {
+                            group.subFamilyMap[`${FAMILIES[i].id - 1}`] = group.subFamilyMap[`${FAMILIES[i].id}`];
+                            delete group.subFamilyMap[`${FAMILIES[i].id}`];
+                        }
+                    });
+                }
             }
-        }
-        // Correct div ids
-        for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
-            FAMILIES[i].div.id = `family ${i - 1}`;
+            // Correct div ids
+            for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
+                FAMILIES[i].div.id = `family ${i - 1}`;
+            }
         }
 
         FAMILIES.splice(this.id, 1);
 
         this.#parentsDiv.remove();
         this.#childrenDiv.remove();
-        if (this.#childrenDiv.childElementCount === 1 && this.#childrenDiv.firstElementChild.className === "family") {
+        if (this.#childrenDiv.childElementCount === 1 && this.#childrenDiv.firstElementChild.className === "family" && update) {
             this.#div.replaceWith(this.#childrenDiv.firstElementChild);
-        }
-        else {
-            this.#div.remove();
-        }
-        
-        if (FAMILIES.length === 0) {
             return;
         }
-        Family.updateAll();
+        else if (this.#div.parentElement.className === "children" && this.#div.parentElement.childElementCount === 2) {
+            const largerFamily = FAMILIES[Family.getIDFromDiv(this.#div.parentElement.parentElement)];
+            this.#div.remove();
+            largerFamily.delete();
+            return;
+        }
+        this.#div.remove();
+        
+        // if (FAMILIES.length === 0 || !update) {
+        //     return;
+        // }
+        // Family.updateAll();
     }
 
     toJSON(visiblePeople, visibleFamilies) {
@@ -371,7 +384,7 @@ class ParentChildGroup {
     #isHidden = false;
     
     // subFamilyMap is a dictionary with subfamilies's ids as keys and one of their parents as values
-    constructor(parents, children, family, subFamilyMap=undefined) {
+    constructor(parents, children, family, subFamilyMap={}) {
         this.#family = family;
         this.parents = parents;
 
@@ -801,19 +814,19 @@ class ParentChildGroup {
     
             this.#family.hiddenGroupCount++;
     
-            const replaceCondition = this.#family.parentsDiv.childElementCount === 0 &&
-                                     this.#family.childrenDiv.childElementCount === 1 &&
-                                     this.#family.childrenDiv.firstElementChild.className === "family";
-            if (replaceCondition || this.#family.groups.length === this.#family.hiddenGroupCount) {
+            const hideCondition = this.#family.parentsDiv.childElementCount === 0 &&
+                                 (this.#family.childrenDiv.childElementCount === 0 || 
+                                 (this.#family.childrenDiv.childElementCount === 1 && this.#family.childrenDiv.firstElementChild.className === "family"));
+            if (hideCondition) {
                 this.#family.hide();
                 return;
             }
     
-            if (Family.getVisibleLength() === 0) {
-                return;
-            }
-            Family.updateAll();
-            return;
+            // if (Family.getVisibleLength() === 0) {
+            //     return;
+            // }
+            // Family.updateAll();
+            // return;
         }
 
         // Hide the person in the group
@@ -893,16 +906,19 @@ class ParentChildGroup {
         return;
     }
 
-    remove(person) {
+    remove(person, update=true) {
+        person.groups.splice(person.groups.indexOf(this), 1);
+        
         const parentIndex = this.parents.indexOf(person);
         if (parentIndex > -1) {
             this.parents.splice(parentIndex, 1);
+            
             if (person.isHidden) {
                 this.parents.hiddenCount--;
             }
 
             if (this.parents.length === 0 && (this.children.length === 0 || (this.children.length === 1 && this.children[0] instanceof Family))) {
-                this.delete();
+                this.delete(update);
                 return;
             }
             if (this.parents.getVisibleLength() < 3) {
@@ -919,7 +935,7 @@ class ParentChildGroup {
                     }
                 });
 
-                if (this.parents.getVisibleLength() > 0) {
+                if (this.parents.getVisibleLength() > 0 && update) {
                     this.createParentConnectionPoint();
                 }
                 else if (this.childrenConnectionPoint) {
@@ -931,12 +947,13 @@ class ParentChildGroup {
         
         const childIndex = (this.children.indexOf(person) > -1)? this.children.indexOf(person) : this.children.indexOf(person.family);
         this.children.splice(childIndex, 1);
+
         if (person.isHidden) {
             this.children.hiddenCount--;
         }
 
         if (this.parents.length === 0 && (this.children.length === 0 || (this.children.length === 1 && this.children[0] instanceof Family))) {
-            this.delete();
+            this.delete(update);
             return;
         }
         if (this.children.getVisibleLength() < 2) {
@@ -953,7 +970,9 @@ class ParentChildGroup {
                     singleChild.connections.delete(`children ${index}`);
                 }
 
-                this.createChildConnectionPoint();
+                if (update) {
+                    this.createChildConnectionPoint();
+                }
             }
             else if (this.parentsConnectionPoint) {
                 this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);
@@ -961,18 +980,24 @@ class ParentChildGroup {
         }
     }
 
-    delete() {
-        if (this.children[0] && !this.children[0].isHidden) {
+    delete(update=true) {
+        if (this.children[0]) {
             const subChild = this.#subFamilyMap[`${this.children[0].id}`];
             const index = subChild.groups.indexOf(this);
-            if (subChild.connections.has(`children ${index}`)) {
-                subChild.connections.get(`children ${index}`).remove();
-                subChild.connections.delete(`children ${index}`);
 
-                // Update connections with higher indexes
-                updateConnectionsIndexes(subChild.connections, index);
-            }
             subChild.groups.splice(index, 1);
+
+            if (!this.children[0].isHidden) {
+                if (subChild.connections.has(`children ${index}`)) {
+                    subChild.connections.get(`children ${index}`).remove();
+                    subChild.connections.delete(`children ${index}`);
+    
+                    if (update) {
+                        // Update connections with higher indexes
+                        updateConnectionsIndexes(subChild.connections, index);
+                    }
+                }
+            }
         }
 
         if (this.parentsConnectionPoint) {
@@ -985,16 +1010,19 @@ class ParentChildGroup {
 
         this.#family.groups.splice(this.#family.groups.indexOf(this), 1);
 
-        const replaceCondition = this.#family.parentsDiv.childElementCount === 0 && this.#family.childrenDiv.childElementCount === 1 && this.#family.childrenDiv.firstElementChild.className === "family";
-        if (replaceCondition || this.#family.groups.length === 0) {
-            this.#family.delete();
+        const deleteCondition = this.#family.groups.length === 0 &&
+                                this.#family.parentsDiv.childElementCount === 0 &&
+                               (this.#family.childrenDiv.childElementCount === 0 || 
+                               (this.#family.childrenDiv.childElementCount === 1 && this.#family.childrenDiv.firstElementChild.className === "family"));
+        if (deleteCondition) {
+            this.#family.delete(update);
             return;
         }
 
-        if (FAMILIES.length === 0) {
-            return;
-        }
-        Family.updateAll();
+        // if (FAMILIES.length === 0 || !update) {
+        //     return;
+        // }
+        // Family.updateAll();
     }
 
     convertChildToFamily(child, family) {

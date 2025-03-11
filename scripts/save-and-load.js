@@ -11,21 +11,7 @@ saveDiv.addEventListener("click", (event) => {
     }
     event.preventDefault();
 
-    const visibleFamilies = FAMILIES.filter((family) => !family.isHidden);
-    const visiblePeople = PEOPLE.filter((person) => !person.isHidden);
-
-    const blobContent = Person.save(visiblePeople, visibleFamilies);
-    const familiesData = Family.save(visiblePeople, visibleFamilies);
-    const domStructure = createStructureObject(visiblePeople, visibleFamilies);
-    blobContent.push(familiesData);
-    blobContent.push(domStructure);
-
-    const file = new Blob([JSON.stringify(blobContent, null, 4)], { type: "text/plain" });
-    
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(file);
-    a.download = "family.json";
-    a.click();
+    save();
 });
 
 input.addEventListener("change", (event) => {
@@ -51,7 +37,6 @@ input.addEventListener("change", (event) => {
 
         for (let i = 0, length = PEOPLE.length; i < length; i++) {
             PEOPLE[0].delete();
-            console.debug(FAMILIES);
         }
         forget();
 
@@ -103,4 +88,26 @@ function createStructureObject(visiblePeople, visibleFamilies, from=document.get
     if (from.classList.contains("person")) {
         return visiblePeople.indexOf(from.person);
     }
+}
+
+export function save() {
+    const visibleFamilies = FAMILIES.filter((family) => !family.isHidden);
+    const visiblePeople = PEOPLE.filter((person) => !person.isHidden);
+
+    const blobContent = Person.save(visiblePeople, visibleFamilies);
+    const familiesData = Family.save(visiblePeople, visibleFamilies);
+    const domStructure = createStructureObject(visiblePeople, visibleFamilies);
+    blobContent.push(familiesData);
+    blobContent.push(domStructure);
+
+    const file = new Blob([JSON.stringify(blobContent, null, 4)], { type: "text/plain" });
+    
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(file);
+    a.download = "family.json";
+    a.click();
+}
+
+export function open() {
+    input.click();
 }
