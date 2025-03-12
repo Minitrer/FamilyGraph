@@ -1,4 +1,5 @@
 import { PEOPLE } from "./person.js";
+import { RELATIONSHIPTEXTS, SELECTED, updateRelationshipText } from "./controls.js";
 
 class Noun  {
     static Spouce = Object.freeze({
@@ -126,16 +127,28 @@ export default class Relationship {
         this.cousinSeperation += addAmount;
         return this;
     }
-    setInLaw(isInLaw=true) {
+    setInLaw(isInLaw=true, id=null) {
         this.#suffix = isInLaw? "-in-law" : "";
+        if (id === null) {
+            return this;
+        }
+        updateText(id, this);
         return this;
     }
-    setStep(isStep=true) {
+    setStep(isStep=true, id=null) {
         this.#prefix = isStep? "Step-" : "";
+        if (id === null) {
+            return this;
+        }
+        updateText(id, this);   
         return this;
     }
-    setHalf(isHalf=true) {
+    setHalf(isHalf=true, id=null) {
         this.#prefix = isHalf? "Half-" : "";
+        if (id === null) {
+            return this;
+        }
+        updateText(id, this);
         return this;
     }
     copy(type=this.#type, person=this.#person, GCount=this.#GCount, prefix=this.#prefix, suffix=this.#suffix, cousinNumber=this.#cousinNumber, cousinSeperation=this.#cousinSeperation) {
@@ -143,7 +156,7 @@ export default class Relationship {
     }
     
     static setRelationships(from, to, type) {
-        to.relationships.set(from.id, new Relationship(type, from));
+        set(to.relationships, from.id, new Relationship(type, from));
         switch (type) {
             case "Parent":
                 for (const [id, relationship] of from.relationships) {
@@ -155,45 +168,47 @@ export default class Relationship {
                     switch (relationship.type) {
                         case "Child":
                             if (relationship.GCount > 0) {
-                                to.relationships.set(id, relationship.copy("Nibling", PEOPLE[id], relationship.GCount - 1));
-                                PEOPLE[id].relationships.set(to.id, otherRelationship.copy("Pibling", to, relationship.GCount - 1));
+                                set(to.relationships, id, relationship.copy("Nibling", PEOPLE[id], relationship.GCount - 1));
+                                set(PEOPLE[id].relationships, to.id, otherRelationship.copy("Pibling", to, relationship.GCount - 1));
                                 break;    
                             }
-                            to.relationships.set(id, relationship.copy("Sibling", PEOPLE[id]));
-                            PEOPLE[id].relationships.set(to.id, otherRelationship.copy("Sibling", to));
+                            set(to.relationships, id, relationship.copy("Sibling", PEOPLE[id]));
+                            set(PEOPLE[id].relationships, to.id, otherRelationship.copy("Sibling", to));
                             break;
                         case "Sibling":
-                            to.relationships.set(id, relationship.copy("Pibling", PEOPLE[id]));
-                            PEOPLE[id].relationships.set(to.id, otherRelationship.copy("Nibling", to)); 
+                            set(to.relationships, id, relationship.copy("Pibling", PEOPLE[id]));
+                            set(PEOPLE[id].relationships, to.id, otherRelationship.copy("Nibling", to)); 
                             break;
                         case "Pibling":
-                            to.relationships.set(id, relationship.copy("Pibling", PEOPLE[id], relationship.GCount + 1));
-                            PEOPLE[id].relationships.set(to.id, otherRelationship.copy("Nibling", to, otherRelationship.GCount + 1));
+                            set(to.relationships, id, relationship.copy("Pibling", PEOPLE[id], relationship.GCount + 1));
+                            set(PEOPLE[id].relationships, to.id, otherRelationship.copy("Nibling", to, otherRelationship.GCount + 1));
                             break;
                         case "Nibling": 
                             if (relationship.GCount > 0) {
                                 const seperationAmount = relationship.GCount;
-                                to.relationships.set(id, relationship.copy("Cousin", PEOPLE[id], 0, relationship.prefix, relationship.suffix, 1, seperationAmount));
-                                PEOPLE[id].relationships.set(to.id, otherRelationship.copy("Cousin", to, 0, otherRelationship.prefix, otherRelationship.suffix, 1, seperationAmount));
+                                set(to.relationships, id, relationship.copy("Cousin", PEOPLE[id], 0, relationship.prefix, relationship.suffix, 1, seperationAmount));
+                                set(PEOPLE[id].relationships, to.id, otherRelationship.copy("Cousin", to, 0, otherRelationship.prefix, otherRelationship.suffix, 1, seperationAmount));
                                 break;
                             }
-                            to.relationships.set(id, relationship.copy("Cousin", PEOPLE[id], 0, relationship.prefix, relationship.suffix, 1));
-                            PEOPLE[id].relationships.set(to.id, otherRelationship.copy("Cousin", to, 0, otherRelationship.prefix, otherRelationship.suffix, 1));
+                            set(to.relationships, id, relationship.copy("Cousin", PEOPLE[id], 0, relationship.prefix, relationship.suffix, 1));
+                            set(PEOPLE[id].relationships, to.id, otherRelationship.copy("Cousin", to, 0, otherRelationship.prefix, otherRelationship.suffix, 1));
                             break;
                         case "Parent": 
-                            to.relationships.set(id, relationship.copy("Parent", PEOPLE[id], relationship.GCount + 1));
-                            PEOPLE[id].relationships.set(to.id, otherRelationship.copy("Child", to, otherRelationship.GCount + 1));
+                            set(to.relationships, id, relationship.copy("Parent", PEOPLE[id], relationship.GCount + 1));
+                            set(PEOPLE[id].relationships, to.id, otherRelationship.copy("Child", to, otherRelationship.GCount + 1));
                             break;
                         case "Cousin":
                             if (relationship.cousinSeperation === 0) {
-                                to.relationships.set(id, relationship.copy("Cousin", PEOPLE[id]).addCousinSeperation());
-                                PEOPLE[id].relationships.set(to.id, otherRelationship.copy("Cousin", to).addCousinSeperation());
+                                set(to.relationships, id, relationship.copy("Cousin", PEOPLE[id]).addCousinSeperation());
+                                set(PEOPLE[id].relationships, to.id, otherRelationship.copy("Cousin", to).addCousinSeperation());
                                 break;
                             }
                             // We can see whether the parent is in an older generation by checking the cousin's parents, seeing if one of them is also the parent's cousin 
                             // and comparing the seperations, or if there's no cousins to be found
                             let isParentHigher = false;
-                            for (const parent of PEOPLE[id].parents) {
+                            // othersParents includes the parents of the spouces
+                            const othersParents = PEOPLE[id].parents.concat(PEOPLE[id].spouses.map((spouce) => spouce.parents).flat());
+                            for (const parent of othersParents) {
                                 const parentRelationship = from.relationships.get(parent.id);
                                 if (parentRelationship.type !== "Cousin") {
                                     continue;
@@ -206,18 +221,18 @@ export default class Relationship {
                                 break;
                             }
                             if (isParentHigher) {
-                                to.relationships.set(id, relationship.copy("Cousin", PEOPLE[id])
+                                set(to.relationships, id, relationship.copy("Cousin", PEOPLE[id])
                                     .addCousinSeperation(-1)
                                     .addCousinNumber());
-                                PEOPLE[id].relationships.set(to.id, otherRelationship.copy("Cousin", to)
+                                set(PEOPLE[id].relationships, to.id, otherRelationship.copy("Cousin", to)
                                     .addCousinSeperation(-1)
                                     .addCousinNumber());
                                 break;
                             }
                             // Cousin is higher
-                            to.relationships.set(id, relationship.copy("Cousin", PEOPLE[id])
+                            set(to.relationships, id, relationship.copy("Cousin", PEOPLE[id])
                                 .addCousinSeperation());
-                            PEOPLE[id].relationships.set(to.id, otherRelationship.copy("Cousin", to)
+                            set(PEOPLE[id].relationships, to.id, otherRelationship.copy("Cousin", to)
                                 .addCousinSeperation());
                             break;
                         default:
@@ -231,8 +246,8 @@ export default class Relationship {
                     }
                     for (const parent of from.spouses) {
                         if (parent.relationships.get(id).suffix === "") {
-                            toRelationship.setInLaw(false);
-                            PEOPLE[id].relationships.get(to.id).setInLaw(false);
+                            toRelationship.setInLaw(false, id);
+                            PEOPLE[id].relationships.get(to.id).setInLaw(false, to.id);
                             break;
                         }
                     }
@@ -246,12 +261,12 @@ export default class Relationship {
                         
                     switch (relationship.type) {
                         case "Child":
-                            to.relationships.set(id, relationship.copy("Child", PEOPLE[id]).addGreat());
-                            PEOPLE[id].relationships.set(to.id, PEOPLE[id].relationships.get(from.id).copy("Parent", to).addGreat());
+                            set(to.relationships, id, relationship.copy("Child", PEOPLE[id]).addGreat());
+                            set(PEOPLE[id].relationships, to.id, PEOPLE[id].relationships.get(from.id).copy("Parent", to).addGreat());
                             continue;
                         case "Spouce":
-                            to.relationships.set(id, to.relationships.get(from.id).copy("Child", PEOPLE[id]).setInLaw());
-                            PEOPLE[id].relationships.set(to.id, from.relationships.get(to.id).copy("Parent", to).setInLaw());
+                            set(to.relationships, id, to.relationships.get(from.id).copy("Child", PEOPLE[id]).setInLaw());
+                            set(PEOPLE[id].relationships, to.id, from.relationships.get(to.id).copy("Parent", to).setInLaw());
                             continue;
                         default:
                             continue;
@@ -269,13 +284,13 @@ export default class Relationship {
                         if (from.children.includes(PEOPLE[id])) {
                             continue;
                         }
-                        to.relationships.set(id, relationship.copy());
-                        PEOPLE[id].relationships.set(to.id, otherRelationship.copy(otherRelationship.type, to));
+                        set(to.relationships, id, relationship.copy());
+                        set(PEOPLE[id].relationships, to.id, otherRelationship.copy(otherRelationship.type, to));
                         continue;
                     }
                     
-                    to.relationships.set(id, relationship.copy(relationship.type, PEOPLE[id]).setInLaw());
-                    PEOPLE[id].relationships.set(to.id, otherRelationship.copy(otherRelationship.type, to).setInLaw());
+                    set(to.relationships, id, relationship.copy(relationship.type, PEOPLE[id]).setInLaw());
+                    set(PEOPLE[id].relationships, to.id, otherRelationship.copy(otherRelationship.type, to).setInLaw());
                 }
                 return;
             default:
@@ -285,76 +300,102 @@ export default class Relationship {
     }
 
     static setStepRelationships(from, to, type, toggle=true) {
-        to.relationships.get(from.id).setStep(toggle);
+        to.relationships.get(from.id).setStep(toggle, from.id);
+        const toID = to.id;
         switch (type) {
             case "Parent":
-                const toID = to.id;
-                for (const [id, relationship] of from.relationships) {
-                    if (id === to.id) {
+                const tosDescendants = [];
+                to.relationships.forEach((relationship, id) => {
+                    if (relationship.type === "Child") {
+                        tosDescendants.push({
+                            person: PEOPLE[id],
+                            id: id
+                        });
+                    }
+                });
+
+                for (const [otherId, relationship] of from.relationships) {
+                    if (otherId === toID) {
                         continue;
                     }
                     switch (relationship.type) {
                         case "Spouce":
                             continue;
                         case "Child":
-                            const toRelationship = to.relationships.get(id);
+                            const toRelationship = to.relationships.get(otherId);
+                            
                             if (toRelationship.type === "Spouce" || toRelationship.type === "Child") {
                                 continue;
                             } 
                             
                             // Other could be sibling or nibling
-                            const other = PEOPLE[id];
+                            const other = PEOPLE[otherId];
                             function setBothStep(isStep=true) {
-                                toRelationship.setStep(isStep);
-                                other.relationships.get(to.id).setStep(isStep);
+                                toRelationship.setStep(isStep, otherId);
+                                other.relationships.get(toID).setStep(isStep, toID);
+                                tosDescendants.forEach((descendant) => {
+                                    descendant.person.relationships.get(otherId).setStep(isStep, otherId);
+                                    other.relationships.get(descendant.id).setStep(isStep, descendant.id);
+                                });
                             }
                             function setBothHalf(isHalf=true) {
-                                toRelationship.setHalf(isHalf);
-                                other.relationships.get(to.id).setHalf(isHalf);
+                                toRelationship.setHalf(isHalf, otherId);
+                                other.relationships.get(toID).setHalf(isHalf, toID);
+                                tosDescendants.forEach((descendant) => {
+                                    descendant.person.relationships.get(otherId).setHalf(isHalf, otherId);
+                                    other.relationships.get(descendant.id).setHalf(isHalf, descendant.id);
+                                });
                             }
 
-                            const tosParents = to.parents;
-                            const tosBiologicalParents = tosParents.filter((parent) => {
-                                const relationship = parent.relationships.get(toID);
-                                return relationship.type === "Child" && relationship.prefix === "";
-                            });
-                            if (tosBiologicalParents.length === 0) {
-                                setBothStep();
-                                continue;
-                            }
-
-                            const biologicallyShared = tosBiologicalParents.filter((parent) => {
-                                const otherRelationship = parent.relationships.get(id);
-                                if (!otherRelationship) {
-                                    return false;
+                            let isntStep = false;
+                            let isntNeither = false;
+                            for (const parent of to.parents) {
+                                const toRelationship = parent.relationships.get(toID);
+                                const otherRelationship = parent.relationships.get(otherId);
+                                if (!otherRelationship || toRelationship.prefix !== otherRelationship.prefix) {
+                                    isntNeither = true;
+                                    if (isntStep) {
+                                        setBothHalf();
+                                        break;
+                                    }
+                                    continue;
                                 }
-                                return otherRelationship.type === "Child" && otherRelationship.prefix === "";
-                            });
-                            if (biologicallyShared.length === 0) {
-                                setBothStep();
+                                if (toRelationship.prefix === "" && otherRelationship.prefix === "") {
+                                    isntStep = true;
+                                    if (isntNeither) {
+                                        setBothHalf();
+                                        break;
+                                    }
+                                    continue;
+                                }
+                            }
+                            //  isHalf = isntStep && isntNeither;
+                            if (isntStep && isntNeither) {
                                 continue;
                             }
-                            if (biologicallyShared.length === tosBiologicalParents.length) {
-                                setBothStep(false);
+                            // isntHalf = true;
+                            if (isntNeither) {
+                                setBothStep()
                                 continue;
                             }
-                            setBothHalf();
+                            // isntHalf and isntStep
+                            setBothStep(false);
                             continue;
                         default:
-                            to.relationships.get(id).setStep(toggle);
-                            PEOPLE[id].relationships.get(to.id).setStep(toggle);
+                            to.relationships.get(otherId).setStep(toggle, otherId);
+                            PEOPLE[otherId].relationships.get(toID).setStep(toggle, toID);
                             continue;
                     }
                 }
                 return;
             case "Child":
                 for (const [id, relationship] of from.relationships) {
-                    if (id === to.id) {
+                    if (id === toID) {
                         continue;
                     }
                     if (relationship.type === "Spouce" || relationship.type === "Child") {
-                        to.relationships.get(id).setStep(toggle);
-                        PEOPLE[id].relationships.get(to.id).setStep(toggle);
+                        to.relationships.get(id).setStep(toggle, id);
+                        PEOPLE[id].relationships.get(toID).setStep(toggle, toID);
                         continue;
                     }
                 }
@@ -366,6 +407,23 @@ export default class Relationship {
     }
 }
 
+function set(map, id, relationship) {
+    map.set(id, relationship);
+    updateText(id, relationship);
+}
+function updateText(id, relationship) {
+    if (!SELECTED[0]) {
+        return;
+    }
+    const selectedRelationship = SELECTED[0].person.relationships.get(id);
+    if (!selectedRelationship || selectedRelationship !== relationship) {
+        return;
+    }
+    const text = RELATIONSHIPTEXTS.get(id);
+    if (text && text.parentElement) {
+        updateRelationshipText(text, id, relationship);
+    }
+}
 function getOrdinal(number) {
     switch (number) {
         case 1:

@@ -2,20 +2,14 @@ import Family from "./family.js";
 import { FAMILIES } from "./family.js";
 import Vec2 from "./vec2.js";
 import Relationship from "./relationship.js";
-import { RELATIONSHIPTEXTS } from "./controls.js";
+import { RELATIONSHIPTEXTS, updateRelationshipTextPos } from "./controls.js";
 
 export let PEOPLE = [];
 const observer = new ResizeObserver(() => {
     Family.updateAll();
 
     RELATIONSHIPTEXTS.forEach((text, id) => {
-        const x = PEOPLE[id].div.offsetLeft + PEOPLE[id].transformPos.x + PEOPLE[id].div.offsetWidth / 2 - text.offsetWidth / 2;
-        const y = PEOPLE[id].div.offsetTop + PEOPLE[id].transformPos.y + PEOPLE[id].div.offsetHeight;
-        text.style.left = `${x}px`;
-        text.style.top = `${y}px`;
-
-        text.style.setProperty("--pos-x", 0);
-        text.style.setProperty("--pos-y", 0);
+        updateRelationshipTextPos(text, id);
     });
 });
 

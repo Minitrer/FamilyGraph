@@ -36,7 +36,7 @@ input.addEventListener("change", (event) => {
         const familiesData = peopleData.pop();
 
         for (let i = 0, length = PEOPLE.length; i < length; i++) {
-            PEOPLE[0].delete();
+            PEOPLE[0].delete(false);
         }
         forget();
 

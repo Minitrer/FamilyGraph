@@ -40,7 +40,6 @@ function pushStack(command, stack) {
     const removed = stack.shift()
     if (Object.hasOwn(removed, "onRemoved")) {
         removed.onRemoved();
-        console.debug("removed");
     }
 }
 export function forget() {

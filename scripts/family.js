@@ -226,7 +226,6 @@ export default class Family {
     }
 
     delete(update=true) {
-        console.debug("deleted: ", this.div.id);
         if (update) {
             // Correct SubFamilyMaps
             for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
@@ -821,6 +820,7 @@ class ParentChildGroup {
                 this.#family.hide();
                 return;
             }
+            return;
     
             // if (Family.getVisibleLength() === 0) {
             //     return;

@@ -6,7 +6,7 @@ import * as Actions from "./actions.js";
 import * as SaveLoad from "./save-and-load.js";
 
 let menuTarget;
-let selected = [];
+export let SELECTED = [];
 export let RELATIONSHIPTEXTS = new Map();
 
 // 
@@ -253,6 +253,9 @@ function onEdit(targetPerson) {
     if (visibleParents.length === 0 && visibleChildren.length === 0) {
         return;
     }
+
+    selectPeople([personEditing.div]);
+
     resetEditRelationshipMenu();
     contextMenu.appendChild(editRelationship);
     if (visibleParents.length > 0) {
@@ -298,18 +301,18 @@ function onRelationshipTypeChange(ID, type) {
     // Relationship.setStepRelationships(PEOPLE[ID], targetPerson, "Parent", isStep);
 }
 function selectPeople(selection) {
-    selected.forEach((previouslySelected) => {
+    SELECTED.forEach((previouslySelected) => {
         previouslySelected.classList.remove("selected");
     });
     selection.forEach((person) => {
         person.classList.add("selected");
     });
-    selected = selection;
+    SELECTED = selection;
     for (const text of RELATIONSHIPTEXTS.values()) {
         text.remove();
     }
-    menuTarget = selected[0].person;
-    createRelationshipText(menuTarget);
+    menuTarget = SELECTED[0].person;
+    createRelationshipTexts(menuTarget);
 }
 function setGenderOption(target) {
     const currentGenderOption = document.getElementById(target.person.gender);
@@ -329,41 +332,54 @@ function resetGenderMenuPosition() {
     genderMenu.transformPos.y = 0;
 }
 
-function createRelationshipText(person) {
+export function updateRelationshipTextPos(text, id) {
+    const x = PEOPLE[id].div.offsetLeft + PEOPLE[id].transformPos.x + PEOPLE[id].div.offsetWidth / 2 - text.offsetWidth / 2;
+    const y = PEOPLE[id].div.offsetTop + PEOPLE[id].transformPos.y + PEOPLE[id].div.offsetHeight;
+    text.style.left = `${x}px`;
+    text.style.top = `${y}px`;
+
+    text.style.setProperty("--pos-x", 0);
+    text.style.setProperty("--pos-y", 0);
+}
+export function updateRelationshipText(text, id, relationship) {
+    text.textContent = relationship.text.at(0).toUpperCase().concat(relationship.text.slice(1));
+    updateRelationshipTextPos(text, id);
+}
+function createRelationshipTexts(person) {
     const workspace = document.getElementById("workspace");
     for (const [id, relationship] of person.relationships) {
         if (PEOPLE[id].isHidden) {
             continue;
         }
 
+        if (RELATIONSHIPTEXTS.has(id)) {
+            const text = RELATIONSHIPTEXTS.get(id);
+            if (!text.parentElement) {
+                workspace.appendChild(text);
+            }
+            updateRelationshipText(text, id, relationship);
+            continue;
+        }
         const text = document.createElement("h2");
-
+        RELATIONSHIPTEXTS.set(id, text);
         text.classList.add("relationship");
-        text.textContent = relationship.text.at(0).toUpperCase().concat(relationship.text.slice(1));
+
         workspace.appendChild(text);
+        
+        updateRelationshipText(text, id, relationship);
 
-        const x = PEOPLE[id].div.offsetLeft + PEOPLE[id].transformPos.x + PEOPLE[id].div.offsetWidth / 2 - text.offsetWidth / 2;
-        const y = PEOPLE[id].div.offsetTop + PEOPLE[id].transformPos.y + PEOPLE[id].div.offsetHeight;
-        text.style.left = `${x}px`;
-        text.style.top = `${y}px`;
-
-        text.style.setProperty("--pos-x", 0);
-        text.style.setProperty("--pos-y", 0);
         text.style.transform = "translate(calc(var(--pos-x) * 1px), calc(var(--pos-y) * 1px))";
         makeDraggableBasic(text);
-
-        RELATIONSHIPTEXTS.set(id, text);
     }
 }
 function clearSelections() {
-    selected.forEach((selection) => {
+    SELECTED.forEach((selection) => {
         selection.classList.remove("selected");
     });
-    selected = [];
+    SELECTED = [];
     for (const text of RELATIONSHIPTEXTS.values()) {
         text.remove();
     }
-    RELATIONSHIPTEXTS.clear();
 
     genderMenu.className = "hidden";
     resetGenderMenuPosition();
@@ -549,21 +565,21 @@ document.addEventListener("keyup", (e) => {
                 resetGenderMenuPosition();
                 return;
             }
-            if (selected.length === 0) {
+            if (SELECTED.length === 0) {
                 Actions.addPerson();
                 return;
             }
-            selected.forEach((selection) => {
+            SELECTED.forEach((selection) => {
                 Actions.addPerson(selection.person);
             });
             return;
         // Add parent
         case "p":
         case "P":
-            if ((document.activeElement.className === "name" && !e.altKey) || selected.length === 0) {
+            if ((document.activeElement.className === "name" && !e.altKey) || SELECTED.length === 0) {
                 return;
             }
-            selected.forEach((selection) => {
+            SELECTED.forEach((selection) => {
                 Actions.addParent(selection.person);
             });
             return;
@@ -575,40 +591,40 @@ document.addEventListener("keyup", (e) => {
                 return;
             }
             // Add spouce
-            if ((document.activeElement.className === "name" && !e.altKey) || selected.length === 0) {
+            if ((document.activeElement.className === "name" && !e.altKey) || SELECTED.length === 0) {
                 return;
             }
-            selected.forEach((selection) => {
+            SELECTED.forEach((selection) => {
                 Actions.addSpouce(selection.person);
             });
             return;            
         // Add child
         case "c":
         case "C":
-            if ((document.activeElement.className === "name" && !e.altKey) || selected.length === 0) {
+            if ((document.activeElement.className === "name" && !e.altKey) || SELECTED.length === 0) {
                 return;
             }
-            selected.forEach((selection) => {
+            SELECTED.forEach((selection) => {
                 Actions.addChild(selection.person);
             });
             return;
         // Add sibling
         case "a":
         case "A":
-            if ((document.activeElement.className === "name" && !e.altKey) || selected.length === 0) {
+            if ((document.activeElement.className === "name" && !e.altKey) || SELECTED.length === 0) {
                 return;
             }
-            selected.forEach((selection) => {
+            SELECTED.forEach((selection) => {
                 Actions.addSibling(selection.person);
             });
             return;
         // Delete person
         case "Backspace":
         case "Delete":
-            if ((document.activeElement.className === "name" && !e.altKey) || selected.length === 0) {
+            if ((document.activeElement.className === "name" && !e.altKey) || SELECTED.length === 0) {
                 return;
             }
-            selected.forEach((selection) => {
+            SELECTED.forEach((selection) => {
                 Actions.hidePerson(selection.person);
             });
             hideContextMenu();
@@ -617,16 +633,16 @@ document.addEventListener("keyup", (e) => {
         // Edit
         case "e":
         case "E":
-            if ((document.activeElement.className === "name" && !e.altKey) || selected.length === 0) {
+            if ((document.activeElement.className === "name" && !e.altKey) || SELECTED.length === 0) {
                 return;
             }
-            const x = selected[0].offsetLeft + selected[0].offsetWidth;
-            const y = selected[0].offsetTop;
+            const x = SELECTED[0].offsetLeft + SELECTED[0].offsetWidth;
+            const y = SELECTED[0].offsetTop;
             contextMenu.style.left = `${x}px`;
             contextMenu.style.top = `${y}px`;
             contextMenu.className = "show";
 
-            onEdit(selected[0].person);
+            onEdit(SELECTED[0].person);
             return;
         // Open gender menu
         case "g":
@@ -686,10 +702,10 @@ document.addEventListener("keyup", (e) => {
                 // Toggle relationship
                 if (document.activeElement.tagName !== "DIV") {
                     // Focus person
-                    if (selected.length === 0) {
+                    if (SELECTED.length === 0) {
                         return;
                     }
-                    selected[0].firstElementChild.focus();
+                    SELECTED[0].firstElementChild.focus();
                     return;
                 }
                 const selectedButtons = document.activeElement.firstElementChild;
@@ -713,7 +729,7 @@ document.addEventListener("keyup", (e) => {
                 e.preventDefault();
                 return;
             }
-            if (selected.length !== 0) {
+            if (SELECTED.length !== 0) {
                 clearSelections();
                 e.preventDefault();
                 return;
@@ -721,14 +737,14 @@ document.addEventListener("keyup", (e) => {
             return;
         // Navigation
         function NavigatePeople(method) {
-            if (selected.length === 0) {
+            if (SELECTED.length === 0) {
                 selectPeople([PEOPLE.find((person) => !person.isHidden).div]);
                 return;
             }
-            if (selected.length > 1) {
+            if (SELECTED.length > 1) {
                 return;
             }
-            const person = method(selected[0]);
+            const person = method(SELECTED[0]);
             if (person) {
                 selectPeople([person]);
             }
@@ -930,7 +946,7 @@ document.addEventListener("keydown", (e) => {
             // Fall-through
         case "e":
         case "E":
-            if (!e.altKey || selected.length === 0) {
+            if (!e.altKey || SELECTED.length === 0) {
                 return;
             }
             e.preventDefault();
