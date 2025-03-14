@@ -318,7 +318,14 @@ export default class Family {
                 subFamilyMap.set(FAMILIES[id], PEOPLE[group.subFamilyMap[id]]);
                 // subFamilyMap[id] = PEOPLE[group.subFamilyMap[id]];
             });
-            return new ParentChildGroup(parents, children, this, subFamilyMap);
+            if (group.parents.length !== 0 || group.children.length < 2) {
+                return new ParentChildGroup(parents, children, this, subFamilyMap);
+            }
+            // Need to properly set relationships for siblings with no parents
+            const tempParent = new Person();
+            const newGroup = new ParentChildGroup([tempParent], children, this, subFamilyMap);
+            tempParent.delete();
+            return newGroup;
         });
     }
 

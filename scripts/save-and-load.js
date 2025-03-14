@@ -1,6 +1,7 @@
 import Family, { FAMILIES } from "./family.js";
 import Person, { PEOPLE } from "./person.js";
 import { forget } from "./actions.js";
+import { hideContextMenu, clearSelections, RELATIONSHIPTEXTS } from "./controls.js";
 
 const saveDiv = document.getElementById("save");
 const input = document.getElementById("import");
@@ -34,6 +35,15 @@ input.addEventListener("change", (event) => {
         const peopleData = JSON.parse(reader.result);
         const domStructure = peopleData.pop();
         const familiesData = peopleData.pop();
+
+        hideContextMenu();
+        clearSelections();
+
+        RELATIONSHIPTEXTS.forEach((text) => {
+            text.remove();
+        });
+        RELATIONSHIPTEXTS.clear();
+
 
         for (let i = 0, length = PEOPLE.length; i < length; i++) {
             PEOPLE[0].delete(false);

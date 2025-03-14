@@ -215,7 +215,7 @@ function setContextMenu(target) {
     }
     contextMenu.replaceChildren(...onBackground);
 }
-function hideContextMenu() {
+export function hideContextMenu() {
     contextMenu.replaceChildren();
     contextMenu.className = "hide";
 }
@@ -372,7 +372,7 @@ function createRelationshipTexts(person) {
         makeDraggableBasic(text);
     }
 }
-function clearSelections() {
+export function clearSelections() {
     SELECTED.forEach((selection) => {
         selection.classList.remove("selected");
     });

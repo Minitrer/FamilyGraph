@@ -572,12 +572,29 @@ export default class Person {
     }
 
     toJSON(visiblePeople, visibleFamilies) {
-        const stepRelationshipIDs = [];
+        const stepRelationshipIDs = {
+            step: [],
+            half: [],
+        };
         this.#relationships.forEach((relationship, id) => {
-            if (relationship.prefix !== "Step-") {
-                return;
+            switch (relationship.prefix) {
+                case ("Step-"): {
+                    const index = visiblePeople.indexOf(PEOPLE[id]);
+                    if (index > -1) {
+                        stepRelationshipIDs.step.push(index);
+                    }
+                    return;
+                }
+                case ("Half-"): {
+                    const index = visiblePeople.indexOf(PEOPLE[id]);
+                    if (index > -1) {
+                        stepRelationshipIDs.half.push(index);
+                    }
+                    return;
+                }
+                default:
+                    return;
             }
-            stepRelationshipIDs.push(visiblePeople.indexOf(PEOPLE[id]));
         });
         return {
             name: this.name,
@@ -602,6 +619,15 @@ export default class Person {
         this.#transformPos = new Vec2(jsonObject.transformPos.x, jsonObject.transformPos.y);
         this.#workspacePos = new Vec2(jsonObject.workspacePos.x, jsonObject.workspacePos.y);
         this.#connectionPoints = jsonObject.connectionPoints;
+
+        if (Object.hasOwn(jsonObject, "stepRelationshipIDs")) {
+            jsonObject.stepRelationshipIDs.step.forEach((id) => {
+                this.#relationships.get(id).setStep();
+            });
+            jsonObject.stepRelationshipIDs.half.forEach((id) => {
+                this.#relationships.get(id).setHalf();
+            });
+        }
 
         this.#div.style.setProperty("--pos-x", this.#transformPos.x);
         this.#div.style.setProperty("--pos-y", this.#transformPos.y);
