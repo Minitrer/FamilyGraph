@@ -202,53 +202,70 @@ export default class Family {
 
     hide() {
         this.#isHidden = true;
+        Family.hiddenCount++;
 
         this.#parentsDiv.remove();
         this.#childrenDiv.remove();
         this.#DOMPositionAfterHiding = this.#div.parentElement;
-        if (this.#childrenDiv.childElementCount === 1 && this.#childrenDiv.firstElementChild.className === "family") {
-            this.#div.replaceWith(this.#childrenDiv.firstElementChild);
-            return;
-        }
-        else if (this.#div.parentElement.className === "children" && this.#div.parentElement.childElementCount === 2) {
-            const largerFamily = FAMILIES[Family.getIDFromDiv(this.#div.parentElement.parentElement)];
+
+        if (this.#childrenDiv.childElementCount !== 1 || this.#childrenDiv.firstElementChild.className !== "family") {
             this.#div.remove();
-            largerFamily.hide();
             return;
         }
-        this.#div.remove();
-        
-        Family.hiddenCount++;
-        // if (Family.getVisibleLength() === 0) {
-        //     return;
-        // }
-        // Family.updateAll();
+
+        const id = Family.getIDFromDiv(this.#childrenDiv.firstElementChild);
+        this.#div.replaceWith(this.#childrenDiv.firstElementChild);
+        const groups = this.#groups.filter((group) => Object.hasOwn(group.subFamilyMap, `${id}`));
+        groups.forEach((group) => {
+            const subChild = group.subFamilyMap[`${id}`];
+            const index = subChild.groups.indexOf(group);
+            if (subChild.connections.has(`parents ${index}`)) {
+                subChild.connections.get(`parents ${index}`).remove();
+                subChild.connections.delete(`parents ${index}`);
+    
+                // Update connections with higher indexes
+                // updateConnectionsIndexes(subChild.connections, index);
+            }
+        });
     }
 
     delete(update=true) {
-        if (update) {
-            // Correct SubFamilyMaps
-            for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
-                if (FAMILIES[i].div.parentElement && FAMILIES[i].div.parentElement.className === "children") {
-                    const largerFamilyID = Family.getIDFromDiv(FAMILIES[i].div.parentElement.parentElement);
-                    if (largerFamilyID === this.id) {
-                        continue;
-                    }
-                    FAMILIES[largerFamilyID].groups.forEach((group) => {
-                        if (group.subFamilyMap[`${FAMILIES[i].id}`]) {
-                            group.subFamilyMap[`${FAMILIES[i].id - 1}`] = group.subFamilyMap[`${FAMILIES[i].id}`];
-                            delete group.subFamilyMap[`${FAMILIES[i].id}`];
+        // Correct SubFamilyMaps
+        for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
+            // Look for groups that contain this family
+            FAMILIES[i].groups.forEach((group) => {
+                group.parents.forEach((parent) => {
+                    parent.groups.forEach((group) => {
+                        if (group.subFamilyMap[`${i}`]) {
+                            group.subFamilyMap[`${i - 1}`] = group.subFamilyMap[`${i}`];
+                            delete group.subFamilyMap[`${i}`];
                         }
                     });
-                }
-            }
-            // Correct div ids
-            for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
-                FAMILIES[i].div.id = `family ${i - 1}`;
-            }
+                });
+            });
+            // if (FAMILIES[i].div.parentElement && FAMILIES[i].div.parentElement.className === "children") {
+            //     const largerFamilyID = Family.getIDFromDiv(FAMILIES[i].div.parentElement.parentElement);
+            //     // if (largerFamilyID === this.id) {
+            //     //     continue;
+            //     // }
+            //     FAMILIES[largerFamilyID].groups.forEach((group) => {
+            //         if (group.subFamilyMap[`${i}`]) {
+            //             group.subFamilyMap[`${i - 1}`] = group.subFamilyMap[`${i}`];
+            //             delete group.subFamilyMap[`${i}`];
+            //         }
+            //     });
+            // }
         }
-
+        // Correct div ids
+        for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
+            FAMILIES[i].div.id = `family ${i - 1}`;
+        }
+        
         FAMILIES.splice(this.id, 1);
+
+        if (this.isHidden) {
+            return;
+        }
 
         this.#parentsDiv.remove();
         this.#childrenDiv.remove();
@@ -259,7 +276,12 @@ export default class Family {
         else if (this.#div.parentElement.className === "children" && this.#div.parentElement.childElementCount === 2) {
             const largerFamily = FAMILIES[Family.getIDFromDiv(this.#div.parentElement.parentElement)];
             this.#div.remove();
-            largerFamily.delete();
+            // for (const group of largerFamily.groups) {
+            //     if (group.children.includes(this)) {
+            //         group.remove(this);
+            //     }
+            // }
+            // largerFamily.delete();
             return;
         }
         this.#div.remove();
@@ -482,8 +504,11 @@ class ParentChildGroup {
     }
 
     createParentConnectionPoint() {
-        const visibleChildren = this.getVisiblePeople(this.children);
         const visibleParents = this.getVisiblePeople(this.parents);
+        if (visibleParents.length === 0) {
+            return;
+        }
+        const visibleChildren = this.getVisiblePeople(this.children);
 
         if (visibleParents.length === 1) {
             if (visibleChildren.length === 0) {
@@ -800,7 +825,6 @@ class ParentChildGroup {
                     // Update connections with higher indexes
                     updateConnectionsIndexes(subChild.connections, index);
                 }
-                subChild.groups.splice(index, 1);
             }
     
             if (this.parentsConnectionPoint) {
@@ -1018,11 +1042,6 @@ class ParentChildGroup {
             this.#family.delete(update);
             return;
         }
-
-        // if (FAMILIES.length === 0 || !update) {
-        //     return;
-        // }
-        // Family.updateAll();
     }
 
     convertChildToFamily(child, family) {

@@ -620,6 +620,9 @@ export default class Person {
 
     static resetAllTransforms(points=undefined) {
         PEOPLE.forEach((person) => {
+            if (person.isHidden) {
+                return;
+            }
             person.resetTransform();
         });
         if (points) {

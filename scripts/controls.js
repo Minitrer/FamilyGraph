@@ -624,9 +624,17 @@ document.addEventListener("keyup", (e) => {
             if ((document.activeElement.className === "name" && !e.altKey) || SELECTED.length === 0) {
                 return;
             }
-            SELECTED.forEach((selection) => {
-                Actions.hidePerson(selection.person);
-            });
+            // TODO: Remove this when no longer debugging
+            if (e.ctrlKey) {
+                SELECTED.forEach((selection) => {
+                    selection.person.delete();
+                });                    
+            }
+            else {
+                SELECTED.forEach((selection) => {
+                    Actions.hidePerson(selection.person);
+                });
+            }
             hideContextMenu();
             clearSelections();
             return;

@@ -210,7 +210,7 @@ export default class Relationship {
                             const othersParents = PEOPLE[id].parents.concat(PEOPLE[id].spouses.map((spouce) => spouce.parents).flat());
                             for (const parent of othersParents) {
                                 const parentRelationship = from.relationships.get(parent.id);
-                                if (parentRelationship.type !== "Cousin") {
+                                if (!parentRelationship || parentRelationship.type !== "Cousin") {
                                     continue;
                                 }
                                 
