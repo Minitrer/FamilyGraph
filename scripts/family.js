@@ -213,11 +213,11 @@ export default class Family {
             return;
         }
 
-        const id = Family.getIDFromDiv(this.#childrenDiv.firstElementChild);
+        const subFamily = FAMILIES[Family.getIDFromDiv(this.#childrenDiv.firstElementChild)];
         this.#div.replaceWith(this.#childrenDiv.firstElementChild);
-        const groups = this.#groups.filter((group) => Object.hasOwn(group.subFamilyMap, `${id}`));
+        const groups = this.#groups.filter((group) => group.subFamilyMap.has(subFamily));
         groups.forEach((group) => {
-            const subChild = group.subFamilyMap[`${id}`];
+            const subChild = group.subFamilyMap.get(subFamily);
             const index = subChild.groups.indexOf(group);
             if (subChild.connections.has(`parents ${index}`)) {
                 subChild.connections.get(`parents ${index}`).remove();
@@ -231,18 +231,18 @@ export default class Family {
 
     delete(update=true) {
         // Correct SubFamilyMaps
-        for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
-            // Look for groups that contain this family
-            FAMILIES[i].groups.forEach((group) => {
-                group.parents.forEach((parent) => {
-                    parent.groups.forEach((group) => {
-                        if (group.subFamilyMap[`${i}`]) {
-                            group.subFamilyMap[`${i - 1}`] = group.subFamilyMap[`${i}`];
-                            delete group.subFamilyMap[`${i}`];
-                        }
-                    });
-                });
-            });
+        // for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
+        //     // Look for groups that contain this family
+        //     FAMILIES[i].groups.forEach((group) => {
+        //         group.parents.forEach((parent) => {
+        //             parent.groups.forEach((group) => {
+        //                 if (group.subFamilyMap[`${i}`]) {
+        //                     group.subFamilyMap[`${i - 1}`] = group.subFamilyMap[`${i}`];
+        //                     delete group.subFamilyMap[`${i}`];
+        //                 }
+        //             });
+        //         });
+        //     });
             // if (FAMILIES[i].div.parentElement && FAMILIES[i].div.parentElement.className === "children") {
             //     const largerFamilyID = Family.getIDFromDiv(FAMILIES[i].div.parentElement.parentElement);
             //     // if (largerFamilyID === this.id) {
@@ -255,7 +255,7 @@ export default class Family {
             //         }
             //     });
             // }
-        }
+        // }
         // Correct div ids
         for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
             FAMILIES[i].div.id = `family ${i - 1}`;
@@ -313,9 +313,10 @@ export default class Family {
                 }
                 return FAMILIES[child.familyID];
             });
-            const subFamilyMap = {};
+            const subFamilyMap = new Map();
             Object.keys(group.subFamilyMap).forEach((id) => {
-                subFamilyMap[id] = PEOPLE[group.subFamilyMap[id]];
+                subFamilyMap.set(FAMILIES[id], PEOPLE[group.subFamilyMap[id]]);
+                // subFamilyMap[id] = PEOPLE[group.subFamilyMap[id]];
             });
             return new ParentChildGroup(parents, children, this, subFamilyMap);
         });
@@ -401,11 +402,11 @@ class ParentChildGroup {
     parentsConnectionPoint;
     childrenConnectionPoint;
     #inBetweenPoint;
-    #subFamilyMap = {};
+    #subFamilyMap=new Map();
+    // subFamilyMap has subfamilies as keys and one of their parents as values
     #isHidden = false;
     
-    // subFamilyMap is a dictionary with subfamilies's ids as keys and one of their parents as values
-    constructor(parents, children, family, subFamilyMap={}) {
+    constructor(parents, children, family, subFamilyMap=this.#subFamilyMap) {
         this.#family = family;
         this.parents = parents;
 
@@ -438,9 +439,10 @@ class ParentChildGroup {
                     child.addGroup(this);
                     return;
                 }
-                if (subFamilyMap[`${child.id}`]) {
-                    subFamilyMap[`${child.id}`].getAdopted(parents);
-                    subFamilyMap[`${child.id}`].addGroup(this);
+                if (subFamilyMap.has(child)) {
+                    const subChild = subFamilyMap.get(child);
+                    subChild.getAdopted(parents);
+                    subChild.addGroup(this);
                     return;
                 }
                 console.error(`Warning: Sub-family ${child} added without specified subFamilyChild.`);
@@ -467,8 +469,8 @@ class ParentChildGroup {
         const visibleChildren = this.getVisiblePeople(this.children);
         const visibleParents = this.getVisiblePeople(this.parents);
 
-        if (visibleChildren.length === 1 && (visibleChildren[0] instanceof Person || this.#subFamilyMap[`${visibleChildren[0].id}`])) {
-            const singleChild = (visibleChildren[0] instanceof Person)? visibleChildren[0] : this.#subFamilyMap[`${visibleChildren[0].id}`];
+        if (visibleChildren.length === 1 && (visibleChildren[0] instanceof Person || this.#subFamilyMap.has(visibleChildren[0]))) {
+            const singleChild = (visibleChildren[0] instanceof Person)? visibleChildren[0] : this.#subFamilyMap.get(visibleChildren[0]);
             if (visibleParents.length === 1) {
                 const parentCenter = visibleParents[0].connectionPoints.up.add(visibleParents[0].connectionPoints.down).divide(2);
                 const childCenter = singleChild.connectionPoints.up.add(singleChild.connectionPoints.down).divide(2);
@@ -518,8 +520,8 @@ class ParentChildGroup {
             const direction = "down";
             this.parentsConnectionPoint = visibleParents[0].connectionPoints[direction];
 
-            if (visibleChildren.length === 1 && (visibleChildren[0] instanceof Person || this.#subFamilyMap[`${visibleChildren[0].id}`])) {
-                const singleChild = (visibleChildren[0] instanceof Person)? visibleChildren[0] : this.#subFamilyMap[`${visibleChildren[0].id}`];
+            if (visibleChildren.length === 1 && (visibleChildren[0] instanceof Person || this.#subFamilyMap.has(visibleChildren[0]))) {
+                const singleChild = (visibleChildren[0] instanceof Person)? visibleChildren[0] : this.#subFamilyMap.get(visibleChildren[0]);
                 this.parentsConnectionPoint.updatePos = () => {
                     const firstParent = this.parents.find((parent) => !parent.isHidden);
                     const direction = getPersonToPersonDirection(firstParent, singleChild);
@@ -547,8 +549,8 @@ class ParentChildGroup {
                 const _visibleChildren = this.getVisiblePeople(this.children);
                 this.parentsConnectionPoint.updatePos();
                 let direction;
-                if (_visibleChildren.length === 1 && (_visibleChildren[0] instanceof Person || this.#subFamilyMap[`${_visibleChildren[0].id}`])) {
-                    const singleChild = (_visibleChildren[0] instanceof Person)? _visibleChildren[0] : this.#subFamilyMap[`${_visibleChildren[0].id}`];
+                if (_visibleChildren.length === 1 && (_visibleChildren[0] instanceof Person || this.#subFamilyMap.has(_visibleChildren[0]))) {
+                    const singleChild = (_visibleChildren[0] instanceof Person)? _visibleChildren[0] : this.#subFamilyMap.get(_visibleChildren[0]);
                     direction = getPersonToPersonDirection(visibleParents[0], singleChild);
                 }
                 else {
@@ -564,15 +566,47 @@ class ParentChildGroup {
             }
         }
         else {   
+            function getLeftRightPair(people) {
+                if (people[0].div.offsetLeft < people[1].div.offsetLeft) {
+                    return {
+                        left: people[0].div,
+                        right: people[1].div,
+                    }
+                }
+                return {
+                    left: people[1].div,
+                    right: people[0].div,
+                }
+            }
+            function getLeftRightGroup(people) {
+                let leftDiv = people[0].div;
+                let rightDiv = people[0].div;
+                for (let i = 1, length = people.length; i < length; i++) {
+                    if (people[i].div.offsetLeft < leftDiv) {
+                        leftDiv = people[i].div;
+                        continue;
+                    }
+                    if (people[i].div.offsetLeft > rightDiv) {
+                        rightDiv = people[i].div
+                    }
+                }
+                return {
+                    left: leftDiv,
+                    right: rightDiv
+                }
+            }
+
             let x;
             let y;
             if (visibleParents.length === 2) {
-                x = (visibleParents[0].div.offsetLeft + visibleParents[0].div.offsetWidth + visibleParents[1].div.offsetLeft) / 2;
-                y = visibleParents[0].connectionPoints.right.y;
+                const divs = getLeftRightPair(visibleParents);
+                x = (divs.left.offsetLeft + divs.left.offsetWidth + divs.right.offsetLeft) / 2;
+                y = divs.left.person.connectionPoints.right.y;
             }
             else {
-                x = (visibleParents[0].div.offsetLeft + visibleParents[(visibleParents.length - 1)].div.offsetLeft + visibleParents[(visibleParents.length - 1)].div.offsetWidth) / 2;
-                y = visibleParents[0].connectionPoints.down.y + connectionPointGap;
+                const divs = getLeftRightGroup(visibleParents);
+                x = (divs.left.offsetLeft + divs.right.offsetLeft + divs.right.offsetWidth) / 2;
+                y = divs.left.person.connectionPoints.down.y + connectionPointGap;
             }
             this.parentsConnectionPoint = new Vec2(x, y);
             
@@ -592,10 +626,12 @@ class ParentChildGroup {
                 const _visibleParents = this.getVisiblePeople(this.parents);
                 let x;
                 if (_visibleParents.length === 2) {
-                    x = (_visibleParents[0].div.offsetLeft + _visibleParents[0].div.offsetWidth + _visibleParents[1].div.offsetLeft) / 2;
+                    const divs = getLeftRightPair(_visibleParents);
+                    x = (divs.left.offsetLeft + divs.left.offsetWidth + divs.right.offsetLeft) / 2;
                 }
                 else {
-                    x = (_visibleParents[0].div.offsetLeft + _visibleParents[(_visibleParents.length - 1)].div.offsetLeft + _visibleParents[(_visibleParents.length - 1)].div.offsetWidth) / 2;
+                    const divs = getLeftRightGroup(_visibleParents);
+                    x = (divs.left.offsetLeft + divs.right.offsetLeft + divs.right.offsetWidth) / 2;
                 }
                 const y = _visibleParents.length === 2? _visibleParents[0].connectionPoints.right.y : _visibleParents[0].connectionPoints.down.y + connectionPointGap;
 
@@ -624,11 +660,11 @@ class ParentChildGroup {
         const visibleChildren = this.getVisiblePeople(this.children);
         const visibleParents = this.getVisiblePeople(this.parents);
 
-        if (visibleChildren.length === 1 && (visibleChildren[0] instanceof Person || this.#subFamilyMap[`${visibleChildren[0].id}`])) {
+        if (visibleChildren.length === 1 && (visibleChildren[0] instanceof Person || this.#subFamilyMap.has(visibleChildren[0]))) {
             if (visibleParents.length === 0) {
                 return;
             }
-            const singleChild = (visibleChildren[0] instanceof Person)? visibleChildren[0] : this.#subFamilyMap[`${visibleChildren[0].id}`];
+            const singleChild = (visibleChildren[0] instanceof Person)? visibleChildren[0] : this.#subFamilyMap.get(visibleChildren[0]);
 
             this.childrenConnectionPoint = new Vec2();
 
@@ -680,7 +716,7 @@ class ParentChildGroup {
                     total++;
                 }
                 else {   
-                    const subFamilyChild = this.#subFamilyMap[`${child.id}`]
+                    const subFamilyChild = this.#subFamilyMap.get(child);
                     sumOfCentersX += subFamilyChild.div.offsetLeft + (subFamilyChild.div.offsetWidth / 2);
                     total++;
                 }
@@ -713,7 +749,7 @@ class ParentChildGroup {
                         total++;
                     }
                     else {   
-                        const subFamilyChild = this.#subFamilyMap[`${_child.id}`]
+                        const subFamilyChild = this.#subFamilyMap.get(_child);
                         sumOfCentersX += subFamilyChild.div.offsetLeft + (subFamilyChild.div.offsetWidth / 2);
                         total++;
                     }
@@ -736,7 +772,7 @@ class ParentChildGroup {
             const _visibleParents = this.getVisiblePeople(this.parents);
             _visibleChildren.forEach((child) => {
                 if (!(child instanceof Person)) {
-                    child.draw(this.#subFamilyMap[`${child.id}`]);
+                    child.draw(this.#subFamilyMap.get(child));
                     return;
                 }
                 this.#family.draw(child);
@@ -763,7 +799,7 @@ class ParentChildGroup {
                 parent.adopt(child);
                 return;
             }
-            parent.adopt(this.#subFamilyMap[`${child.id}`]);
+            parent.adopt(this.#subFamilyMap.get(child));
         });
         this.parents.push(parent);
 
@@ -800,7 +836,7 @@ class ParentChildGroup {
         if (subFamilyChild) {
             subFamilyChild.addGroup(this);
             subFamilyChild.getAdopted(this.parents);
-            this.#subFamilyMap[`${child.id}`] = subFamilyChild;
+            this.#subFamilyMap.set(child, subFamilyChild);
 
             Family.updateAll();
 
@@ -814,18 +850,18 @@ class ParentChildGroup {
         if (!person) {
             this.#isHidden = true;
 
-            const family = this.children.find((child) => !child.isHidden && child instanceof Family);
-            if (family) {
-                const subChild = this.#subFamilyMap[`${family.id}`];
+            const subFamilies = this.children.filter((child) => !child.isHidden && child instanceof Family);
+            subFamilies.forEach((subFamily) => {
+                const subChild = this.#subFamilyMap.get(subFamily);
                 const index = subChild.groups.indexOf(this);
                 if (subChild.connections.has(`children ${index}`)) {
                     subChild.connections.get(`children ${index}`).remove();
                     subChild.connections.delete(`children ${index}`);
 
                     // Update connections with higher indexes
-                    updateConnectionsIndexes(subChild.connections, index);
+                    // updateConnectionsIndexes(subChild.connections, index);
                 }
-            }
+            });
     
             if (this.parentsConnectionPoint) {
                 this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);
@@ -887,7 +923,7 @@ class ParentChildGroup {
 
         const visibleChildren = this.getVisiblePeople(this.children);
         const hideCondition = this.parents.getVisibleLength() === 0 &&
-                              visibleChildren.length === 0 || (visibleChildren.length === 1 && visibleChildren[0] instanceof Family);
+                              (visibleChildren.length === 0 || (visibleChildren.length === 1 && visibleChildren[0] instanceof Family));        
         if (hideCondition) {
             this.hide();
             return;
@@ -896,7 +932,7 @@ class ParentChildGroup {
             this.childrenConnectionPoint = deleteConnectionPoint(this.childrenConnectionPoint);
 
             if (visibleChildren.length > 0) {
-                const singleChild = (visibleChildren[0] instanceof Person)? visibleChildren[0] : this.#subFamilyMap[`${visibleChildren[0].id}`];
+                const singleChild = (visibleChildren[0] instanceof Person)? visibleChildren[0] : this.#subFamilyMap.get(visibleChildren[0]);
                 const index = singleChild.groups.indexOf(this);
                 singleChild.connections.get(`children ${index}`).remove();
                 singleChild.connections.delete(`children ${index}`);
@@ -987,7 +1023,7 @@ class ParentChildGroup {
 
             if (this.children.getVisibleLength() > 0) {
                 const firstVisibleChild = this.children.find((child) => !child.isHidden);
-                const singleChild = (firstVisibleChild instanceof Person)? firstVisibleChild : this.#subFamilyMap[`${firstVisibleChild.id}`];
+                const singleChild = (firstVisibleChild instanceof Person)? firstVisibleChild : this.#subFamilyMap.get(firstVisibleChild);
                 const index = singleChild.groups.indexOf(this);
                 if (singleChild.connections.has(`children ${index}`)) {
                     singleChild.connections.get(`children ${index}`).remove();
@@ -1006,7 +1042,7 @@ class ParentChildGroup {
 
     delete(update=true) {
         if (this.children[0]) {
-            const subChild = this.#subFamilyMap[`${this.children[0].id}`];
+            const subChild = this.#subFamilyMap.get(this.children[0]);
             const index = subChild.groups.indexOf(this);
 
             subChild.groups.splice(index, 1);
@@ -1049,30 +1085,33 @@ class ParentChildGroup {
 
         this.children[index] = family;
 
-        if (!this.#subFamilyMap) {
-            this.#subFamilyMap = {}
-            this.#subFamilyMap[`${family.id}`] = child;
-            return;
-        }
-        this.#subFamilyMap[`${family.id}`] = child;
+        this.#subFamilyMap.set(family, child);
         return;
     }
 
     getVisiblePeople(people) {
         return people.filter((person) => {
-            return !person.isHidden && (person instanceof Person || !this.#subFamilyMap[`${person.id}`].isHidden);
+            return !person.isHidden && (person instanceof Person || !this.#subFamilyMap.get(person).isHidden);
         });
     }
 
     toJSON(visiblePeople, visibleFamilies) {
         const subFamilyMap = {};
-        Object.keys(this.#subFamilyMap).forEach((key) => {
-            const index = visibleFamilies.indexOf(FAMILIES[key]);
-            if (index < 0) {
+        this.#subFamilyMap.forEach((child, family) => {
+            const familyIndex = visibleFamilies.indexOf(family);
+            if (familyIndex < 0) {
                 return;
             }
-            subFamilyMap[`${index}`] = visiblePeople.indexOf(this.#subFamilyMap[key]);
-        });
+            const childIndex = visiblePeople.indexOf(child);
+            subFamilyMap[`${familyIndex}`] = childIndex;
+        })
+        // Object.keys(this.#subFamilyMap).forEach((key) => {
+        //     const index = visibleFamilies.indexOf(FAMILIES[key]);
+        //     if (index < 0) {
+        //         return;
+        //     }
+        //     subFamilyMap[`${index}`] = visiblePeople.indexOf(this.#subFamilyMap[key]);
+        // });
 
         const parentIDs = [];
         const childrenIDs = [];

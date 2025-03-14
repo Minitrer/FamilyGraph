@@ -131,8 +131,8 @@ export function addParent(person) {
         }
     }
 
-    const subFamilyMap = {};
-    subFamilyMap[`${person.family.id}`] = person;
+    const subFamilyMap = new Map();
+    subFamilyMap.set(person.family, person);
 
     // No parent is single
     if (person.parents.length > 0) {
@@ -223,7 +223,7 @@ export function addSibling(person) {
         if (!family) {
             return false;
         }
-        if (group.subFamilyMap[`${family.id}`] === person) {
+        if (group.subFamilyMap.get(family) === person) {
             return true;
         }
         return false;
@@ -231,8 +231,8 @@ export function addSibling(person) {
     if (groupsAsChild.length === 0) {
         const parent = new Person();
 
-        const subFamilyMap = {};
-        subFamilyMap[`${person.family.id}`] = person;
+        const subFamilyMap = new Map();
+        subFamilyMap.set(person.family, person);
 
         if (!addNewParentGroup(person, parent, subFamilyMap)) {
             parent.delete();
