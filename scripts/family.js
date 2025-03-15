@@ -14,11 +14,8 @@ export default class Family {
     hiddenGroupCount = 0;
 
     constructor() {
-
         FAMILIES.push(this);
         
-        // // Setup groups for hiding
-        // this.groups.hiddenCount = 0;
         // Create divs
         this.#div = document.createElement("div");
         this.#div.setAttribute("class", "family");
@@ -222,40 +219,11 @@ export default class Family {
             if (subChild.connections.has(`parents ${index}`)) {
                 subChild.connections.get(`parents ${index}`).remove();
                 subChild.connections.delete(`parents ${index}`);
-    
-                // Update connections with higher indexes
-                // updateConnectionsIndexes(subChild.connections, index);
             }
         });
     }
 
     delete(update=true) {
-        // Correct SubFamilyMaps
-        // for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
-        //     // Look for groups that contain this family
-        //     FAMILIES[i].groups.forEach((group) => {
-        //         group.parents.forEach((parent) => {
-        //             parent.groups.forEach((group) => {
-        //                 if (group.subFamilyMap[`${i}`]) {
-        //                     group.subFamilyMap[`${i - 1}`] = group.subFamilyMap[`${i}`];
-        //                     delete group.subFamilyMap[`${i}`];
-        //                 }
-        //             });
-        //         });
-        //     });
-            // if (FAMILIES[i].div.parentElement && FAMILIES[i].div.parentElement.className === "children") {
-            //     const largerFamilyID = Family.getIDFromDiv(FAMILIES[i].div.parentElement.parentElement);
-            //     // if (largerFamilyID === this.id) {
-            //     //     continue;
-            //     // }
-            //     FAMILIES[largerFamilyID].groups.forEach((group) => {
-            //         if (group.subFamilyMap[`${i}`]) {
-            //             group.subFamilyMap[`${i - 1}`] = group.subFamilyMap[`${i}`];
-            //             delete group.subFamilyMap[`${i}`];
-            //         }
-            //     });
-            // }
-        // }
         // Correct div ids
         for (let i = this.id + 1, length = FAMILIES.length; i < length; i++) {
             FAMILIES[i].div.id = `family ${i - 1}`;
@@ -273,23 +241,7 @@ export default class Family {
             this.#div.replaceWith(this.#childrenDiv.firstElementChild);
             return;
         }
-        else if (this.#div.parentElement.className === "children" && this.#div.parentElement.childElementCount === 2) {
-            const largerFamily = FAMILIES[Family.getIDFromDiv(this.#div.parentElement.parentElement)];
-            this.#div.remove();
-            // for (const group of largerFamily.groups) {
-            //     if (group.children.includes(this)) {
-            //         group.remove(this);
-            //     }
-            // }
-            // largerFamily.delete();
-            return;
-        }
         this.#div.remove();
-        
-        // if (FAMILIES.length === 0 || !update) {
-        //     return;
-        // }
-        // Family.updateAll();
     }
 
     toJSON(visiblePeople, visibleFamilies) {
@@ -316,7 +268,6 @@ export default class Family {
             const subFamilyMap = new Map();
             Object.keys(group.subFamilyMap).forEach((id) => {
                 subFamilyMap.set(FAMILIES[id], PEOPLE[group.subFamilyMap[id]]);
-                // subFamilyMap[id] = PEOPLE[group.subFamilyMap[id]];
             });
             if (group.parents.length !== 0 || group.children.length < 2) {
                 return new ParentChildGroup(parents, children, this, subFamilyMap);
@@ -864,9 +815,6 @@ class ParentChildGroup {
                 if (subChild.connections.has(`children ${index}`)) {
                     subChild.connections.get(`children ${index}`).remove();
                     subChild.connections.delete(`children ${index}`);
-
-                    // Update connections with higher indexes
-                    // updateConnectionsIndexes(subChild.connections, index);
                 }
             });
     
@@ -888,12 +836,6 @@ class ParentChildGroup {
                 return;
             }
             return;
-    
-            // if (Family.getVisibleLength() === 0) {
-            //     return;
-            // }
-            // Family.updateAll();
-            // return;
         }
 
         // Hide the person in the group
@@ -1111,14 +1053,7 @@ class ParentChildGroup {
             }
             const childIndex = visiblePeople.indexOf(child);
             subFamilyMap[`${familyIndex}`] = childIndex;
-        })
-        // Object.keys(this.#subFamilyMap).forEach((key) => {
-        //     const index = visibleFamilies.indexOf(FAMILIES[key]);
-        //     if (index < 0) {
-        //         return;
-        //     }
-        //     subFamilyMap[`${index}`] = visiblePeople.indexOf(this.#subFamilyMap[key]);
-        // });
+        });
 
         const parentIDs = [];
         const childrenIDs = [];
@@ -1139,7 +1074,43 @@ class ParentChildGroup {
             }
             childrenIDs.push({ familyID: visibleFamilies.indexOf(child) });
             return;
-        })
+        });
+
+        if ((this.parentsConnectionPoint && this.parentsConnectionPoint.div) || (this.childrenConnectionPoint && this.childrenConnectionPoint.div)) {
+            const points = {};
+            if (this.parentsConnectionPoint && this.parentsConnectionPoint.div) {
+                const transforms = {
+                    cssPos: {
+                        x: Number(this.parentsConnectionPoint.div.style.getPropertyValue("--pos-x")),
+                        y: Number(this.parentsConnectionPoint.div.style.getPropertyValue("--pos-y")),
+                    },
+                    transformPos: { 
+                        x: this.parentsConnectionPoint.div.transformPos.x,
+                        y: this.parentsConnectionPoint.div.transformPos.y, 
+                    }
+                }
+                points.parent = transforms;
+            }
+            if (this.childrenConnectionPoint && this.childrenConnectionPoint.div) {
+                const transforms = {
+                    cssPos: {
+                        x: Number(this.childrenConnectionPoint.div.style.getPropertyValue("--pos-x")),
+                        y: Number(this.childrenConnectionPoint.div.style.getPropertyValue("--pos-y")),
+                    },
+                    transformPos: { 
+                        x: this.childrenConnectionPoint.div.transformPos.x,
+                        y: this.childrenConnectionPoint.div.transformPos.y, 
+                    }
+                }
+                points.children = transforms;
+            }
+            return {
+                parents: parentIDs,
+                children: childrenIDs,
+                subFamilyMap: subFamilyMap,
+                points: points,
+            };
+        }
 
         return {
             parents: parentIDs,

@@ -291,14 +291,10 @@ function onRelationshipTypeChange(ID, type) {
     if (isTargetTheParent) {
         const isStep = type === "step-child";
         Actions.changeRelationshipType(PEOPLE[ID], personEditing, isStep);
-        // Relationship.setStepRelationships(PEOPLE[ID], targetPerson, "Child", isStep);
-        // Relationship.setStepRelationships(targetPerson, PEOPLE[ID], "Parent", isStep);
         return;
     }
     const isStep = type === "step-parent";
     Actions.changeRelationshipType(personEditing, PEOPLE[ID], isStep);
-    // Relationship.setStepRelationships(targetPerson, PEOPLE[ID], "Child", isStep);
-    // Relationship.setStepRelationships(PEOPLE[ID], targetPerson, "Parent", isStep);
 }
 function selectPeople(selection) {
     SELECTED.forEach((previouslySelected) => {
@@ -471,7 +467,6 @@ document.addEventListener("click", (event) => {
         (event.target.tagName === "I" && event.target.parentElement.tagName === "LABEL") || isEditing) {
             return;
         }
-        // event.preventDefault();
         
         let target = undefined;
         menuTarget = undefined;
@@ -624,17 +619,18 @@ document.addEventListener("keyup", (e) => {
             if ((document.activeElement.className === "name" && !e.altKey) || SELECTED.length === 0) {
                 return;
             }
-            // TODO: Remove this when no longer debugging
-            if (e.ctrlKey) {
-                SELECTED.forEach((selection) => {
-                    selection.person.delete();
-                });                    
-            }
-            else {
-                SELECTED.forEach((selection) => {
-                    Actions.hidePerson(selection.person);
-                });
-            }
+            // DEBUG:
+            // if (e.ctrlKey) {
+            //     SELECTED.forEach((selection) => {
+            //         selection.person.delete();
+            //     });
+            //     hideContextMenu();
+            //     clearSelections();
+            //     return;
+            // }
+            SELECTED.forEach((selection) => {
+                Actions.hidePerson(selection.person);
+            });
             hideContextMenu();
             clearSelections();
             return;
@@ -766,7 +762,7 @@ document.addEventListener("keyup", (e) => {
                 if (firstParent) {
                     return firstParent.div;
                 }
-                // search first outer family or second outer family
+                // Search first outer family or second outer family
                 let divToSearch = selected.parentElement.classList.contains("children")? selected.parentElement.parentElement : selected.parentElement.parentElement.parentElement.parentElement;
                 while (divToSearch.id !== "workspace") {
                     const firstParent = divToSearch.firstElementChild.firstElementChild;

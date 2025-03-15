@@ -68,15 +68,22 @@ input.addEventListener("change", (event) => {
                 }
                 family.childrenDiv.append(FAMILIES[child.familyID].div);
                 appendFamilyDivs(FAMILIES[child.familyID], child);
-            })
+            });
         }
         appendFamilyDivs(firstFamily, domStructure);
 
         const graph = document.getElementById("graph");
         graph.append(firstFamily.div);
 
-        Family.updateAll();
-
+        // Load point pos values
+        FAMILIES.forEach((family) => {
+            family.groups.forEach((group, id) => {
+                if (Object.hasOwn(familiesData[family.id].groups[id], "points")) {
+                    console.debug(group.parentsConnectionPoint);
+                    console.debug(group.childrenConnectionPoint);                    
+                }
+            });
+        });
         input.value = "";
     }, { once: true });
 

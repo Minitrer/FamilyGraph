@@ -328,7 +328,7 @@ export default class Relationship {
                                 continue;
                             } 
                             
-                            // Other could be sibling or nibling
+                            // other could be sibling or nibling
                             const other = PEOPLE[otherId];
                             function setBothStep(isStep=true) {
                                 toRelationship.setStep(isStep, otherId);
