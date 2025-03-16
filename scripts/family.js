@@ -1089,7 +1089,7 @@ class ParentChildGroup {
                         y: this.parentsConnectionPoint.div.transformPos.y, 
                     }
                 }
-                points.parent = transforms;
+                points.parents = transforms;
             }
             if (this.childrenConnectionPoint && this.childrenConnectionPoint.div) {
                 const transforms = {

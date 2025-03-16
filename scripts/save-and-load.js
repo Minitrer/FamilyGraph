@@ -2,6 +2,7 @@ import Family, { FAMILIES } from "./family.js";
 import Person, { PEOPLE } from "./person.js";
 import { forget } from "./actions.js";
 import { hideContextMenu, clearSelections, RELATIONSHIPTEXTS } from "./controls.js";
+import Vec2 from "./vec2.js";
 
 const saveDiv = document.getElementById("save");
 const input = document.getElementById("import");
@@ -75,12 +76,20 @@ input.addEventListener("change", (event) => {
         const graph = document.getElementById("graph");
         graph.append(firstFamily.div);
 
-        // Load point pos values
-        FAMILIES.forEach((family) => {
-            family.groups.forEach((group, id) => {
-                if (Object.hasOwn(familiesData[family.id].groups[id], "points")) {
-                    console.debug(group.parentsConnectionPoint);
-                    console.debug(group.childrenConnectionPoint);                    
+        Family.updateAll();
+
+        function loadPointPos(point, position) {
+            point.onDrag(position.cssPos);
+            point.transformPos = new Vec2(position.transformPos.x, position.transformPos.y);
+        }
+        // Load point positions
+        FAMILIES.forEach((family, familyID) => {
+            family.groups.forEach((group, groupID) => {
+                if (group.parentsConnectionPoint && group.parentsConnectionPoint.div) {
+                    loadPointPos(group.parentsConnectionPoint.div, familiesData[familyID].groups[groupID].points.parents);
+                }
+                if (group.childrenConnectionPoint && group.childrenConnectionPoint.div) {
+                    loadPointPos(group.childrenConnectionPoint.div, familiesData[familyID].groups[groupID].points.children);
                 }
             });
         });

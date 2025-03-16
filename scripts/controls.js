@@ -399,7 +399,9 @@ document.addEventListener("focusout", (event) => {
         return;
     }
     event.target.contentEditable = false;
-    clearSelections();
+    genderMenu.className = "hidden";
+    resetGenderMenuPosition();
+    // clearSelections();
 });
 
 // 
@@ -700,18 +702,18 @@ document.addEventListener("keyup", (e) => {
             }
             SaveLoad.open();
             return;
-        // Confirm name
         case "Enter":
             if (e.shiftKey || document.activeElement.className !== "name") {
-                // Toggle relationship
                 if (document.activeElement.tagName !== "DIV") {
                     // Focus person
                     if (SELECTED.length === 0) {
                         return;
                     }
+                    SELECTED[0].firstElementChild.contentEditable = true;
                     SELECTED[0].firstElementChild.focus();
                     return;
                 }
+                // Toggle relationship
                 const selectedButtons = document.activeElement.firstElementChild;
                 if (!selectedButtons || (selectedButtons.id !== "parent-relationship-buttons" && selectedButtons.id !== "child-relationship-buttons")) {
                     return;
@@ -723,8 +725,11 @@ document.addEventListener("keyup", (e) => {
                 e.preventDefault();
                 return;
             }
-            clearSelections();
-            e.preventDefault();
+            // Confirm name
+            if (SELECTED.length !== 0) {
+                document.activeElement.blur();
+                e.preventDefault();
+            }
             return;
         // Hide menu/unselect
         case "Escape":
@@ -771,8 +776,30 @@ document.addEventListener("keyup", (e) => {
                     }
                     divToSearch = divToSearch.parentElement.parentElement;
                 }
-                const allPeople = document.querySelectorAll("#graph .person");
-                return allPeople[allPeople.length - 1];
+                function getDeepestPerson(from, depth=0) {
+                    if (from instanceof HTMLCollection) {
+                        let deepest = getDeepestPerson(from.item(0), depth);
+                        for (let i = 1, length = from.length; i < length; i++) {
+                            const get = getDeepestPerson(from.item(i), depth);
+                            if (get.depth > deepest.depth) {
+                                deepest = get;
+                            }
+                        }
+                        return deepest;
+                    }
+                    if (from.classList.contains("family")) {
+                        switch(from.lastElementChild.childElementCount) {
+                            case 0:
+                                return { div: from.firstElementChild.firstElementChild, depth: depth, };
+                            case 1:
+                                return getDeepestPerson(from.lastElementChild.firstElementChild, depth + 1);
+                            default:
+                                return getDeepestPerson(from.lastElementChild.children, depth + 1);
+                        }
+                    }
+                    return { div: from, depth: depth };
+                }
+                return getDeepestPerson(document.getElementById("graph").firstElementChild).div;
             }
             return NavigatePeople(findFirstVisibleParent);
         case "ArrowDown":
@@ -795,24 +822,24 @@ document.addEventListener("keyup", (e) => {
                 }) ();
                 const graph = document.getElementById("graph");
                 let person;
-                // If a parent, look for first child in a family nested same amount or first person nested 1 more than current family
+                // If a parent, look for first child or parent in a family nested 1 more than current family
                 if (selected.parentElement.classList.contains("parents")) {
-                    person = graph.querySelector(`${"div>.children>".repeat(nestedCount)}.children>.person, ${"div>.children>".repeat(nestedCount + 1)}>div>.person`);
+                    person = graph.querySelector(`:scope>${"div>.children>".repeat(nestedCount + 1)}.person, :scope>${"div>.children>".repeat(nestedCount + 1)}div>div>.person`);
                 }
                 else {
-                    // Look for first child in a family nested same amount
-                    person = graph.querySelector(`${"div>.children>".repeat(nestedCount + 1)}div>.person`);
+                    // Look for first child in a family nested 2 more than current family
+                    person = graph.querySelector(`:scope>${"div>.children>".repeat(nestedCount + 2)}.person`);
                 }
                 if (person) {
                     return person;
                 }
-                return graph.querySelector(".person");
+                return graph.querySelector(":scope .person");
             }
             return NavigatePeople(findFirstVisibleChild);
 
         
         function getDivWithNestCount(from, nestedCount) {
-            return from.querySelector(`#${from.id}>${".children>.family>".repeat(nestedCount - 1)}.children>div`);
+            return from.querySelector(`:scope>${".children>.family>".repeat(nestedCount - 1)}.children>div`);
         }
         case "ArrowLeft": 
             if ((document.activeElement.className === "name" && !e.altKey) || PEOPLE.length === 0 || !document.querySelector(".person")) {
@@ -830,30 +857,45 @@ document.addEventListener("keyup", (e) => {
                     return getPersonDiv(selected.previousElementSibling);
                 }
                 let divToCheck = selected.parentElement.parentElement;
-                let nestedCount = selected.parentElement.classList.contains("parents")? -1 : 0;
+                const inParents = selected.parentElement.classList.contains("parents");
+                let nestedCount = 0;
+                if (inParents) {
+                    if (divToCheck.previousElementSibling) {
+                        return getPersonDiv(divToCheck.previousElementSibling);
+                    }
+                    divToCheck = divToCheck.parentElement.parentElement;
+                }
+
+                function getPreviousFamilyDiv(from) {
+                    if (!from.previousElementSibling) {
+                        return undefined;
+                    }
+                    if (from.previousElementSibling.classList.contains("family")) {
+                        return from.previousElementSibling;
+                    }
+                    return getPreviousFamilyDiv(from.previousElementSibling);
+                }
+
                 while (divToCheck.classList.contains("family")) {
                     nestedCount++;
 
-                    let nextSibling = divToCheck.previousElementSibling;
-                    while (nextSibling) {
-                        if (nestedCount === 0) {
-                            return getPersonDiv(nextSibling);
+                    let previousFamilyDiv = getPreviousFamilyDiv(divToCheck);
+                    while (previousFamilyDiv) {
+                        const groupDiv = getDivWithNestCount(previousFamilyDiv, nestedCount);
+                        if (groupDiv) {
+                            return getPersonDiv(groupDiv);
                         }
-                        const div = getDivWithNestCount(divToCheck.previousElementSibling, nestedCount);
-                        if (div) {
-                            return getPersonDiv(div);
-                        }    
-                        nextSibling = nextSibling.previousElementSibling;
+                        previousFamilyDiv = getPreviousFamilyDiv(previousFamilyDiv);
                     }
 
                     divToCheck = divToCheck.parentElement.parentElement;
                 }
                 if (nestedCount < 1) {
-                    return null;
+                    return selected.parentElement.childElementCount > 1? selected.parentElement.lastElementChild : null;
                 }
                 // Person of same generation not found, loop to the right-most person of same generation
                 const firstFamily = document.getElementById("graph").firstElementChild;
-                const generation = firstFamily.querySelectorAll(`#${firstFamily.id}>${".children>.family>".repeat(nestedCount - 1)}.children>div`);
+                const generation = firstFamily.querySelectorAll(`:scope>${".children>.family>".repeat(nestedCount - 1)}.children>div`);
                 const div = generation[generation.length - 1];
                 if (div) {
                     return getPersonDiv(div);
@@ -877,26 +919,31 @@ document.addEventListener("keyup", (e) => {
                     return getPersonDiv(selected.nextElementSibling);
                 }
                 let divToCheck = selected.parentElement.parentElement;
-                let nestedCount = selected.parentElement.classList.contains("parents")? -1 : 0;
+                const inParents = selected.parentElement.classList.contains("parents");
+                let nestedCount = 0;
+                if (inParents) {
+                    if (divToCheck.nextElementSibling) {
+                        return getPersonDiv(divToCheck.nextElementSibling);
+                    }
+                    divToCheck = divToCheck.parentElement.parentElement;
+                }
+
                 while (divToCheck.classList.contains("family")) {
                     nestedCount++;
 
-                    let nextSibling = divToCheck.nextElementSibling;
-                    while (nextSibling) {
-                        if (nestedCount === 0) {
-                            return getPersonDiv(nextSibling);
+                    let nextFamilyDiv = divToCheck.querySelector(`:scope ~ .family`);
+                    while (nextFamilyDiv) {
+                        const groupDiv = getDivWithNestCount(nextFamilyDiv, nestedCount);
+                        if (groupDiv) {
+                            return getPersonDiv(groupDiv);
                         }
-                        const div = getDivWithNestCount(divToCheck.nextElementSibling, nestedCount);
-                        if (div) {
-                            return getPersonDiv(div);
-                        }    
-                        nextSibling = nextSibling.nextElementSibling;
+                        nextFamilyDiv = nextFamilyDiv.querySelector(`:scope ~ .family`);
                     }
 
                     divToCheck = divToCheck.parentElement.parentElement;
                 }
                 if (nestedCount < 1) {
-                    return null;
+                    return selected.parentElement.childElementCount > 1? selected.parentElement.firstElementChild : null;
                 }
                 // Person of same generation not found, loop to the left-most person of same generation
                 const firstFamily = document.getElementById("graph").firstElementChild;
