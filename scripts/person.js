@@ -357,8 +357,8 @@ export default class Person {
             const nextSibling = isFamily? divToSwap.firstElementChild.lastElementChild : divToSwap;
 
             if (this.#div.offsetLeft + dragAmount.x > nextSibling.person.workspacePos.x) {
-                const widthDifference = this.#div.offsetWidth - nextSibling.offsetWidth;
-                this.#transformPos.x -= nextSibling.offsetLeft - this.#div.offsetLeft - widthDifference;
+                const widthDifference = this.#div.offsetWidth - divToSwap.offsetWidth;
+                this.#transformPos.x -= divToSwap.offsetLeft - this.#div.offsetLeft - widthDifference;
                 const oldOffset = this.#div.offsetLeft;
 
                 divToSwap.after(this.#div);
@@ -390,7 +390,7 @@ export default class Person {
             const previousSibling = isFamily? divToSwap.firstElementChild.firstElementChild : divToSwap;
 
             if (this.#div.offsetLeft + dragAmount.x < previousSibling.person.workspacePos.x) {
-                this.#transformPos.x -= previousSibling.offsetLeft - this.#div.offsetLeft;
+                this.#transformPos.x -= divToSwap.offsetLeft - this.#div.offsetLeft;
                 const oldOffset = this.#div.offsetLeft;
 
                 this.#div.after(divToSwap);
