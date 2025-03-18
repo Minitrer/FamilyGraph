@@ -10,7 +10,11 @@ export default class Family {
     #parentsDiv;
     #childrenDiv;
     #isHidden = false;
-    #DOMPositionAfterHiding;
+    #DOMPositionAfterHiding = {
+        container: undefined,
+        parentDivs: [],
+        childrenDivs: []
+    };
     hiddenGroupCount = 0;
 
     constructor() {
@@ -190,8 +194,11 @@ export default class Family {
     show() {
         this.#isHidden = false;
 
+        this.#DOMPositionAfterHiding.container.append(this.#div);
+
         this.#div.append(this.#parentsDiv, this.#childrenDiv);
-        this.#DOMPositionAfterHiding.append(this.#div);
+        this.#parentsDiv.append(...this.#DOMPositionAfterHiding.parentDivs);
+        this.#childrenDiv.append(...this.#DOMPositionAfterHiding.childrenDivs);
 
         Family.hiddenCount--;
         Family.updateAll();
@@ -201,9 +208,11 @@ export default class Family {
         this.#isHidden = true;
         Family.hiddenCount++;
 
+        this.#DOMPositionAfterHiding.container = this.#div.parentElement;
+        this.#DOMPositionAfterHiding.parentDivs = Array.from(this.#parentsDiv.children);
+        this.#DOMPositionAfterHiding.childrenDivs = Array.from(this.#childrenDiv.children);
         this.#parentsDiv.remove();
         this.#childrenDiv.remove();
-        this.#DOMPositionAfterHiding = this.#div.parentElement;
 
         if (this.#childrenDiv.childElementCount !== 1 || this.#childrenDiv.firstElementChild.className !== "family") {
             this.#div.remove();
@@ -325,6 +334,9 @@ export default class Family {
             else {
                 container.prepend(family.div);
             }
+            if (parents.length === 2 && (source.transformPos.x !== 0 || source.transformPos.y !== 0)) {
+                family.#groups[0].updateParentTransforms(parents.find((parent) => parent !== source));
+            }
         }
         
         Family.updateAll();
@@ -350,7 +362,7 @@ export default class Family {
 }
 
 const connectionPointGap = 30;
-const connectionPointLength = 10;
+const connectionPointLength = 16;
 const connectionColor = "rgb(204, 204, 204)";
 
 class ParentChildGroup {
@@ -567,7 +579,6 @@ class ParentChildGroup {
                 y = divs.left.person.connectionPoints.down.y + connectionPointGap;
             }
             this.parentsConnectionPoint = new Vec2(x, y);
-            
             this.parentsConnectionPoint.div = createConnectionDiv(this.parentsConnectionPoint);
 
             this.parentsConnectionPoint.draw = () => {
@@ -591,7 +602,9 @@ class ParentChildGroup {
                     const divs = getLeftRightGroup(_visibleParents);
                     x = (divs.left.offsetLeft + divs.right.offsetLeft + divs.right.offsetWidth) / 2;
                 }
-                const y = _visibleParents.length === 2? _visibleParents[0].connectionPoints.right.y : _visibleParents[0].connectionPoints.down.y + connectionPointGap;
+                const y = _visibleParents.length === 2?
+                    _visibleParents[0].div.offsetTop + _visibleParents[0].div.offsetHeight / 2 :
+                    _visibleParents[0].div.offsetTop + _visibleParents[0].div.offsetHeight + connectionPointGap;
 
                 this.parentsConnectionPoint.x = x + this.parentsConnectionPoint.div.transformPos.x;
                 this.parentsConnectionPoint.y = y + this.parentsConnectionPoint.div.transformPos.y;
@@ -754,10 +767,10 @@ class ParentChildGroup {
 
         this.children.forEach((child) => {
             if (child instanceof Person) {
-                parent.adopt(child);
+                child.getAdopted(parent);
                 return;
             }
-            parent.adopt(this.#subFamilyMap.get(child));
+            this.#subFamilyMap.get(child).getAdopted(parent);
         });
         this.parents.push(parent);
 
@@ -769,9 +782,25 @@ class ParentChildGroup {
                 const visibleParents = this.getVisiblePeople(this.parents);
                 visibleParents[visibleParents.length - 2].div.after(parent.div);
             }
+            this.updateParentTransforms(parent);
         }
         else {
             this.#family.parentsDiv.appendChild(parent.div);
+            if (this.children.getVisibleLength() > 0) {
+                const transforms = { x: 0, y: 0 };
+                if (this.children.getVisibleLength() === 1) {
+                    const find = this.children.find((child) => !child.isHidden);
+                    const visibleChild = find instanceof Person? find : this.#subFamilyMap.get(find);
+                    transforms.x = Number(visibleChild.div.style.getPropertyValue("--pos-x"));
+                    transforms.y = Number(visibleChild.div.style.getPropertyValue("--pos-y"));
+                }
+                else {
+                    transforms.x = this.childrenConnectionPoint.div.offsetLeft + this.childrenConnectionPoint.div.transformPos.x - parent.div.offsetLeft + (-parent.div.offsetWidth + connectionPointLength) / 2;
+                    transforms.y = this.childrenConnectionPoint.div.transformPos.y;
+                }
+                parent.onDrag(transforms);
+                parent.transformPos = new Vec2(transforms.x, transforms.y);
+            }
         }
 
         Family.updateAll();
@@ -782,25 +811,52 @@ class ParentChildGroup {
     
         // Set family, add child to children div
         this.#family.childrenDiv.appendChild(child.div);
+
+        const transforms = { x: 0, y: 0 };
         
         if (child instanceof Person) {
             child.setFamily(this.#family);
             child.addGroup(this);
             child.getAdopted(this.parents);
 
-            Family.updateAll();
-            return;
+            if (this.children.getVisibleLength() > 1) {
+                const previousChildDiv = child.div.previousElementSibling.person? child.div.previousElementSibling : this.#subFamilyMap.get(FAMILIES[Family.getIDFromDiv(child.div.previousElementSibling)]).div;
+                transforms.x = Number(previousChildDiv.style.getPropertyValue("--pos-x"));
+                transforms.y = Number(previousChildDiv.style.getPropertyValue("--pos-y"));
+                child.onDrag(transforms);
+                child.transformPos = new Vec2(previousChildDiv.person.transformPos.x, previousChildDiv.person.transformPos.y);
+            }
+            else if (this.children.getVisibleLength() === 1 && this.parents.getVisibleLength() > 0) {
+                if (this.parents.getVisibleLength() === 1) {
+                    const visibleParent = this.parents.find((parent) => !parent.isHidden);
+                    transforms.x = Number(visibleParent.div.style.getPropertyValue("--pos-x"));
+                    transforms.y = Number(visibleParent.div.style.getPropertyValue("--pos-y"));
+                    // For some reason this.parentsConnectionPoint can only be created doing this
+                    // Without this, child.onDrag() runs into a TypeError
+                    this.#family.draw(this.parents[0]);
+                }
+                else {
+                    transforms.x = this.parentsConnectionPoint.div.offsetLeft + this.parentsConnectionPoint.div.transformPos.x - child.div.offsetLeft + (-child.div.offsetWidth + connectionPointLength) / 2;
+                    transforms.y = this.parentsConnectionPoint.div.transformPos.y;
+                } 
+                child.onDrag(transforms);
+                child.transformPos = new Vec2(transforms.x, transforms.y);
+            }
         }
-        if (subFamilyChild) {
+        else if (subFamilyChild) {
             subFamilyChild.addGroup(this);
             subFamilyChild.getAdopted(this.parents);
             this.#subFamilyMap.set(child, subFamilyChild);
-
-            Family.updateAll();
-
-            return;
         }
-        console.error(`Warning: Sub-family ${child} added without specified subFamilyChild.`);
+        if (this.children.getVisibleLength() === 2 && this.childrenConnectionPoint) {
+            this.childrenConnectionPoint.div.onDrag(transforms);
+            this.childrenConnectionPoint.div.transformPos.x = transforms.x;
+            this.childrenConnectionPoint.div.transformPos.y = transforms.y;
+            
+            this.childrenConnectionPoint.update();
+        }
+       
+        Family.updateAll();
     }
 
     hide(person=null) {
@@ -1117,6 +1173,26 @@ class ParentChildGroup {
             children: childrenIDs,
             subFamilyMap: subFamilyMap,
         };
+    }
+    updateParentTransforms(parent) {
+        if (this.parents.getVisibleLength() > 1)
+        {    
+            const previousParentDiv = parent.div.previousElementSibling;
+            const transforms = {
+                x: Number(previousParentDiv.style.getPropertyValue("--pos-x")),
+                y: Number(previousParentDiv.style.getPropertyValue("--pos-y")),
+            }
+            parent.onDrag(transforms);
+            parent.transformPos = new Vec2(previousParentDiv.person.transformPos.x, previousParentDiv.person.transformPos.y);
+    
+            if (this.parentsConnectionPoint) {
+                this.parentsConnectionPoint.div.onDrag(transforms);
+                this.parentsConnectionPoint.div.transformPos.x = transforms.x;
+                this.parentsConnectionPoint.div.transformPos.y = transforms.y;
+                
+                this.parentsConnectionPoint.update();
+            }
+        }
     }
 }
 

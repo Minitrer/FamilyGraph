@@ -726,7 +726,7 @@ document.addEventListener("keyup", (e) => {
                 return;
             }
             // Confirm name
-            if (SELECTED.length !== 0) {
+            if (!e.shiftKey && document.activeElement.className === "name") {
                 document.activeElement.blur();
                 e.preventDefault();
             }

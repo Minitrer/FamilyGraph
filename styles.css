@@ -297,7 +297,7 @@ html, body, #workspace {
     align-items: center;
     align-content: center;
     /* DEBUG */
-    /* border: 2px solid cyan; */
+    border: 2px solid cyan;
 }
 
 #graph {

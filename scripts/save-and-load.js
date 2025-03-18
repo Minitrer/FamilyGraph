@@ -49,7 +49,11 @@ input.addEventListener("change", (event) => {
         for (let i = 0, length = PEOPLE.length; i < length; i++) {
             PEOPLE[0].delete(false);
         }
+        for (let i = 0, length = FAMILIES.length; i < length; i++) {
+            FAMILIES[0].delete(false);
+        }
         forget();
+        console.debug(FAMILIES);
 
         Person.setPEOPLE(Array.from(peopleData, () => new Person()));
         
@@ -76,6 +80,7 @@ input.addEventListener("change", (event) => {
         const graph = document.getElementById("graph");
         graph.append(firstFamily.div);
 
+        // Points only get created after everything's been drawn
         Family.updateAll();
 
         function loadPointPos(point, position) {

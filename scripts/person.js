@@ -118,7 +118,7 @@ export default class Person {
         this.workspacePos = new Vec2(
             this.#div.offsetLeft + this.#transformPos.x,
             this.#div.offsetTop + this.#transformPos.y
-        )
+        );
     }
     get workspacePos() {
         return this.#workspacePos;
@@ -138,7 +138,7 @@ export default class Person {
         this.#connectionPoints.right = this.#workspacePos.add(relativeConnectionPoints.right);
 
         if (this.#family) {
-            this.#family.draw(this)
+            this.#family.draw(this);
         }
     }
     get connectionPoints() {

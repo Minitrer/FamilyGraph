@@ -76,12 +76,12 @@ function addNewParentGroup(person, newPerson, subFamilyMap) {
     }
     // Find larger family in other parents
     for (let i = 0, length = person.family.groups.length; i < length; i++) {
-        if (person.family.groups[i].parents.includes(person)) {
+        if (person.family.groups[i].parents.includes(person) || person.family.groups[i].isHidden) {
             continue;
         }
         for (let j = 0, lengthJ = person.family.groups[i].parents.length; j < lengthJ; j++) {
-            if (person.family.groups[i].parents[j].parents.length > 0) {
-                person.family.groups[i].parents[j].parents[0].family.addGroup([newPerson], [person.family], subFamilyMap);
+            if (person.family.groups[i].parents[j].parents.some((parent) => !parent.isHidden)) {
+                person.family.groups[i].parents[j].parents.find((parent) => !parent.isHidden).family.addGroup([newPerson], [person.family], subFamilyMap);
                 return true;
             }
         }
@@ -111,7 +111,7 @@ export function addParent(person) {
     // person has parents and is single
     if (person.div.parentElement.className === "children") {
         for (let i = 0, length = person.groups.length; i < length; i++) {
-            if (person.groups[i].parents.length > 1) {
+            if (person.groups[i].parents.getVisibleLength() > 1) {
                 continue;
             }
             person.groups[i].addParent(newPerson);
@@ -124,7 +124,7 @@ export function addParent(person) {
     }
     // person is in a family (either married or has children or both)
     for (let i = 0, length = person.groups.length; i < length; i++) {
-        if (person.groups[i].children.includes(person.family) && person.groups[i].parents.length < 2) {
+        if (person.groups[i].children.includes(person.family) && person.groups[i].parents.getVisibleLength() < 2 && !person.groups[i].isHidden) {
             person.groups[i].addParent(newPerson);
             editName(newPerson);
             return;
@@ -135,14 +135,14 @@ export function addParent(person) {
     subFamilyMap.set(person.family, person);
 
     // No parent is single
-    if (person.parents.length > 0) {
+    if (person.parents.some((parent) => !parent.isHidden)) {
         person.parents[0].family.addGroup([newPerson], [person.family], subFamilyMap);
         editName(newPerson);
         return;
     }
     // Find larger family in spouses
     for (let i = 0, length = person.spouses.length; i < length; i++) {
-        if (person.spouses[i].parents.length > 0) {
+        if (person.spouses[i].parents.some((parent) => !parent.isHidden)) {
             person.spouses[i].parents[0].family.addGroup([newPerson], [person.family], subFamilyMap);
             editName(newPerson);
             return;
@@ -167,7 +167,7 @@ export function addSpouce(person) {
     
     if (person.div.parentElement.className === "parents") {
         for (let i = 0, length = person.groups.length; i < length; i++) {
-            if (person.groups[i].parents.includes(person)) {
+            if (person.groups[i].parents.includes(person) && !person.groups[i].isHidden) {
                 person.groups[i].addParent(newPerson);
                 editName(newPerson);
                 return;
@@ -192,7 +192,7 @@ export function addChild(person) {
 
     if (person.div.parentElement.className === "parents") {
         for (let i = 0, length = person.groups.length; i < length; i++) {
-            if (person.groups[i].parents.includes(person)) {
+            if (person.groups[i].parents.includes(person) && !person.groups[i].isHidden) {
                 person.groups[i].addChild(newPerson);
                 editName(newPerson);
                 return;
@@ -216,6 +216,9 @@ export function addSibling(person) {
     pushStack(command, undoStack);
 
     const groupsAsChild = person.groups.filter((group) =>  {
+        if (group.isHidden) {
+            return false;
+        }
         if (group.children.includes(person)) {
             return true;
         }

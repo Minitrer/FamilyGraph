@@ -408,6 +408,9 @@ export default class Relationship {
 }
 
 function set(map, id, relationship) {
+    // if (relationship.suffix === "-in-law") {
+    //     debugger;
+    // }
     map.set(id, relationship);
     updateText(id, relationship);
 }
