@@ -348,8 +348,8 @@ function createRelationshipTexts(person) {
             continue;
         }
 
-        if (RELATIONSHIPTEXTS.has(id)) {
-            const text = RELATIONSHIPTEXTS.get(id);
+        if (RELATIONSHIPTEXTS.has(PEOPLE[id])) {
+            const text = RELATIONSHIPTEXTS.get(PEOPLE[id]);
             if (!text.parentElement) {
                 workspace.appendChild(text);
             }
@@ -357,7 +357,7 @@ function createRelationshipTexts(person) {
             continue;
         }
         const text = document.createElement("h2");
-        RELATIONSHIPTEXTS.set(id, text);
+        RELATIONSHIPTEXTS.set(PEOPLE[id], text);
         text.classList.add("relationship");
 
         workspace.appendChild(text);

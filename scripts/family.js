@@ -10,8 +10,9 @@ export default class Family {
     #parentsDiv;
     #childrenDiv;
     #isHidden = false;
-    #DOMPositionAfterHiding = {
+    #DOMPositionBeforeHiding = {
         container: undefined,
+        index: 0,
         parentDivs: [],
         childrenDivs: []
     };
@@ -194,11 +195,20 @@ export default class Family {
     show() {
         this.#isHidden = false;
 
-        this.#DOMPositionAfterHiding.container.append(this.#div);
+        if (this.#DOMPositionBeforeHiding.index === 0) {
+            this.#DOMPositionBeforeHiding.container.prepend(this.#div);
+        }
+        else if (this.#DOMPositionBeforeHiding.index > this.#DOMPositionBeforeHiding.container.childElementCount) {
+            this.#DOMPositionBeforeHiding.container.append(this.#div);
+        }
+        else {
+            const children = this.#DOMPositionBeforeHiding.container.children;
+            children.item(this.#DOMPositionBeforeHiding.index - 1).after(this.#div);
+        }
 
         this.#div.append(this.#parentsDiv, this.#childrenDiv);
-        this.#parentsDiv.append(...this.#DOMPositionAfterHiding.parentDivs);
-        this.#childrenDiv.append(...this.#DOMPositionAfterHiding.childrenDivs);
+        this.#parentsDiv.append(...this.#DOMPositionBeforeHiding.parentDivs);
+        this.#childrenDiv.append(...this.#DOMPositionBeforeHiding.childrenDivs);
 
         Family.hiddenCount--;
         Family.updateAll();
@@ -208,9 +218,10 @@ export default class Family {
         this.#isHidden = true;
         Family.hiddenCount++;
 
-        this.#DOMPositionAfterHiding.container = this.#div.parentElement;
-        this.#DOMPositionAfterHiding.parentDivs = Array.from(this.#parentsDiv.children);
-        this.#DOMPositionAfterHiding.childrenDivs = Array.from(this.#childrenDiv.children);
+        this.#DOMPositionBeforeHiding.container = this.#div.parentElement;
+        this.#DOMPositionBeforeHiding.index = Array.prototype.indexOf.call(this.#div.parentElement.children, this.#div);
+        this.#DOMPositionBeforeHiding.parentDivs = Array.from(this.#parentsDiv.children);
+        this.#DOMPositionBeforeHiding.childrenDivs = Array.from(this.#childrenDiv.children);
         this.#parentsDiv.remove();
         this.#childrenDiv.remove();
 
@@ -366,7 +377,7 @@ const connectionPointLength = 16;
 const connectionColor = "rgb(204, 204, 204)";
 
 class ParentChildGroup {
-    #family
+    #family;
     parents = [];
     children = [];
     parentsConnectionPoint;
@@ -375,6 +386,10 @@ class ParentChildGroup {
     #subFamilyMap=new Map();
     // subFamilyMap has subfamilies as keys and one of their parents as values
     #isHidden = false;
+    #hiddenConnectionPoints = {
+        parents: undefined,
+        children: undefined,
+    };
     
     constructor(parents, children, family, subFamilyMap=this.#subFamilyMap) {
         this.#family = family;
@@ -873,13 +888,23 @@ class ParentChildGroup {
                     subChild.connections.delete(`children ${index}`);
                 }
             });
-    
-            if (this.parentsConnectionPoint) {
-                this.parentsConnectionPoint = deleteConnectionPoint(this.parentsConnectionPoint);
+
+            function hideConnectionPoint(point) {
+                if (point.inbetweenConnection) {
+                    point.inbetweenConnection.remove();
+                }
+                if (point.div) {
+                    point.div.remove();
+                }
+                return undefined;
             }
-    
+            if (this.parentsConnectionPoint) {
+                this.#hiddenConnectionPoints.parents = this.parentsConnectionPoint;
+                this.parentsConnectionPoint = hideConnectionPoint(this.parentsConnectionPoint);
+            }
             if (this.childrenConnectionPoint) {
-                this.childrenConnectionPoint = deleteConnectionPoint(this.childrenConnectionPoint);
+                this.#hiddenConnectionPoints.children = this.childrenConnectionPoint;
+                this.childrenConnectionPoint = hideConnectionPoint(this.childrenConnectionPoint);
             }
     
             this.#family.hiddenGroupCount++;
@@ -958,6 +983,23 @@ class ParentChildGroup {
         if (!person) {
             this.#isHidden = false;
             this.#family.hiddenCount--;
+            const workspace = document.getElementById("workspace");
+            function restorePoint(point) {
+                workspace.append(point.div)
+                if (point.inbetweenConnection) {
+                    workspace.prepend(point.inbetweenConnection);
+                }
+            }
+            if (this.#hiddenConnectionPoints.parents) {
+                this.parentsConnectionPoint = this.#hiddenConnectionPoints.parents;
+                restorePoint(this.parentsConnectionPoint);
+                this.#hiddenConnectionPoints.parents = undefined;
+            }
+            if (this.#hiddenConnectionPoints.children) {
+                this.childrenConnectionPoint = this.#hiddenConnectionPoints.children;
+                restorePoint(this.childrenConnectionPoint);
+                this.#hiddenConnectionPoints.children = undefined;
+            }
             return;
         }
         if (this.#isHidden) {

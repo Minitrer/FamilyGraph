@@ -123,8 +123,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 DRAGGING_ELEMENTS.push(document.getElementById("gender-menu"));
                 return;
             }
-            if (RELATIONSHIPTEXTS.has(person.id)) {
-                DRAGGING_ELEMENTS.push(RELATIONSHIPTEXTS.get(person.id));
+            if (RELATIONSHIPTEXTS.has(person)) {
+                DRAGGING_ELEMENTS.push(RELATIONSHIPTEXTS.get(person));
             }
         }
         function getPersonTransforms(person) {

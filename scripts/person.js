@@ -33,7 +33,7 @@ export default class Person {
     #isHidden = false;
     #DOMPositionBeforeHiding = {
         index: 0,
-        parent: undefined,
+        container: undefined,
     };
     #NameBeforeHiding = "";
     connections = new Map();
@@ -445,19 +445,10 @@ export default class Person {
         this.#isHidden = true;
 
         this.#NameBeforeHiding = this.name;
+        this.#DOMPositionBeforeHiding.container = this.#div.parentElement;
         const children = this.#div.parentElement.children;
-        let i = 0;
-        for (let length = children.length; i < length; i++) {
-            if (children.item(i) !== this.#div) {
-                continue;
-            }
-            this.#DOMPositionBeforeHiding.index = i;
-            this.#DOMPositionBeforeHiding.parent = this.#div.parentElement;
-            break;
-        }
-
-        const found = i !== children.length;
-        if (!found) {
+        const index = Array.prototype.indexOf.call(children, this.#div);
+        if (index < 0) {
             console.error(`Unable to find DOM position of ${this}`);
             return;
         }
@@ -468,15 +459,16 @@ export default class Person {
 
         observer.unobserve(this.#div);
 
-        this.#div.remove();
-        const text = RELATIONSHIPTEXTS.get(this.id)
-        if (text) {
-            text.remove();
-            RELATIONSHIPTEXTS.delete(this.id);
-        }
         this.#groups.forEach(group => {
             group.hide(this);
         });
+        this.#div.remove();
+        const text = RELATIONSHIPTEXTS.get(this)
+        if (text) {
+            text.remove();
+            RELATIONSHIPTEXTS.delete(this);
+        }
+        console.debug(RELATIONSHIPTEXTS, `deleted ${this}`);
 
         Family.updateAll();
     }
@@ -485,7 +477,6 @@ export default class Person {
         if (!this.#isHidden) {
             return;
         }
-        this.#isHidden = false;
 
         if (this.#family.isHidden) {
             this.#family.show();
@@ -499,15 +490,16 @@ export default class Person {
         });
 
         if (this.#DOMPositionBeforeHiding.index === 0) {
-            this.#DOMPositionBeforeHiding.parent.prepend(this.#div);
+            this.#DOMPositionBeforeHiding.container.prepend(this.#div);
         }
-        else if (this.#DOMPositionBeforeHiding.index > this.#DOMPositionBeforeHiding.parent.childElementCount) {
-            this.#DOMPositionBeforeHiding.parent.append(this.#div);
+        else if (this.#DOMPositionBeforeHiding.index > this.#DOMPositionBeforeHiding.container.childElementCount) {
+            this.#DOMPositionBeforeHiding.container.append(this.#div);
         }
         else {
-            const children = this.#DOMPositionBeforeHiding.parent.children;
+            const children = this.#DOMPositionBeforeHiding.container.children;
             children.item(this.#DOMPositionBeforeHiding.index - 1).after(this.#div);
         }
+        this.#isHidden = false;
         const workspace = document.getElementById("workspace");
         this.connections.forEach((connection) => {
             workspace.append(connection);
