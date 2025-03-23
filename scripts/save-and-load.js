@@ -3,6 +3,7 @@ import Person, { PEOPLE } from "./person.js";
 import { forget } from "./actions.js";
 import { hideContextMenu, clearSelections, RELATIONSHIPTEXTS } from "./controls.js";
 import Vec2 from "./vec2.js";
+import { centerWorkspace } from "./pan-zoom-and-drag.js";
 
 const saveDiv = document.getElementById("save");
 const input = document.getElementById("import");
@@ -65,7 +66,7 @@ input.addEventListener("change", (event) => {
             domObject.parents.forEach((parentID) => {
                 family.parentsDiv.append(PEOPLE[parentID].div);
             });
-
+            
             domObject.children.forEach((child) => {
                 if (typeof child === "number") {
                     family.childrenDiv.append(PEOPLE[child].div);
@@ -76,7 +77,7 @@ input.addEventListener("change", (event) => {
             });
         }
         appendFamilyDivs(firstFamily, domStructure);
-
+        
         const graph = document.getElementById("graph");
         graph.append(firstFamily.div);
 
@@ -98,6 +99,8 @@ input.addEventListener("change", (event) => {
                 }
             });
         });
+
+        centerWorkspace();
         input.value = "";
     }, { once: true });
 

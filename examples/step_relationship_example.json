@@ -1,0 +1,720 @@
+[
+    {
+        "name": "Select me",
+        "familyID": 0,
+        "groupIDs": [
+            0,
+            1,
+            2
+        ],
+        "spouseIDs": [
+            5
+        ],
+        "parentIDs": [
+            1,
+            2,
+            8,
+            9
+        ],
+        "childrenIDs": [
+            6,
+            7
+        ],
+        "gender": "agender",
+        "stepRelationshipIDs": {
+            "step": [
+                6,
+                7,
+                2,
+                4,
+                9,
+                10
+            ],
+            "half": [
+                3
+            ]
+        },
+        "transformPos": {
+            "x": 0,
+            "y": 0
+        },
+        "workspacePos": {
+            "x": 976,
+            "y": 269
+        },
+        "connectionPoints": {
+            "up": {
+                "x": 1057,
+                "y": 269
+            },
+            "down": {
+                "x": 1057,
+                "y": 312
+            },
+            "left": {
+                "x": 976,
+                "y": 290.5
+            },
+            "right": {
+                "x": 1138,
+                "y": 290.5
+            }
+        }
+    },
+    {
+        "name": "Eric",
+        "familyID": 1,
+        "groupIDs": [
+            0
+        ],
+        "spouseIDs": [
+            2
+        ],
+        "parentIDs": [],
+        "childrenIDs": [
+            0,
+            3,
+            4
+        ],
+        "gender": "male",
+        "stepRelationshipIDs": {
+            "step": [
+                6,
+                7,
+                4
+            ],
+            "half": []
+        },
+        "transformPos": {
+            "x": 0,
+            "y": 0
+        },
+        "workspacePos": {
+            "x": 778,
+            "y": 66
+        },
+        "connectionPoints": {
+            "up": {
+                "x": 814.5,
+                "y": 66
+            },
+            "down": {
+                "x": 814.5,
+                "y": 109
+            },
+            "left": {
+                "x": 778,
+                "y": 87.5
+            },
+            "right": {
+                "x": 851,
+                "y": 87.5
+            }
+        }
+    },
+    {
+        "name": "Brenda",
+        "familyID": 1,
+        "groupIDs": [
+            0
+        ],
+        "spouseIDs": [
+            1
+        ],
+        "parentIDs": [],
+        "childrenIDs": [
+            0,
+            3,
+            4
+        ],
+        "gender": "female",
+        "stepRelationshipIDs": {
+            "step": [
+                0,
+                5,
+                6,
+                7
+            ],
+            "half": []
+        },
+        "transformPos": {
+            "x": 0,
+            "y": 0
+        },
+        "workspacePos": {
+            "x": 883,
+            "y": 66
+        },
+        "connectionPoints": {
+            "up": {
+                "x": 944.5,
+                "y": 66
+            },
+            "down": {
+                "x": 944.5,
+                "y": 109
+            },
+            "left": {
+                "x": 883,
+                "y": 87.5
+            },
+            "right": {
+                "x": 1006,
+                "y": 87.5
+            }
+        }
+    },
+    {
+        "name": "Jonathan",
+        "familyID": 1,
+        "groupIDs": [
+            0
+        ],
+        "spouseIDs": [],
+        "parentIDs": [
+            1,
+            2
+        ],
+        "childrenIDs": [],
+        "gender": "male",
+        "stepRelationshipIDs": {
+            "step": [
+                6,
+                7
+            ],
+            "half": [
+                0,
+                4
+            ]
+        },
+        "transformPos": {
+            "x": 0,
+            "y": 0
+        },
+        "workspacePos": {
+            "x": 648,
+            "y": 269
+        },
+        "connectionPoints": {
+            "up": {
+                "x": 725.5,
+                "y": 269
+            },
+            "down": {
+                "x": 725.5,
+                "y": 312
+            },
+            "left": {
+                "x": 648,
+                "y": 290.5
+            },
+            "right": {
+                "x": 803,
+                "y": 290.5
+            }
+        }
+    },
+    {
+        "name": "Emma",
+        "familyID": 1,
+        "groupIDs": [
+            0
+        ],
+        "spouseIDs": [],
+        "parentIDs": [
+            1,
+            2
+        ],
+        "childrenIDs": [],
+        "gender": "female",
+        "stepRelationshipIDs": {
+            "step": [
+                1,
+                0,
+                5,
+                6,
+                7
+            ],
+            "half": [
+                3
+            ]
+        },
+        "transformPos": {
+            "x": 0,
+            "y": 0
+        },
+        "workspacePos": {
+            "x": 835,
+            "y": 269
+        },
+        "connectionPoints": {
+            "up": {
+                "x": 889.5,
+                "y": 269
+            },
+            "down": {
+                "x": 889.5,
+                "y": 312
+            },
+            "left": {
+                "x": 835,
+                "y": 290.5
+            },
+            "right": {
+                "x": 944,
+                "y": 290.5
+            }
+        }
+    },
+    {
+        "name": "Quinn",
+        "familyID": 0,
+        "groupIDs": [
+            0
+        ],
+        "spouseIDs": [
+            0
+        ],
+        "parentIDs": [],
+        "childrenIDs": [
+            6,
+            7
+        ],
+        "gender": "agender",
+        "stepRelationshipIDs": {
+            "step": [
+                2,
+                4,
+                9,
+                10
+            ],
+            "half": []
+        },
+        "transformPos": {
+            "x": 0,
+            "y": 0
+        },
+        "workspacePos": {
+            "x": 1170,
+            "y": 269
+        },
+        "connectionPoints": {
+            "up": {
+                "x": 1222.5,
+                "y": 269
+            },
+            "down": {
+                "x": 1222.5,
+                "y": 312
+            },
+            "left": {
+                "x": 1170,
+                "y": 290.5
+            },
+            "right": {
+                "x": 1275,
+                "y": 290.5
+            }
+        }
+    },
+    {
+        "name": "Nicole",
+        "familyID": 0,
+        "groupIDs": [
+            0
+        ],
+        "spouseIDs": [],
+        "parentIDs": [
+            0,
+            5
+        ],
+        "childrenIDs": [],
+        "gender": "female",
+        "stepRelationshipIDs": {
+            "step": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                8,
+                9,
+                10
+            ],
+            "half": []
+        },
+        "transformPos": {
+            "x": 0,
+            "y": 0
+        },
+        "workspacePos": {
+            "x": 1009,
+            "y": 472
+        },
+        "connectionPoints": {
+            "up": {
+                "x": 1063.5,
+                "y": 472
+            },
+            "down": {
+                "x": 1063.5,
+                "y": 515
+            },
+            "left": {
+                "x": 1009,
+                "y": 493.5
+            },
+            "right": {
+                "x": 1118,
+                "y": 493.5
+            }
+        }
+    },
+    {
+        "name": "Larry",
+        "familyID": 0,
+        "groupIDs": [
+            0
+        ],
+        "spouseIDs": [],
+        "parentIDs": [
+            0,
+            5
+        ],
+        "childrenIDs": [],
+        "gender": "male",
+        "stepRelationshipIDs": {
+            "step": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                8,
+                9,
+                10
+            ],
+            "half": []
+        },
+        "transformPos": {
+            "x": 0,
+            "y": 0
+        },
+        "workspacePos": {
+            "x": 1150,
+            "y": 472
+        },
+        "connectionPoints": {
+            "up": {
+                "x": 1196.5,
+                "y": 472
+            },
+            "down": {
+                "x": 1196.5,
+                "y": 515
+            },
+            "left": {
+                "x": 1150,
+                "y": 493.5
+            },
+            "right": {
+                "x": 1243,
+                "y": 493.5
+            }
+        }
+    },
+    {
+        "name": "Anna",
+        "familyID": 1,
+        "groupIDs": [
+            0
+        ],
+        "spouseIDs": [
+            9
+        ],
+        "parentIDs": [],
+        "childrenIDs": [
+            0,
+            10
+        ],
+        "gender": "female",
+        "stepRelationshipIDs": {
+            "step": [
+                6,
+                7,
+                10
+            ],
+            "half": []
+        },
+        "transformPos": {
+            "x": 0,
+            "y": 0
+        },
+        "workspacePos": {
+            "x": 1038,
+            "y": 66
+        },
+        "connectionPoints": {
+            "up": {
+                "x": 1084.5,
+                "y": 66
+            },
+            "down": {
+                "x": 1084.5,
+                "y": 109
+            },
+            "left": {
+                "x": 1038,
+                "y": 87.5
+            },
+            "right": {
+                "x": 1131,
+                "y": 87.5
+            }
+        }
+    },
+    {
+        "name": "Justin",
+        "familyID": 1,
+        "groupIDs": [
+            0
+        ],
+        "spouseIDs": [
+            8
+        ],
+        "parentIDs": [],
+        "childrenIDs": [
+            0,
+            10
+        ],
+        "gender": "male",
+        "stepRelationshipIDs": {
+            "step": [
+                0,
+                5,
+                6,
+                7
+            ],
+            "half": []
+        },
+        "transformPos": {
+            "x": 0,
+            "y": 0
+        },
+        "workspacePos": {
+            "x": 1163,
+            "y": 66
+        },
+        "connectionPoints": {
+            "up": {
+                "x": 1216.5,
+                "y": 66
+            },
+            "down": {
+                "x": 1216.5,
+                "y": 109
+            },
+            "left": {
+                "x": 1163,
+                "y": 87.5
+            },
+            "right": {
+                "x": 1270,
+                "y": 87.5
+            }
+        }
+    },
+    {
+        "name": "Scott",
+        "familyID": 1,
+        "groupIDs": [
+            0
+        ],
+        "spouseIDs": [],
+        "parentIDs": [
+            8,
+            9
+        ],
+        "childrenIDs": [],
+        "gender": "male",
+        "stepRelationshipIDs": {
+            "step": [
+                8,
+                0,
+                5,
+                6,
+                7
+            ],
+            "half": []
+        },
+        "transformPos": {
+            "x": 0,
+            "y": 0
+        },
+        "workspacePos": {
+            "x": 1307,
+            "y": 269
+        },
+        "connectionPoints": {
+            "up": {
+                "x": 1353.5,
+                "y": 269
+            },
+            "down": {
+                "x": 1353.5,
+                "y": 312
+            },
+            "left": {
+                "x": 1307,
+                "y": 290.5
+            },
+            "right": {
+                "x": 1400,
+                "y": 290.5
+            }
+        }
+    },
+    [
+        {
+            "groups": [
+                {
+                    "parents": [
+                        0,
+                        5
+                    ],
+                    "children": [
+                        6,
+                        7
+                    ],
+                    "subFamilyMap": {},
+                    "points": {
+                        "parents": {
+                            "cssPos": {
+                                "x": 0,
+                                "y": 0
+                            },
+                            "transformPos": {
+                                "x": 0,
+                                "y": 0
+                            }
+                        },
+                        "children": {
+                            "cssPos": {
+                                "x": 0,
+                                "y": 0
+                            },
+                            "transformPos": {
+                                "x": 0,
+                                "y": 0
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "groups": [
+                {
+                    "parents": [
+                        1,
+                        2
+                    ],
+                    "children": [
+                        {
+                            "familyID": 0
+                        },
+                        3,
+                        4
+                    ],
+                    "subFamilyMap": {
+                        "0": 0
+                    },
+                    "points": {
+                        "parents": {
+                            "cssPos": {
+                                "x": 0,
+                                "y": 0
+                            },
+                            "transformPos": {
+                                "x": 0,
+                                "y": 0
+                            }
+                        },
+                        "children": {
+                            "cssPos": {
+                                "x": 0,
+                                "y": 0
+                            },
+                            "transformPos": {
+                                "x": 0,
+                                "y": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "parents": [
+                        8,
+                        9
+                    ],
+                    "children": [
+                        {
+                            "familyID": 0
+                        },
+                        10
+                    ],
+                    "subFamilyMap": {
+                        "0": 0
+                    },
+                    "points": {
+                        "parents": {
+                            "cssPos": {
+                                "x": 0,
+                                "y": 0
+                            },
+                            "transformPos": {
+                                "x": 0,
+                                "y": 0
+                            }
+                        },
+                        "children": {
+                            "cssPos": {
+                                "x": 0,
+                                "y": 0
+                            },
+                            "transformPos": {
+                                "x": 0,
+                                "y": 0
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    {
+        "familyID": 1,
+        "parents": [
+            1,
+            2,
+            8,
+            9
+        ],
+        "children": [
+            3,
+            4,
+            {
+                "familyID": 0,
+                "parents": [
+                    0,
+                    5
+                ],
+                "children": [
+                    6,
+                    7
+                ]
+            },
+            10
+        ]
+    }
+]

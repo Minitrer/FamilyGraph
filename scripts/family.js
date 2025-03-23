@@ -655,7 +655,8 @@ class ParentChildGroup {
             this.childrenConnectionPoint = new Vec2();
 
             const direction = getPersonToPointDirection(singleChild, this.parentsConnectionPoint);
-            this.childrenConnectionPoint = singleChild.connectionPoints[direction];
+            this.childrenConnectionPoint.x = singleChild.connectionPoints[direction].x;
+            this.childrenConnectionPoint.y = singleChild.connectionPoints[direction].y;
 
             if (visibleParents.length === 1) {
                 this.childrenConnectionPoint.updatePos = () => {

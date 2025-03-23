@@ -152,6 +152,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 draggingPos.x = event.pageX;
                 draggingPos.y = event.pageY;
                 event.preventDefault();
+                if (event.target.id === "trash-can" || event.target.parentElement.id === "trash-can") {
+                    DRAGGING_ELEMENTS.forEach((element) => {
+                        element.onDrag(new Vec2(element.transformPos.x, element.transformPos.y));
+                    });
+                    document.removeEventListener("pointermove", drag);
+                    DRAGGING_ELEMENTS = [];
+                    
+                    const trashCan = document.getElementById("trash-can");
+                    trashCan.style.pointerEvents = "none";
+                    return;
+                }
             }
             DRAGGING_ELEMENTS.forEach((element) => {
                 element.transformPos.x += (draggingPos.x - CLICKED_POS.x) * (1 / TRANSFORM_SCALE);

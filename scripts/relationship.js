@@ -419,9 +419,9 @@ function updateText(id, relationship) {
     if (!selectedRelationship || selectedRelationship !== relationship) {
         return;
     }
-    const text = RELATIONSHIPTEXTS.get(id);
+    const text = RELATIONSHIPTEXTS.get(PEOPLE[id]);
     if (text && text.parentElement) {
-        updateRelationshipText(text, id, relationship);
+        updateRelationshipText(text, PEOPLE[id], relationship);
     }
 }
 function getOrdinal(number) {
