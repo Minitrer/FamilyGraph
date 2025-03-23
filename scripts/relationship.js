@@ -4,7 +4,7 @@ import { RELATIONSHIPTEXTS, SELECTED, updateRelationshipText } from "./controls.
 class Noun  {
     static Spouce = Object.freeze({
         male: "husband",
-        agender: "spouce",
+        agender: "spouse",
         female: "wife",
     });
     static Child = Object.freeze({
@@ -206,8 +206,8 @@ export default class Relationship {
                             // We can see whether the parent is in an older generation by checking the cousin's parents, seeing if one of them is also the parent's cousin 
                             // and comparing the seperations, or if there's no cousins to be found
                             let isParentHigher = false;
-                            // othersParents includes the parents of the spouces
-                            const othersParents = PEOPLE[id].parents.concat(PEOPLE[id].spouses.map((spouce) => spouce.parents).flat());
+                            // othersParents includes the parents of the spouses
+                            const othersParents = PEOPLE[id].parents.concat(PEOPLE[id].spouses.map((spouse) => spouse.parents).flat());
                             for (const parent of othersParents) {
                                 const parentRelationship = from.relationships.get(parent.id);
                                 if (!parentRelationship || parentRelationship.type !== "Cousin") {

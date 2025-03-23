@@ -105,7 +105,7 @@ const resetTransformButton = document.createElement("button");
 const deleteButton = document.createElement("button");
 
 addParentButton.textContent = "Add parent";
-addSpouceButton.textContent = "Add spouce";
+addSpouceButton.textContent = "Add spouse";
 addChildButton.textContent = "Add child";
 addSiblingButton.textContent = "Add sibling";
 editButton.textContent = "Edit";
@@ -587,7 +587,7 @@ document.addEventListener("keyup", (e) => {
                 SaveLoad.save();
                 return;
             }
-            // Add spouce
+            // Add spouse
             if ((document.activeElement.className === "name" && !e.altKey) || SELECTED.length === 0) {
                 return;
             }
