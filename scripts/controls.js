@@ -328,18 +328,18 @@ function resetGenderMenuPosition() {
     genderMenu.transformPos.y = 0;
 }
 
-export function updateRelationshipTextPos(text, id) {
-    const x = PEOPLE[id].div.offsetLeft + PEOPLE[id].transformPos.x + PEOPLE[id].div.offsetWidth / 2 - text.offsetWidth / 2;
-    const y = PEOPLE[id].div.offsetTop + PEOPLE[id].transformPos.y + PEOPLE[id].div.offsetHeight;
+export function updateRelationshipTextPos(text, person) {
+    const x = person.div.offsetLeft + person.transformPos.x + person.div.offsetWidth / 2 - text.offsetWidth / 2;
+    const y = person.div.offsetTop + person.transformPos.y + person.div.offsetHeight;
     text.style.left = `${x}px`;
     text.style.top = `${y}px`;
 
     text.style.setProperty("--pos-x", 0);
     text.style.setProperty("--pos-y", 0);
 }
-export function updateRelationshipText(text, id, relationship) {
+export function updateRelationshipText(text, person, relationship) {
     text.textContent = relationship.text.at(0).toUpperCase().concat(relationship.text.slice(1));
-    updateRelationshipTextPos(text, id);
+    updateRelationshipTextPos(text, person);
 }
 function createRelationshipTexts(person) {
     const workspace = document.getElementById("workspace");
@@ -353,7 +353,7 @@ function createRelationshipTexts(person) {
             if (!text.parentElement) {
                 workspace.appendChild(text);
             }
-            updateRelationshipText(text, id, relationship);
+            updateRelationshipText(text, PEOPLE[id], relationship);
             continue;
         }
         const text = document.createElement("h2");
@@ -362,7 +362,7 @@ function createRelationshipTexts(person) {
 
         workspace.appendChild(text);
         
-        updateRelationshipText(text, id, relationship);
+        updateRelationshipText(text, PEOPLE[id], relationship);
 
         text.style.transform = "translate(calc(var(--pos-x) * 1px), calc(var(--pos-y) * 1px))";
         makeDraggableBasic(text);

@@ -8,8 +8,8 @@ export let PEOPLE = [];
 const observer = new ResizeObserver(() => {
     Family.updateAll();
 
-    RELATIONSHIPTEXTS.forEach((text, id) => {
-        updateRelationshipTextPos(text, id);
+    RELATIONSHIPTEXTS.forEach((text, person) => {
+        updateRelationshipTextPos(text, person);
     });
 });
 
@@ -447,8 +447,8 @@ export default class Person {
         this.#NameBeforeHiding = this.name;
         this.#DOMPositionBeforeHiding.container = this.#div.parentElement;
         const children = this.#div.parentElement.children;
-        const index = Array.prototype.indexOf.call(children, this.#div);
-        if (index < 0) {
+        this.#DOMPositionBeforeHiding.index = Array.prototype.indexOf.call(children, this.#div);
+        if (this.#DOMPositionBeforeHiding.index < 0) {
             console.error(`Unable to find DOM position of ${this}`);
             return;
         }

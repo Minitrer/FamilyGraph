@@ -990,12 +990,12 @@ class ParentChildGroup {
                     workspace.prepend(point.inbetweenConnection);
                 }
             }
-            if (this.#hiddenConnectionPoints.parents) {
+            if (this.#hiddenConnectionPoints.parents && this.parents.getVisibleLength() > 0) {
                 this.parentsConnectionPoint = this.#hiddenConnectionPoints.parents;
                 restorePoint(this.parentsConnectionPoint);
                 this.#hiddenConnectionPoints.parents = undefined;
             }
-            if (this.#hiddenConnectionPoints.children) {
+            if (this.#hiddenConnectionPoints.children && this.children.getVisibleLength() > 0) {
                 this.childrenConnectionPoint = this.#hiddenConnectionPoints.children;
                 restorePoint(this.childrenConnectionPoint);
                 this.#hiddenConnectionPoints.children = undefined;
